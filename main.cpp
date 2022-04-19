@@ -4,12 +4,28 @@
 #include <iostream>
 #endif
 
+#include<d3d12.h>
+#include<dxgi1_6.h>
+
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+
 using namespace std;
 
-// @brief
-// @param format
-// @pram
-// @remarks
+//将来的にヘッダーファイルへ
+D3D_FEATURE_LEVEL levels[] =
+{
+	D3D_FEATURE_LEVEL_12_2,
+	D3D_FEATURE_LEVEL_12_1,
+	D3D_FEATURE_LEVEL_12_0,
+	D3D_FEATURE_LEVEL_11_1,
+	D3D_FEATURE_LEVEL_11_0,
+};
+
+// @brief コンソール画面にフォーマットつき文字列を表示（プレースホルダー)
+// @param format フォーマット
+// @pram	可変長引数
+// @remarks	デバッグ
 
 void DebugOutputFormatString(const char* format, ...)
 {
@@ -20,6 +36,7 @@ void DebugOutputFormatString(const char* format, ...)
 	va_end(valist);
 #endif
 }
+
 
 LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -51,6 +68,7 @@ int main()
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false); //ウィンドウサイズ補正
 
+
 	//ウィンドウオブジェクトの生成
 	HWND hwnd = CreateWindowW(w.lpszClassName, //クラス名指定
 		_T("DX12TEST"),	//タイトルバーの文字
@@ -64,8 +82,38 @@ int main()
 		w.hInstance,			//呼び出しアプリケーションハンドル
 		nullptr);			//追加パラメーター
 
+
+	//Directx基本オブジェクトの生成
+	ID3D12Device* _dev = nullptr;
+	IDXGIFactory6* _dxgiFactory = nullptr;
+	IDXGISwapChain4* _swapchain = nullptr;
+
+	//create directx device method
+	HRESULT D3D12CreateDevice(
+		IUnknown*		  pAdapter, //アダプター
+		D3D_FEATURE_LEVEL MinimumFeatureLevel, //最低限必要なフィーチャーレベル
+		REFIID			  riid, //受け取るオブジェクトの型ID
+		void**			  ppDevice //デバイス実体
+	);
+
+	//Directx3Dデバイス初期化
+	D3D_FEATURE_LEVEL featurelevel;
+
+	for (auto lv : levels)
+	{
+		if (D3D12CreateDevice(nullptr, lv, IID_PPV_ARGS(&_dev)) == S_OK)
+		{
+			featurelevel = lv;
+			break;
+		}
+	}
+
+
+	//ウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
 
+
+	//メッセージループ生成
 	MSG msg = {};
 
 	while (true)
@@ -85,11 +133,11 @@ int main()
 
 	UnregisterClass(w.lpszClassName, w.hInstance);
 
+
 #else
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 #endif
-	printf("test");
 	return 0;
 
 }
