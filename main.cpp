@@ -27,6 +27,7 @@ D3D_FEATURE_LEVEL levels[] =
 // @pram	可変長引数
 // @remarks	デバッグ
 
+//デバッグ用関数
 void DebugOutputFormatString(const char* format, ...)
 {
 #ifdef _DEBUG
@@ -38,6 +39,7 @@ void DebugOutputFormatString(const char* format, ...)
 }
 
 
+//ウィンドウに必要な関数
 LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	// ウィンドウが破壊されたら呼ばれる
@@ -50,9 +52,11 @@ LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 }
 
 
+//main関数　メッセージループが入っている
 #ifdef _DEBUG
 int main()
 {
+	//ウィンドウクラスの生成
 	WNDCLASSEX w = {};
 
 	w.cbSize = sizeof(WNDCLASSEX);
@@ -88,17 +92,8 @@ int main()
 	IDXGIFactory6* _dxgiFactory = nullptr;
 	IDXGISwapChain4* _swapchain = nullptr;
 
-	//create directx device method
-	HRESULT D3D12CreateDevice(
-		IUnknown*		  pAdapter, //アダプター
-		D3D_FEATURE_LEVEL MinimumFeatureLevel, //最低限必要なフィーチャーレベル
-		REFIID			  riid, //受け取るオブジェクトの型ID
-		void**			  ppDevice //デバイス実体
-	);
-
 	//Directx3Dデバイス初期化
 	D3D_FEATURE_LEVEL featurelevel;
-
 	for (auto lv : levels)
 	{
 		if (D3D12CreateDevice(nullptr, lv, IID_PPV_ARGS(&_dev)) == S_OK)
@@ -107,7 +102,8 @@ int main()
 			break;
 		}
 	}
-
+	//DXGIFactory初期化
+	auto result = CreateDXGIFactory1(IID_PPV_ARGS(&_dxgiFactory));
 
 	//ウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
@@ -131,6 +127,7 @@ int main()
 		}
 	}
 
+	//もうクラスはつかわないので登録解除する
 	UnregisterClass(w.lpszClassName, w.hInstance);
 
 
