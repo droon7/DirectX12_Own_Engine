@@ -87,12 +87,14 @@ int main()
 		nullptr);			//追加パラメーター
 
 
-	//Directx基本オブジェクトの生成
+	//Directx基本オブジェクトの宣言
 	ID3D12Device* _dev = nullptr;
 	IDXGIFactory6* _dxgiFactory = nullptr;
 	IDXGISwapChain4* _swapchain = nullptr;
+	ID3D12CommandAllocator* _cmdAllocator = nullptr;
+	ID3D12GraphicsCommandList* _cmdList = nullptr;
 
-	//Directx3Dデバイス初期化
+	//Directx3Dデバイス生成
 	D3D_FEATURE_LEVEL featurelevel;
 	for (auto lv : levels)
 	{
@@ -102,8 +104,14 @@ int main()
 			break;
 		}
 	}
-	//DXGIFactory初期化
+	//DXGIFactory生成
 	auto result = CreateDXGIFactory1(IID_PPV_ARGS(&_dxgiFactory));
+	//コマンドアロケーターの生成
+	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+		IID_PPV_ARGS(&_cmdAllocator));
+	//コマンドリストの生成
+	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+		_cmdAllocator, nullptr, IID_PPV_ARGS(&_cmdList));
 
 	//ウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
