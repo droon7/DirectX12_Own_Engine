@@ -93,6 +93,7 @@ int main()
 	IDXGISwapChain4* _swapchain = nullptr;
 	ID3D12CommandAllocator* _cmdAllocator = nullptr;
 	ID3D12GraphicsCommandList* _cmdList = nullptr;
+	ID3D12CommandQueue* _cmdQueue = nullptr;
 
 	//Directx3Dデバイス生成
 	D3D_FEATURE_LEVEL featurelevel;
@@ -112,6 +113,14 @@ int main()
 	//コマンドリストの生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
 		_cmdAllocator, nullptr, IID_PPV_ARGS(&_cmdList));
+	//コマンドキューの設定および生成
+	D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
+	cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; //タイムアウトなし
+	cmdQueueDesc.NodeMask = 0;
+	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; //プライオリティ指定なし
+	cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //コマンドリストと同じタイプ
+	result = _dev->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&_cmdQueue));
+
 
 	//ウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
