@@ -7,11 +7,13 @@
 
 #include<d3d12.h>
 #include<dxgi1_6.h>
+#include<DirectXMath.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
 using namespace std;
+using namespace DirectX;
 
 
 //将来的にヘッダーファイルへ
@@ -22,6 +24,13 @@ D3D_FEATURE_LEVEL levels[] =
 	D3D_FEATURE_LEVEL_12_0,
 	D3D_FEATURE_LEVEL_11_1,
 	D3D_FEATURE_LEVEL_11_0,
+};
+
+XMFLOAT3 vertices[] =
+{
+	{-1.0f, -1.0f, 0.0f},
+	{-1.0f,  1.0f, 0.0f},
+	{ 1.0f, -1.0f, 0.0f},
 };
 
 
@@ -190,13 +199,54 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//フェンスの生成
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
 
+
+	//リソースの生成
+	//頂点バッファーの生成
+	D3D12_HEAP_PROPERTIES heapprop = {}; //頂点のヒープの設定
+	heapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+	D3D12_RESOURCE_DESC resdesc = {};//頂点のリソースのディスクリプタの設定
+	resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resdesc.Width = sizeof(vertices);
+	resdesc.Height = 1;
+	resdesc.DepthOrArraySize = 1;
+	resdesc.MipLevels = 1;
+	resdesc.Format = DXGI_FORMAT_UNKNOWN;
+	resdesc.SampleDesc.Count = 1;
+	resdesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	ID3D12Resource* vertBuff = nullptr;
+	result = _dev->CreateCommittedResource(
+		&heapprop,
+		D3D12_HEAP_FLAG_NONE,
+		&resdesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vertBuff)
+	);
+
+	//MapメソッドでビデオメモリvertBuff上に頂点を書き込む
+	XMFLOAT3* vertMap = nullptr;
+	result = vertBuff->Map(0, nullptr, (void**)&vertMap); //vertMap上にvertBuffの仮想メモリを置く
+	std::copy(std::begin(vertices), std::end(vertices), vertMap);
+	vertBuff->Unmap(0, nullptr);  //仮想メモリを解除
+
+	//頂点バッファービューの生成
+	D3D12_VERTEX_BUFFER_VIEW vbView = {};
+	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
+	vbView.SizeInBytes = sizeof(vertices);
+	vbView.SizeInBytes = sizeof(vertices[0]);
+
+
 	//ウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
 
 
-	//メッセージループ生成
+	//メッセージループの開始
 	MSG msg = {};
-
 	while (true)
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -206,9 +256,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 
 
-		//ゲームの処理
+		//DirectXの処理
 
-		//result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット
+		//result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット。おそらくいらないのでコメントアウト
 		//レンダーターゲットをバックバッファーにセット
 		auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
 		auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
@@ -242,13 +292,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		_cmdQueue->ExecuteCommandLists(1, cmdlists);
 
 
-		//命令の完了のチェック
+		//命令の完了を待ち、チェック
 		_cmdQueue->Signal(_fence, ++_fenceVal);
 		if (_fence->GetCompletedValue() != _fenceVal)
 		{
 			//イベントハンドルの取得
 			auto event = CreateEvent(nullptr, false, false, nullptr);
-			printf("test\n");
 
 			_fence->SetEventOnCompletion(_fenceVal, event);
 
