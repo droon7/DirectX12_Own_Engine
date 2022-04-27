@@ -113,6 +113,8 @@ int main()
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	ID3D12DescriptorHeap* rtvHeaps = nullptr;
+	ID3D12Fence* _fence = nullptr;
+	UINT64 _fenceVal = 0;
 
 	//Directx3Dデバイス生成
 	D3D_FEATURE_LEVEL featurelevel;
@@ -179,6 +181,8 @@ int main()
 		_dev->CreateRenderTargetView(_backBuffers[idx], nullptr, handle);       //バッファの数生成する
 		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);  //ポインタをレンダービューの大きさ分ずらす
 	}
+	//フェンスの生成
+	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
 
 
 	//ウィンドウ表示
@@ -214,6 +218,22 @@ int main()
 		_cmdList->Close();
 		ID3D12CommandList* cmdlists[] = { _cmdList };
 		_cmdQueue->ExecuteCommandLists(1, cmdlists);
+
+		//命令の完了のチェック
+		_cmdQueue->Signal(_fence, ++_fenceVal);
+		if (_fence->GetCompletedValue() != _fenceVal)
+		{
+			//イベントハンドルの取得
+			auto event = CreateEvent(nullptr, false, false, nullptr);
+
+			_fence->SetEventOnCompletion(_fenceVal, event);
+
+			//イベントが発生するまで待ち続ける
+			WaitForSingleObject(event, INFINITE);
+
+			CloseHandle(event);
+		}
+
 		_cmdAllocator->Reset(); //キューのリセット
 		_cmdList->Reset(_cmdAllocator, nullptr); //再びコマンドリストをためる準備
 
