@@ -12,6 +12,7 @@
 
 using namespace std;
 
+
 //将来的にヘッダーファイルへ
 D3D_FEATURE_LEVEL levels[] =
 {
@@ -21,6 +22,7 @@ D3D_FEATURE_LEVEL levels[] =
 	D3D_FEATURE_LEVEL_11_1,
 	D3D_FEATURE_LEVEL_11_0,
 };
+
 
 // @brief コンソール画面にフォーマットつき文字列を表示（プレースホルダー)
 // @param format フォーマット
@@ -94,6 +96,9 @@ int main()
 	ID3D12CommandAllocator* _cmdAllocator = nullptr;
 	ID3D12GraphicsCommandList* _cmdList = nullptr;
 	ID3D12CommandQueue* _cmdQueue = nullptr;
+	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	ID3D12DescriptorHeap* rtvHeaps = nullptr;
 
 	//Directx3Dデバイス生成
 	D3D_FEATURE_LEVEL featurelevel;
@@ -120,6 +125,33 @@ int main()
 	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; //プライオリティ指定なし
 	cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //コマンドリストと同じタイプ
 	result = _dev->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&_cmdQueue));
+	//スワップチェーンの設定および生成
+	swapchainDesc.Width = window_width;
+	swapchainDesc.Height = window_height;
+	swapchainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapchainDesc.Stereo = false;
+	swapchainDesc.SampleDesc.Count = 1;
+	swapchainDesc.SampleDesc.Quality = 0;
+	swapchainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER;
+	swapchainDesc.BufferCount = 2;
+	swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
+	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+	swapchainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	result = _dxgiFactory->CreateSwapChainForHwnd(
+		_cmdQueue,
+		hwnd,
+		&swapchainDesc,
+		nullptr,
+		nullptr,
+		(IDXGISwapChain1**)&_swapchain);
+	//ディスクリプタヒープの設定
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	heapDesc.NodeMask = 0;
+	heapDesc.NumDescriptors = 2;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&rtvHeaps));
+
 
 
 	//ウィンドウ表示
