@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <tchar.h>
+#include<vector>
 #ifdef _DEBUG
 #include <iostream>
 #endif
@@ -99,6 +100,7 @@ int main()
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	ID3D12DescriptorHeap* rtvHeaps = nullptr;
+	DXGI_SWAP_CHAIN_DESC swcDesc = {};
 
 	//Directx3Dデバイス生成
 	D3D_FEATURE_LEVEL featurelevel;
@@ -151,7 +153,14 @@ int main()
 	heapDesc.NumDescriptors = 2;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&rtvHeaps));
-
+	//スワップチェーンとディスクリプタを紐づけレンダーターゲットビューを生成する。
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
+	std::vector<ID3D12Resource*> _backBuffers(swapchainDesc.BufferCount);
+	for (int idx = 0; idx < swapchainDesc.BufferCount; ++idx) {
+		result = _swapchain->GetBuffer(idx, IID_PPV_ARGS(&_backBuffers[idx]));  //_backBufferにスワップチェーン上のバックバッファのメモリを入れる
+		_dev->CreateRenderTargetView(_backBuffers[idx], nullptr, handle);       //バッファの数生成する
+		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);  //ポインタをレンダービューの大きさ分ずらす
+	}
 
 
 	//ウィンドウ表示
