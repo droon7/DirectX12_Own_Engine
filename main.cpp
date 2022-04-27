@@ -8,9 +8,11 @@
 #include<d3d12.h>
 #include<dxgi1_6.h>
 #include<DirectXMath.h>
+#include<d3dcompiler.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
 
 using namespace std;
 using namespace DirectX;
@@ -239,6 +241,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
 	vbView.SizeInBytes = sizeof(vertices);
 	vbView.SizeInBytes = sizeof(vertices[0]);
+
+	//シェーダーオブジェクトの宣言
+	ID3DBlob* _vsBlob = nullptr;
+	ID3DBlob* _psBlob = nullptr;
+	ID3DBlob* errorBlob = nullptr;
+
+	result = D3DCompileFromFile(
+		L"BasicVertexShader.hlsl",  //シェーダー名
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, //カレントディレクトリからインクルードする
+		"BasicVS", "vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, //オプションにデバッグと最適化をスキップ
+		0,
+		&_vsBlob, &errorBlob);
+
+	result = D3DCompileFromFile(
+		L"BasicPixelShader.hlsl",  //シェーダー名
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, //カレントディレクトリからインクルードする
+		"BasicPS", "ps_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&_psBlob, &errorBlob);
+	
+
+
+
 
 
 	//ウィンドウ表示
