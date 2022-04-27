@@ -41,6 +41,16 @@ void DebugOutputFormatString(const char* format, ...)
 #endif
 }
 
+//デバッグレイヤーの有効化をする
+void EnableDebugLayer()
+{
+	ID3D12Debug* debugLayer = nullptr;
+	auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
+
+	debugLayer->EnableDebugLayer(); //デバッグレイヤーの有効化
+	debugLayer->Release(); //インターフェイスの解法
+}
+
 
 //ウィンドウに必要な関数
 LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -89,7 +99,10 @@ int main()
 		w.hInstance,			//呼び出しアプリケーションハンドル
 		nullptr);			//追加パラメーター
 
-
+#ifdef _DEBUG
+	//デバッグレイヤーを有効化する
+	EnableDebugLayer();
+#endif
 	//Directx基本オブジェクトの宣言
 	ID3D12Device* _dev = nullptr;
 	IDXGIFactory6* _dxgiFactory = nullptr;
@@ -112,7 +125,11 @@ int main()
 		}
 	}
 	//DXGIFactory生成
+#ifdef _DEBUG
+	auto result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&_dxgiFactory));
+#else
 	auto result = CreateDXGIFactory1(IID_PPV_ARGS(&_dxgiFactory));
+#endif
 	//コマンドアロケーターの生成
 	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
 		IID_PPV_ARGS(&_cmdAllocator));
