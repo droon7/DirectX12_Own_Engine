@@ -100,7 +100,6 @@ int main()
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	ID3D12DescriptorHeap* rtvHeaps = nullptr;
-	DXGI_SWAP_CHAIN_DESC swcDesc = {};
 
 	//Directx3Dデバイス生成
 	D3D_FEATURE_LEVEL featurelevel;
@@ -154,9 +153,11 @@ int main()
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&rtvHeaps));
 	//スワップチェーンとディスクリプタを紐づけレンダーターゲットビューを生成する。
+	DXGI_SWAP_CHAIN_DESC swcDesc = {};
+	result = _swapchain->GetDesc(&swcDesc);
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
-	std::vector<ID3D12Resource*> _backBuffers(swapchainDesc.BufferCount);
-	for (int idx = 0; idx < swapchainDesc.BufferCount; ++idx) {
+	std::vector<ID3D12Resource*> _backBuffers(swcDesc.BufferCount);
+	for (int idx = 0; idx < swcDesc.BufferCount; ++idx) {
 		result = _swapchain->GetBuffer(idx, IID_PPV_ARGS(&_backBuffers[idx]));  //_backBufferにスワップチェーン上のバックバッファのメモリを入れる
 		_dev->CreateRenderTargetView(_backBuffers[idx], nullptr, handle);       //バッファの数生成する
 		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);  //ポインタをレンダービューの大きさ分ずらす
@@ -177,6 +178,31 @@ int main()
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+
+		//ゲームの処理
+
+		result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット
+		//レンダーターゲットをバックバッファーにセット
+		auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
+		auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
+		rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		_cmdList->OMSetRenderTargets(1, &rtvH, true, nullptr); 
+
+		//画面クリア
+		float clearColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };// 黄色
+		_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
+
+		//コマンドリストの命令の実行
+		_cmdList->Close();
+		ID3D12CommandList* cmdlists[] = { _cmdList };
+		_cmdQueue->ExecuteCommandLists(1, cmdlists);
+		_cmdAllocator->Reset(); //キューのリセット
+		_cmdList->Reset(_cmdAllocator, nullptr); //再びコマンドリストをためる準備
+
+		//画面のスワップ
+		_swapchain->Present(1, 0);
+
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
 		if (msg.message == WM_QUIT)
