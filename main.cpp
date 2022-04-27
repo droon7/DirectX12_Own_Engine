@@ -69,6 +69,11 @@ LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 #ifdef _DEBUG
 int main()
 {
+
+#else
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
+#endif
 	//ウィンドウクラスの生成
 	WNDCLASSEX w = {};
 
@@ -115,6 +120,7 @@ int main()
 	ID3D12DescriptorHeap* rtvHeaps = nullptr;
 	ID3D12Fence* _fence = nullptr;
 	UINT64 _fenceVal = 0;
+
 
 	//Directx3Dデバイス生成
 	D3D_FEATURE_LEVEL featurelevel;
@@ -184,7 +190,6 @@ int main()
 	//フェンスの生成
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
 
-
 	//ウィンドウ表示
 	ShowWindow(hwnd, SW_SHOW);
 
@@ -203,21 +208,39 @@ int main()
 
 		//ゲームの処理
 
-		result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット
+		//result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット
 		//レンダーターゲットをバックバッファーにセット
 		auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
 		auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
 		rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		_cmdList->OMSetRenderTargets(1, &rtvH, true, nullptr); 
+		//リソースバリアの設定
+		//リソースバリアをバックバッファーリソースに指定する
+		D3D12_RESOURCE_BARRIER BarrierDesc = {};
+		BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		BarrierDesc.Transition.pResource = _backBuffers[bbIdx];
+		BarrierDesc.Transition.Subresource = 0;
+		BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+		_cmdList->OMSetRenderTargets(1, &rtvH, true, nullptr); //レンダーターゲットをバックバッファにセット 
 
 		//画面クリア
 		float clearColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };// 黄色
 		_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
 
+		//リソースバリアの状態の設定
+		BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+
 		//コマンドリストの命令の実行
 		_cmdList->Close();
 		ID3D12CommandList* cmdlists[] = { _cmdList };
 		_cmdQueue->ExecuteCommandLists(1, cmdlists);
+
 
 		//命令の完了のチェック
 		_cmdQueue->Signal(_fence, ++_fenceVal);
@@ -225,6 +248,7 @@ int main()
 		{
 			//イベントハンドルの取得
 			auto event = CreateEvent(nullptr, false, false, nullptr);
+			printf("test\n");
 
 			_fence->SetEventOnCompletion(_fenceVal, event);
 
@@ -234,8 +258,8 @@ int main()
 			CloseHandle(event);
 		}
 
-		_cmdAllocator->Reset(); //キューのリセット
-		_cmdList->Reset(_cmdAllocator, nullptr); //再びコマンドリストをためる準備
+		result = _cmdAllocator->Reset(); //キューのリセット
+		result = _cmdList->Reset(_cmdAllocator, nullptr); //再びコマンドリストをためる準備
 
 		//画面のスワップ
 		_swapchain->Present(1, 0);
@@ -252,10 +276,7 @@ int main()
 	UnregisterClass(w.lpszClassName, w.hInstance);
 
 
-#else
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
-{
-#endif
+
 	return 0;
 
 }
