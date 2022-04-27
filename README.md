@@ -1,0 +1,3 @@
+# Grimoire_of_the_DirectX12
+
+Directx12の魔導書の学習のためのリポジトリ
