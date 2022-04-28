@@ -247,6 +247,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	ID3DBlob* _psBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
 
+	//頂点シェーダーオブジェクトの生成
 	result = D3DCompileFromFile(
 		L"BasicVertexShader.hlsl",  //シェーダー名
 		nullptr,
@@ -256,6 +257,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		0,
 		&_vsBlob, &errorBlob);
 
+
+	//ピクセルシェーダーオブジェクトの生成
 	result = D3DCompileFromFile(
 		L"BasicPixelShader.hlsl",  //シェーダー名
 		nullptr,
@@ -265,6 +268,57 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		0,
 		&_psBlob, &errorBlob);
 	
+	//頂点レイアウトの設定
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+		{
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+	};
+
+	//パイプラインステートの作成、設定
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
+	//ルートジグネチャ、シェーダーを設定
+	gpipeline.pRootSignature = nullptr;
+	gpipeline.VS.pShaderBytecode = _vsBlob->GetBufferPointer();
+	gpipeline.VS.BytecodeLength = _vsBlob->GetBufferSize();
+	gpipeline.PS.pShaderBytecode = _psBlob->GetBufferPointer();
+	gpipeline.PS.BytecodeLength = _psBlob->GetBufferSize();
+	//サンプルマスクとラスタライザーステートを設定
+	gpipeline.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+	gpipeline.RasterizerState.MultisampleEnable = false;
+	gpipeline.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	gpipeline.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	gpipeline.RasterizerState.DepthClipEnable = true;
+	//ブレンドステートの設定
+	gpipeline.BlendState.AlphaToCoverageEnable = false;
+	gpipeline.BlendState.IndependentBlendEnable = false;
+
+	D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc = {};
+	renderTargetBlendDesc.BlendEnable = false;
+	renderTargetBlendDesc.LogicOpEnable = false;
+	renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	gpipeline.BlendState.RenderTarget[0] = renderTargetBlendDesc;
+	//入力レイアウトの設定
+	gpipeline.InputLayout.pInputElementDescs = inputLayout;
+	gpipeline.InputLayout.NumElements = _countof(inputLayout);
+	//トライアングルストリップの設定
+	gpipeline.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+	//プリミティブトポロジの設定
+	gpipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	//レンダーターゲットの設定
+	gpipeline.NumRenderTargets = 1;
+	gpipeline.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	//アンチエイリアシングのサンプル数の設定
+	gpipeline.SampleDesc.Count = 1;
+	gpipeline.SampleDesc.Quality = 0;
+
+	//グラフィクスPSOオブジェクトの生成
+	ID3D12PipelineState* _pipelinestate = nullptr;
+	result = _dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(&_pipelinestate));
 
 
 
