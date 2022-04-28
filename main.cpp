@@ -202,11 +202,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	//リソースの生成
 	// 
-	XMFLOAT3 vertices[] =
-	{
-		{-0.5f, -0.7f, 0.0f},
-		{-1.0f,  0.7f, 0.0f},
-		{ 0.5f, -0.7f, 0.0f},
+	XMFLOAT3 vertices[] = {
+		{-0.4f,-0.7f,0.0f} ,//左下
+		{-0.4f,0.7f,0.0f} ,//左上
+		{0.4f,-0.7f,0.0f} ,//右下
+		{0.4f,0.7f,0.0f} ,//右上
 	};
 	//頂点バッファーの生成
 	D3D12_HEAP_PROPERTIES heapprop = {}; //頂点のヒープの設定
@@ -465,13 +465,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		_cmdList->SetGraphicsRootSignature(rootsignature);
 		_cmdList->RSSetViewports(1, &viewport);
 		_cmdList->RSSetScissorRects(1, &scissorrect);
-		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 		//頂点バッファーのセット
 		_cmdList->IASetVertexBuffers(0, 1, &vbView);
 
 		//実際の描画命令
-		_cmdList->DrawInstanced(3, 1, 0, 0);
+		_cmdList->DrawInstanced(4, 1, 0, 0);
 
 
 
