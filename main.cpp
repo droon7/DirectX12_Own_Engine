@@ -280,7 +280,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
 	//ルートジグネチャ、シェーダーを設定
-	gpipeline.pRootSignature = nullptr;
 	gpipeline.VS.pShaderBytecode = _vsBlob->GetBufferPointer();
 	gpipeline.VS.BytecodeLength = _vsBlob->GetBufferSize();
 	gpipeline.PS.pShaderBytecode = _psBlob->GetBufferPointer();
@@ -316,12 +315,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	gpipeline.SampleDesc.Count = 1;
 	gpipeline.SampleDesc.Quality = 0;
 
+	//PSOの設定の終了
+	
+	//ルートシグネチャの設定、生成
+	//ルートシグネチャディスクリプタの設定
+	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	//ルートシグネチャのBlobの作成
+	ID3DBlob* rootSigBlob = nullptr;
+
+	ID3D12RootSignature* rootsignature = nullptr;
+	result = D3D12SerializeRootSignature(
+		&rootSignatureDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1_0,
+		&rootSigBlob,
+		&errorBlob		);
+
+	result = _dev->CreateRootSignature(
+		0,
+		rootSigBlob->GetBufferPointer(),
+		rootSigBlob->GetBufferSize(),
+		IID_PPV_ARGS(&rootsignature));
+
+	rootSigBlob->Release();
+	gpipeline.pRootSignature = rootsignature;
+
 	//グラフィクスPSOオブジェクトの生成
 	ID3D12PipelineState* _pipelinestate = nullptr;
 	result = _dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(&_pipelinestate));
-
-
-
 
 
 	//ウィンドウ表示
