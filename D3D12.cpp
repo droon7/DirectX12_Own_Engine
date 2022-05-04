@@ -336,6 +336,40 @@ void Dx12::LoadAssets()
 		nullptr,
 		IID_PPV_ARGS(&texbuff));
 
+	//テクスチャバッファに手打ちテクスチャデータを書き込む
+	result = texbuff->WriteToSubresource(
+		0,
+		nullptr,
+		texturedata.data(),
+		sizeof(TexRGBA) * 256,
+		sizeof(TexRGBA) * texturedata.size()
+	);
+
+	//シェーダーリソースビュー用のディスクリプタヒープの作成
+	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
+
+	//シェーダーから見えるように
+	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descHeapDesc.NodeMask = 0;
+	descHeapDesc.NumDescriptors = 1;
+	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&srvHeaps));
+
+	//シェーダーリソースビューの作成
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	_dev->CreateShaderResourceView(
+		texbuff,
+		&srvDesc,
+		srvHeaps->GetCPUDescriptorHandleForHeapStart()
+	);
+
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
 	//ルートジグネチャ、シェーダーを設定
