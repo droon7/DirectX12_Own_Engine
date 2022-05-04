@@ -128,11 +128,19 @@ void Dx12::LoadAssets()
 {
 	//リソースの生成
 	// 
-	XMFLOAT3 vertices[] = {
-		{-0.4f,-0.7f,0.0f} ,//左下
-		{-0.4f,0.7f,0.0f} ,//左上
-		{0.4f,-0.7f,0.0f} ,//右下
-		{0.4f,0.7f,0.0f} ,//右上
+
+	//頂点データ構造体
+	struct Vertex
+	{
+		XMFLOAT3 pos;
+		XMFLOAT2 uv;
+	};
+
+	Vertex vertices[] = {
+		{{-0.4f,-0.7f,0.0f} ,{0.0f, 1.0f}},//左下
+		{{-0.4f, 0.7f,0.0f} ,{0.0f, 0.0f}},//左上
+		{{ 0.4f,-0.7f,0.0f} ,{1.0f, 1.0f}},//右下
+		{{ 0.4f, 0.7f,0.0f} ,{1.0f, 0.0f}},//右上
 	};
 
 	unsigned short indices[] = {
@@ -168,7 +176,7 @@ void Dx12::LoadAssets()
 	);
 
 	//MapメソッドでビデオメモリvertBuff上に頂点を書き込む
-	XMFLOAT3* vertMap = nullptr;
+	Vertex* vertMap = nullptr;
 	result = vertBuff->Map(0, nullptr, (void**)&vertMap); //vertMap上にvertBuffの仮想メモリを置く
 	std::copy(std::begin(vertices), std::end(vertices), vertMap);
 	vertBuff->Unmap(0, nullptr);  //仮想メモリを解除
@@ -221,6 +229,7 @@ void Dx12::LoadAssets()
 		0,
 		&_vsBlob, &errorBlob);
 
+	//エラー発生時の処理
 	if (FAILED(result)) {
 		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
 			::OutputDebugStringA("ファイルが見当たりません");
@@ -232,7 +241,7 @@ void Dx12::LoadAssets()
 			errstr += "\n";
 			OutputDebugStringA(errstr.c_str());
 		}
-		exit(1);//行儀悪いかな…
+		exit(1);
 	}
 
 	//ピクセルシェーダーオブジェクトの生成
@@ -245,6 +254,7 @@ void Dx12::LoadAssets()
 		0,
 		&_psBlob, &errorBlob);
 
+	//エラー発生時の処理
 	if (FAILED(result)) {
 		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
 			::OutputDebugStringA("ファイルが見当たりません");
@@ -256,14 +266,19 @@ void Dx12::LoadAssets()
 			errstr += "\n";
 			OutputDebugStringA(errstr.c_str());
 		}
-		exit(1);//行儀悪いかな…
+		exit(1);
 	}
 
 	//頂点レイアウトの設定
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-		{
+		{//座標情報
 			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//uv情報
+			"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,
+			0, D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
 		},
 	};
@@ -365,15 +380,17 @@ void Dx12::LoadAssets()
 
 }
 
+//フレームによって更新する値を入れる予定
 void Dx12::OnUpdate()
 {
 
 }
 
 
-
+//レンダリングする
 void Dx12::OnRender() 
 {
+	//コマンドリストに実際に実行するレンダリングコマンドを集める
 	PopulateCommandList();
 
 	//コマンドリストの命令の実行
@@ -381,16 +398,17 @@ void Dx12::OnRender()
 	ID3D12CommandList* cmdlists[] = { _cmdList };
 	_cmdQueue->ExecuteCommandLists(1, cmdlists);
 
+	//GPUのコマンド実行の同期を待つ
 	WaitForPreviousFrame();
 
 	HRESULT result = _cmdAllocator->Reset(); //キューのリセット
 	result = _cmdList->Reset(_cmdAllocator, nullptr); //再びコマンドリストをためる準備
 
-	//画面のスワップ
+	//画面をスワップし描画する
 	_swapchain->Present(1, 0);
 }
 
-
+//DirectX12が終了するときコマンドが全て実行されている確認
 void Dx12::OnDestroy() 
 {
 	WaitForPreviousFrame();
@@ -399,11 +417,12 @@ void Dx12::OnDestroy()
 }
 
 
+//コマンドリストに実際に実行するコマンドを追加
 void Dx12::PopulateCommandList()
 {
 
-	//result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット。おそらくいらないのでコメントアウト
-		//レンダーターゲットをバックバッファーにセット
+	//auto result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット。おそらくいらないのでコメントアウト
+	//レンダーターゲットをバックバッファーにセット
 	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
 	//リソースバリアの設定
 	//リソースバリアをバックバッファーリソースに指定する
@@ -416,12 +435,10 @@ void Dx12::PopulateCommandList()
 	BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	_cmdList->ResourceBarrier(1, &BarrierDesc);
 	
-	_cmdList->SetPipelineState(_pipelinestate);
-
-
+	//レンダーターゲットをバックバッファにセット 
 	auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
 	rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	_cmdList->OMSetRenderTargets(1, &rtvH, true, nullptr); //レンダーターゲットをバックバッファにセット 
+	_cmdList->OMSetRenderTargets(1, &rtvH, true, nullptr);
 
 	//画面クリア
 	float r, g, b;
@@ -434,6 +451,7 @@ void Dx12::PopulateCommandList()
 
 	//描画命令
 	//PSO、RootSignature,Primitive topologyのセット
+	_cmdList->SetPipelineState(_pipelinestate);
 	_cmdList->SetGraphicsRootSignature(rootsignature);
 	_cmdList->RSSetViewports(1, &viewport);
 	_cmdList->RSSetScissorRects(1, &scissorrect);
@@ -446,8 +464,8 @@ void Dx12::PopulateCommandList()
 	_cmdList->IASetIndexBuffer(&ibView);
 
 	//実際の描画命令
-	//_cmdList->DrawInstanced(4, 1, 0, 0);
-	_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	//_cmdList->DrawInstanced(4, 1, 0, 0); //頂点インデックス非使用
+	_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0); //頂点インデックス使用
 
 
 	//リソースバリアの状態の設定
@@ -461,7 +479,7 @@ void Dx12::PopulateCommandList()
 }
 
 
-
+//GPUがコマンドを全て実行完了するまで待つ
 void Dx12::WaitForPreviousFrame()
 {
 	//命令の完了を待ち、チェック

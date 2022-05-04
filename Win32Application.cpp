@@ -79,7 +79,7 @@ int Win32App::WindowRun(Dx12* pdx12)
 			DispatchMessage(&msg);
 		}
 
-		//DirectX12のコマンドの追加、実行
+		//DirectX12の処理
 		pdx12->OnRender();
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
@@ -90,6 +90,7 @@ int Win32App::WindowRun(Dx12* pdx12)
 
 	}
 
+	//DirectX12終了時の処理
 	pdx12->OnDestroy();
 
 

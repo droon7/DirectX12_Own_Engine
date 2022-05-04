@@ -164,6 +164,9 @@
   <ItemGroup>
     <ClInclude Include="DirectX12_Tutorial.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="BasicShaderHeader.hlsli" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
