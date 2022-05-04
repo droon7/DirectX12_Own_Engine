@@ -579,6 +579,11 @@ void Dx12::PopulateCommandList()
 	_cmdList->RSSetScissorRects(1, &scissorrect);
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	//SRVのディスクリプタヒープの指定コマンドをセット
+	_cmdList->SetDescriptorHeaps(1, &srvHeaps);
+	//ルートパラメタとsrvディスクリプタヒープのアドレスの関連付け
+	_cmdList->SetGraphicsRootDescriptorTable(0, srvHeaps->GetGPUDescriptorHandleForHeapStart());
+
 	//頂点バッファーのセット
 	_cmdList->IASetVertexBuffers(0, 1, &vbView);
 
