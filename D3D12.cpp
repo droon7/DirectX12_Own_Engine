@@ -190,7 +190,7 @@ void Dx12::LoadAssets()
 	heapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 
-	D3D12_RESOURCE_DESC resdesc = {};//頂点のリソースのディスクリプタの設定
+	D3D12_RESOURCE_DESC resdesc = {};//頂点バッファのリソースのディスクリプタの設定
 	resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	resdesc.Width = sizeof(vertices);
 	resdesc.Height = 1;
@@ -319,6 +319,43 @@ void Dx12::LoadAssets()
 		},
 	};
 
+
+	//テクスチャの中間バッファーとしてのアップロードヒープの設定
+	D3D12_HEAP_PROPERTIES uploadHeapProp = {};
+	uploadHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	//UPLOAD用なのでUNKNOWNに設定
+	uploadHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	uploadHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	uploadHeapProp.CreationNodeMask = 0;
+
+	//テクスチャの中間バッファリソースディスクリプタの設定
+	//テクスチャバッファーとして設定する
+	D3D12_RESOURCE_DESC textureBuffDesc = {};
+
+	textureBuffDesc.Format = DXGI_FORMAT_UNKNOWN;
+	textureBuffDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	textureBuffDesc.Width = img->slicePitch;
+	textureBuffDesc.Height = 1;
+	textureBuffDesc.DepthOrArraySize = 1;
+	textureBuffDesc.MipLevels = 1;
+	textureBuffDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	textureBuffDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	textureBuffDesc.SampleDesc.Count = 1;
+	textureBuffDesc.SampleDesc.Quality = 0;
+
+	//テクスチャの中間バッファの作成
+	ID3D12Resource* uploadbuff = nullptr;
+
+	result = _dev->CreateCommittedResource(
+		&uploadHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&textureBuffDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&uploadbuff)
+	);
+
+	/* WriteToSubresourceを使わずMap()とCopyTextureRegionを使う方法で実装するためコメントアウト
 	//テクスチャバッファーの作成
 	//WriteToSubresourceで転送するためのヒープの設定
 	heapprop = {};
@@ -362,6 +399,7 @@ void Dx12::LoadAssets()
 		img->rowPitch, //sizeof(TexRGBA) * 256,
 		img->slicePitch //sizeof(TexRGBA) * texturedata.size()
 	);
+	*/
 
 	//シェーダーリソースビュー用のディスクリプタヒープの作成
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
@@ -381,11 +419,13 @@ void Dx12::LoadAssets()
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 
+	/*
 	_dev->CreateShaderResourceView(
 		texbuff,
 		&srvDesc,
 		srvHeaps->GetCPUDescriptorHandleForHeapStart()
 	);
+	*/
 
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
