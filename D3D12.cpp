@@ -347,7 +347,6 @@ void Dx12::LoadAssets()
 
 	//シェーダーリソースビュー用のディスクリプタヒープの作成
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
-
 	//シェーダーから見えるように
 	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	descHeapDesc.NodeMask = 0;
@@ -443,7 +442,7 @@ void Dx12::LoadAssets()
 	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.Filter = D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT;
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.MinLOD = 0.0f;
 	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
