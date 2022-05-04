@@ -136,6 +136,7 @@ void Dx12::LoadAssets()
 		XMFLOAT2 uv;
 	};
 
+	//頂点情報を手打ち
 	Vertex vertices[] = {
 		{{-0.4f,-0.7f,0.0f} ,{0.0f, 1.0f}},//左下
 		{{-0.4f, 0.7f,0.0f} ,{0.0f, 0.0f}},//左上
@@ -143,10 +144,27 @@ void Dx12::LoadAssets()
 		{{ 0.4f, 0.7f,0.0f} ,{1.0f, 0.0f}},//右上
 	};
 
+	//頂点インデックス情報を手打ち
 	unsigned short indices[] = {
 		0, 1, 2,
 		2, 1, 3
 	};
+
+	//テクスチャ情報を手打ち
+	struct TexRGBA
+	{
+		unsigned char R, G, B, A;
+	};
+
+	std::vector<TexRGBA> texturedata(256 * 256);
+
+	for (auto& rgba : texturedata)
+	{
+		rgba.R = rand() % 256;
+		rgba.G = rand() % 256;
+		rgba.B = rand() % 256;
+		rgba.A = 255;
+	}
 
 	//頂点バッファーの生成
 	D3D12_HEAP_PROPERTIES heapprop = {}; //頂点のヒープの設定
@@ -282,6 +300,41 @@ void Dx12::LoadAssets()
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
 		},
 	};
+
+	//テクスチャバッファーの作成
+	//WriteToSubresourceで転送するためのヒープの設定
+	heapprop = {};
+	heapprop.Type = D3D12_HEAP_TYPE_CUSTOM;
+	//ライトバック
+	heapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+	heapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+	heapprop.CreationNodeMask = 0;
+	heapprop.VisibleNodeMask = 0;
+
+	//テクスチャ用のリソースディスクリプタの設定
+	D3D12_RESOURCE_DESC texturedesc = {};
+
+	texturedesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texturedesc.Width = 256;
+	texturedesc.Height = 256;
+	texturedesc.DepthOrArraySize = 1;
+	texturedesc.SampleDesc.Count = 1;
+	texturedesc.SampleDesc.Quality = 0;
+	texturedesc.MipLevels = 1;
+	texturedesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texturedesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	texturedesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	//テクスチャバッファーの生成
+	ID3D12Resource* texbuff = nullptr;
+
+	result = _dev->CreateCommittedResource(
+		&heapprop,
+		D3D12_HEAP_FLAG_NONE,
+		&texturedesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		nullptr,
+		IID_PPV_ARGS(&texbuff));
 
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
