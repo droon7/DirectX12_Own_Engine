@@ -128,7 +128,6 @@ void Dx12::LoadAssets()
 {
 	//リソースの生成
 	// 
-
 	//頂点データ構造体
 	struct Vertex
 	{
@@ -166,6 +165,19 @@ void Dx12::LoadAssets()
 		rgba.A = 255;
 	}
 
+
+	//DirectXTexライブラリのメソッドによりテクスチャ画像をロード
+	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
+	TexMetadata metadata = {};
+	ScratchImage scratchImg = {};
+
+	result = LoadFromWICFile(
+		L"img/Family_Computer.png", WIC_FLAGS_NONE,
+		&metadata, scratchImg);
+
+	auto img = scratchImg.GetImage(0, 0, 0);
+
+
 	//頂点バッファーの生成
 	D3D12_HEAP_PROPERTIES heapprop = {}; //頂点のヒープの設定
 	heapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -184,7 +196,7 @@ void Dx12::LoadAssets()
 	resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	vertBuff = nullptr;
-	HRESULT result = _dev->CreateCommittedResource(
+	result = _dev->CreateCommittedResource(
 		&heapprop,
 		D3D12_HEAP_FLAG_NONE,
 		&resdesc,
@@ -314,14 +326,14 @@ void Dx12::LoadAssets()
 	//テクスチャ用のリソースディスクリプタの設定
 	D3D12_RESOURCE_DESC texturedesc = {};
 
-	texturedesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	texturedesc.Width = 256;
-	texturedesc.Height = 256;
-	texturedesc.DepthOrArraySize = 1;
+	texturedesc.Format = metadata.format;
+	texturedesc.Width = metadata.width;
+	texturedesc.Height = metadata.height;
+	texturedesc.DepthOrArraySize = metadata.arraySize;
 	texturedesc.SampleDesc.Count = 1;
 	texturedesc.SampleDesc.Quality = 0;
-	texturedesc.MipLevels = 1;
-	texturedesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texturedesc.MipLevels = metadata.mipLevels;
+	texturedesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
 	texturedesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	texturedesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
@@ -340,9 +352,9 @@ void Dx12::LoadAssets()
 	result = texbuff->WriteToSubresource(
 		0,
 		nullptr,
-		texturedata.data(),
-		sizeof(TexRGBA) * 256,
-		sizeof(TexRGBA) * texturedata.size()
+		img->pixels,
+		img->rowPitch, //sizeof(TexRGBA) * 256,
+		img->slicePitch //sizeof(TexRGBA) * texturedata.size()
 	);
 
 	//シェーダーリソースビュー用のディスクリプタヒープの作成
@@ -358,7 +370,7 @@ void Dx12::LoadAssets()
 	//シェーダーリソースビューの作成
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = metadata.format;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;

@@ -12,11 +12,12 @@
 #include<dxgi1_6.h>
 #include<DirectXMath.h>
 #include<d3dcompiler.h>
+#include<DirectXTex.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
-
+#pragma comment(lib, "DirectXTex.lib")
 
 
 
@@ -35,10 +36,8 @@ public:
 	//ウィンドウサイズ
 	UINT window_width;
 	UINT window_height;
-
+	//レンダーターゲットとなるバッファの数
 	static const int buffer_count = 2;
-
-
 
 private:
 	int frame = 0;

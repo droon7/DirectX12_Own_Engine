@@ -78,6 +78,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <ExternalIncludePath>C:\Users\MORIHIRO\source\repos\DirectXTex\DirectXTex;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>C:\Users\MORIHIRO\source\repos\DirectXTex\DirectXTex\Bin\Desktop_2022_Win10\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -166,6 +168,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicShaderHeader.hlsli" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="img\Family_Computer.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
