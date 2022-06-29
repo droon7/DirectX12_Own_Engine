@@ -65,6 +65,10 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vbView = {};
 	ID3D12Resource* idxBuff = nullptr;
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
+	D3D12_TEXTURE_COPY_LOCATION src = {};
+	D3D12_TEXTURE_COPY_LOCATION dst = {};
+	ID3D12Resource* texbuff = nullptr;
+
 
 	//同期オブジェクトの宣言
 	ID3D12Fence* _fence = nullptr;
@@ -91,4 +95,6 @@ public:
 private:
 	 static HWND m_hwnd;
 };
+
+size_t AlignmentedSize(size_t size, size_t alignment);
 
