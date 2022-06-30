@@ -7,6 +7,9 @@
 // @pram	可変長引数
 // @remarks	デバッグ
 
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 602; }
+
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 //main関数　メッセージループが入っている
 #ifdef _DEBUG
