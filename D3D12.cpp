@@ -326,7 +326,7 @@ void Dx12::LoadAssets()
 	textureBuffDesc.Format = DXGI_FORMAT_UNKNOWN;
 	textureBuffDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	textureBuffDesc.Width = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)
-							* img->height;
+		* img->height;
 	textureBuffDesc.Height = 1;
 	textureBuffDesc.DepthOrArraySize = 1;
 	textureBuffDesc.MipLevels = 1;
@@ -412,6 +412,41 @@ void Dx12::LoadAssets()
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	dst.SubresourceIndex = 0;
 
+	_cmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+	{
+
+		//テクスチャのコピーのためのリソースバリアの設定
+		D3D12_RESOURCE_BARRIER BarrierDesc = {};
+		BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		BarrierDesc.Transition.pResource = texbuff;
+		BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+
+
+		_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+		_cmdList->Close();
+
+		ID3D12CommandList* cmdlists[] = { _cmdList };
+		_cmdQueue->ExecuteCommandLists(1, cmdlists);
+
+		_cmdQueue->Signal(_fence, ++_fenceVal);
+
+		if (_fence->GetCompletedValue() != _fenceVal)
+		{
+			auto event = CreateEvent(nullptr, false, false, nullptr);
+			_fence->SetEventOnCompletion(_fenceVal, event);
+			WaitForSingleObject(event, INFINITE);
+			CloseHandle(event);
+		}
+		_cmdAllocator->Reset();
+		_cmdList->Reset(_cmdAllocator, nullptr);
+	}
+
 	//シェーダーリソースビュー用のディスクリプタヒープの作成
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
 	//シェーダーから見えるように
@@ -430,13 +465,12 @@ void Dx12::LoadAssets()
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 
-	
+
 	_dev->CreateShaderResourceView(
 		texbuff,
 		&srvDesc,
 		srvHeaps->GetCPUDescriptorHandleForHeapStart()
 	);
-	
 
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
@@ -611,17 +645,9 @@ void Dx12::OnDestroy()
 //コマンドリストに実際に実行するコマンドを追加
 void Dx12::PopulateCommandList()
 {
-	//テクスチャのコピーのためのリソースバリアの設定
+
+
 	D3D12_RESOURCE_BARRIER BarrierDesc = {};
-
-	BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	BarrierDesc.Transition.pResource = texbuff;
-	BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-	BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-
-	_cmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 
 
 	//auto result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット。
@@ -701,7 +727,5 @@ void Dx12::WaitForPreviousFrame()
 
 		//イベントが発生するまで待ち続ける
 		WaitForSingleObject(_fenceevent, INFINITE);
-
-
 	}
 }
