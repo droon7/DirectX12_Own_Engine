@@ -13,6 +13,7 @@
 #include<DirectXMath.h>
 #include<d3dcompiler.h>
 #include<DirectXTex.h>
+#include<d3dx12.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -96,5 +97,8 @@ private:
 	 static HWND m_hwnd;
 };
 
-size_t AlignmentedSize(size_t size, size_t alignment);
+inline size_t AlignmentedSize(size_t size, size_t alignment)
+{
+	return size + alignment - size % alignment;
+};
 

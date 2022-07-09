@@ -188,27 +188,14 @@ void Dx12::LoadAssets()
 
 
 	//頂点バッファーの生成
-	D3D12_HEAP_PROPERTIES heapprop = {}; //頂点のヒープの設定
-	heapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
-	heapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-	D3D12_RESOURCE_DESC resdesc = {};//頂点バッファのリソースのディスクリプタの設定
-	resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resdesc.Width = sizeof(vertices);
-	resdesc.Height = 1;
-	resdesc.DepthOrArraySize = 1;
-	resdesc.MipLevels = 1;
-	resdesc.Format = DXGI_FORMAT_UNKNOWN;
-	resdesc.SampleDesc.Count = 1;
-	resdesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	D3D12_HEAP_PROPERTIES heapprop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	D3D12_RESOURCE_DESC resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
 
 	vertBuff = nullptr;
 	result = _dev->CreateCommittedResource(
 		&heapprop,
 		D3D12_HEAP_FLAG_NONE,
-		&resdesc,
+		&resourcedesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&vertBuff)
@@ -229,12 +216,12 @@ void Dx12::LoadAssets()
 	//インデックスバッファーの生成
 	idxBuff = nullptr;
 
-	resdesc.Width = sizeof(indices);
+	resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices));
 
 	result = _dev->CreateCommittedResource(
 		&heapprop,
 		D3D12_HEAP_FLAG_NONE,
-		&resdesc,
+		&resourcedesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&idxBuff)
@@ -424,52 +411,6 @@ void Dx12::LoadAssets()
 	dst.pResource = texbuff;
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	dst.SubresourceIndex = 0;
-
-	/* WriteToSubresourceを使わずMap()とCopyTextureRegionを使う方法で実装するためコメントアウト
-	//テクスチャバッファーの作成
-	//WriteToSubresourceで転送するためのヒープの設定
-	heapprop = {};
-	heapprop.Type = D3D12_HEAP_TYPE_CUSTOM;
-	//ライトバック
-	heapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-	heapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-	heapprop.CreationNodeMask = 0;
-	heapprop.VisibleNodeMask = 0;
-
-	//テクスチャ用のリソースディスクリプタの設定
-	D3D12_RESOURCE_DESC texturedesc = {};
-
-	texturedesc.Format = metadata.format;
-	texturedesc.Width = metadata.width;
-	texturedesc.Height = metadata.height;
-	texturedesc.DepthOrArraySize = metadata.arraySize;
-	texturedesc.SampleDesc.Count = 1;
-	texturedesc.SampleDesc.Quality = 0;
-	texturedesc.MipLevels = metadata.mipLevels;
-	texturedesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
-	texturedesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	texturedesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-	//テクスチャバッファーの生成
-	ID3D12Resource* texbuff = nullptr;
-
-	result = _dev->CreateCommittedResource(
-		&heapprop,
-		D3D12_HEAP_FLAG_NONE,
-		&texturedesc,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		nullptr,
-		IID_PPV_ARGS(&texbuff));
-
-	//テクスチャバッファに手打ちテクスチャデータを書き込む
-	result = texbuff->WriteToSubresource(
-		0,
-		nullptr,
-		img->pixels,
-		img->rowPitch, //sizeof(TexRGBA) * 256,
-		img->slicePitch //sizeof(TexRGBA) * texturedata.size()
-	);
-	*/
 
 	//シェーダーリソースビュー用のディスクリプタヒープの作成
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
