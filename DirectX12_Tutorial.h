@@ -4,6 +4,7 @@
 #include <tchar.h>
 #include<vector>
 #include<string>
+#include<wrl.h>
 #ifdef _DEBUG
 #include <iostream>
 #endif
@@ -21,7 +22,7 @@
 #pragma comment(lib, "DirectXTex.lib")
 
 
-
+using Microsoft::WRL::ComPtr;
 
 class Dx12
 {
@@ -46,33 +47,33 @@ private:
 	//Directxパイプラインオブジェクトの宣言
 	D3D12_RECT scissorrect = {};
 	D3D12_VIEWPORT viewport = {};
-	ID3D12Device* _dev = nullptr;
-	IDXGIFactory6* _dxgiFactory = nullptr;
-	IDXGISwapChain4* _swapchain = nullptr;
-	ID3D12CommandAllocator* _cmdAllocator = nullptr;
-	ID3D12GraphicsCommandList* _cmdList = nullptr;
-	ID3D12CommandQueue* _cmdQueue = nullptr;
+	ComPtr<ID3D12Device> _dev ;
+	ComPtr<IDXGIFactory6> _dxgiFactory ;
+	ComPtr<IDXGISwapChain4> _swapchain ;
+	ComPtr<ID3D12CommandAllocator> _cmdAllocator ;
+	ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
+	ComPtr<ID3D12CommandQueue> _cmdQueue = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	ID3D12DescriptorHeap* rtvHeaps = nullptr;
-	ID3D12DescriptorHeap* srvHeaps = nullptr;
-	ID3D12RootSignature* rootsignature = nullptr;
-	ID3D12PipelineState* _pipelinestate = nullptr;
+	ComPtr<ID3D12DescriptorHeap> rtvHeaps = nullptr;
+	ComPtr<ID3D12DescriptorHeap> srvHeaps = nullptr;
+	ComPtr<ID3D12RootSignature> rootsignature = nullptr;
+	ComPtr<ID3D12PipelineState> _pipelinestate = nullptr;
 	std::vector<ID3D12Resource*> _backBuffers;
 
 	//アセットの宣言
 
-	ID3D12Resource* vertBuff = nullptr;
+	ComPtr<ID3D12Resource> vertBuff = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vbView = {};
-	ID3D12Resource* idxBuff = nullptr;
+	ComPtr<ID3D12Resource> idxBuff = nullptr;
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 	D3D12_TEXTURE_COPY_LOCATION src = {};
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
-	ID3D12Resource* texbuff = nullptr;
+	ComPtr<ID3D12Resource> texbuff = nullptr;
 
 
 	//同期オブジェクトの宣言
-	ID3D12Fence* _fence = nullptr;
+	ComPtr<ID3D12Fence> _fence = nullptr;
 	UINT64 _fenceVal = 0;
 	HANDLE _fenceevent;
 

@@ -71,7 +71,7 @@ void Dx12::LoadPipeline()
 
 	//コマンドリストの生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-		_cmdAllocator, nullptr, IID_PPV_ARGS(&_cmdList));
+		_cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
 
 	//コマンドキューの設定および生成
 	D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
@@ -94,13 +94,16 @@ void Dx12::LoadPipeline()
 	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 	swapchainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+	ComPtr<IDXGISwapChain1> swapChain;
 	result = _dxgiFactory->CreateSwapChainForHwnd(
-		_cmdQueue,
+		_cmdQueue.Get(),
 		Win32App::GetHwnd(),
 		&swapchainDesc,
 		nullptr,
 		nullptr,
-		(IDXGISwapChain1**)&_swapchain);
+		&swapChain);
+	swapChain.As(&_swapchain);
 
 	//RTVのディスクリプタヒープの設定
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -408,7 +411,7 @@ void Dx12::LoadAssets()
 	src.PlacedFootprint.Footprint.Format = img->format;
 
 	//コピー先の設定
-	dst.pResource = texbuff;
+	dst.pResource = texbuff.Get();
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	dst.SubresourceIndex = 0;
 
@@ -417,24 +420,20 @@ void Dx12::LoadAssets()
 	{
 
 		//テクスチャのコピーのためのリソースバリアの設定
-		D3D12_RESOURCE_BARRIER BarrierDesc = {};
-		BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		BarrierDesc.Transition.pResource = texbuff;
-		BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-		BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
-
-
+		D3D12_RESOURCE_BARRIER BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+			texbuff.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
+		);
 		_cmdList->ResourceBarrier(1, &BarrierDesc);
 
 		_cmdList->Close();
 
-		ID3D12CommandList* cmdlists[] = { _cmdList };
+		ID3D12CommandList* cmdlists[] = { _cmdList.Get()};
 		_cmdQueue->ExecuteCommandLists(1, cmdlists);
 
-		_cmdQueue->Signal(_fence, ++_fenceVal);
+		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 
 		if (_fence->GetCompletedValue() != _fenceVal)
 		{
@@ -444,7 +443,7 @@ void Dx12::LoadAssets()
 			CloseHandle(event);
 		}
 		_cmdAllocator->Reset();
-		_cmdList->Reset(_cmdAllocator, nullptr);
+		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
 	}
 
 	//シェーダーリソースビュー用のディスクリプタヒープの作成
@@ -467,7 +466,7 @@ void Dx12::LoadAssets()
 
 
 	_dev->CreateShaderResourceView(
-		texbuff,
+		texbuff.Get(),
 		&srvDesc,
 		srvHeaps->GetCPUDescriptorHandleForHeapStart()
 	);
@@ -584,7 +583,7 @@ void Dx12::LoadAssets()
 	rootSigBlob->Release();
 
 	//グラフィクスPSOオブジェクトの生成
-	gpipeline.pRootSignature = rootsignature;
+	gpipeline.pRootSignature = rootsignature.Get();
 	_pipelinestate = nullptr;
 	result = _dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(&_pipelinestate));
 
@@ -620,14 +619,14 @@ void Dx12::OnRender()
 
 	//コマンドリストの命令の実行
 
-	ID3D12CommandList* cmdlists[] = { _cmdList };
+	ID3D12CommandList* cmdlists[] = { _cmdList.Get()};
 	_cmdQueue->ExecuteCommandLists(1, cmdlists);
 
 	//GPUのコマンド実行の同期を待つ
 	WaitForPreviousFrame();
 
 	HRESULT result = _cmdAllocator->Reset(); //キューのリセット
-	result = _cmdList->Reset(_cmdAllocator, nullptr); //再びコマンドリストをためる準備
+	result = _cmdList->Reset(_cmdAllocator.Get(), nullptr); //再びコマンドリストをためる準備
 
 	//画面をスワップし描画する
 	_swapchain->Present(1, 0);
@@ -655,15 +654,16 @@ void Dx12::PopulateCommandList()
 	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
 	//リソースバリアの設定
 	//リソースバリアをバックバッファーリソースに指定する
-	
-	BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	BarrierDesc.Transition.pResource = _backBuffers[bbIdx];
-	BarrierDesc.Transition.Subresource = 0;
-	BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	//ヘルパー構造体を使用
+	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		_backBuffers[bbIdx],
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
 	_cmdList->ResourceBarrier(1, &BarrierDesc);
 	
+	
+
 	//レンダーターゲットをバックバッファにセット 
 	auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
 	rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -680,14 +680,15 @@ void Dx12::PopulateCommandList()
 
 	//描画命令
 	//PSO、RootSignature,Primitive topologyのセット
-	_cmdList->SetPipelineState(_pipelinestate);
-	_cmdList->SetGraphicsRootSignature(rootsignature);
+	_cmdList->SetPipelineState(_pipelinestate.Get());
+	_cmdList->SetGraphicsRootSignature(rootsignature.Get());
 	_cmdList->RSSetViewports(1, &viewport);
 	_cmdList->RSSetScissorRects(1, &scissorrect);
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//SRVのディスクリプタヒープの指定コマンドをセット
-	_cmdList->SetDescriptorHeaps(1, &srvHeaps);
+	ID3D12DescriptorHeap* ppHeaps[] = { srvHeaps.Get() };
+	_cmdList->SetDescriptorHeaps(1, ppHeaps);
 	//ルートパラメタとsrvディスクリプタヒープのアドレスの関連付け
 	_cmdList->SetGraphicsRootDescriptorTable(0, srvHeaps->GetGPUDescriptorHandleForHeapStart());
 
@@ -717,7 +718,7 @@ void Dx12::PopulateCommandList()
 void Dx12::WaitForPreviousFrame()
 {
 	//命令の完了を待ち、チェック
-	_cmdQueue->Signal(_fence, ++_fenceVal);
+	_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 	if (_fence->GetCompletedValue() != _fenceVal)
 	{
 		//イベントハンドルの取得
