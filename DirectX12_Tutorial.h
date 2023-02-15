@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TUTORIAL_H
+#define TUTORIAL_H
 
 #include <Windows.h>
 #include <tchar.h>
@@ -34,6 +35,10 @@ public:
 	void OnUpdate();
 	void OnRender();
 	void OnDestroy();
+	void LoadPipeline();
+	void LoadAssets();
+	void PopulateCommandList();
+	void WaitForPreviousFrame();
 
 	//ウィンドウサイズ
 	UINT window_width;
@@ -77,10 +82,7 @@ private:
 	UINT64 _fenceVal = 0;
 	HANDLE _fenceevent;
 
-	void LoadPipeline();
-	void LoadAssets();
-	void PopulateCommandList();
-	void WaitForPreviousFrame();
+
 
 };
 
@@ -98,8 +100,13 @@ private:
 	 static HWND m_hwnd;
 };
 
+
+//端数を切り捨てるメソッド
 inline size_t AlignmentedSize(size_t size, size_t alignment)
 {
 	return size + alignment - size % alignment;
 };
 
+
+
+#endif

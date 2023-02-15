@@ -29,7 +29,7 @@ void Dx12::LoadPipeline()
 	auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
 
 	debugLayer->EnableDebugLayer(); //デバッグレイヤーの有効化
-	debugLayer->Release(); //インターフェイスの解法
+	debugLayer->Release(); //インターフェイスの解放
 	
 #endif
 
@@ -718,15 +718,18 @@ void Dx12::PopulateCommandList()
 void Dx12::WaitForPreviousFrame()
 {
 	//命令の完了を待ち、チェック
+	//TODO: このSignal()メソッドによる実装は単純なので他の方法を考える
 	_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
 	if (_fence->GetCompletedValue() != _fenceVal)
 	{
 		//イベントハンドルの取得
 		auto event = CreateEvent(nullptr, false, false, nullptr);
 
-		_fence->SetEventOnCompletion(_fenceVal, _fenceevent);
+		_fence->SetEventOnCompletion(_fenceVal, event);
 
 		//イベントが発生するまで待ち続ける
-		WaitForSingleObject(_fenceevent, INFINITE);
+		WaitForSingleObject(event, INFINITE);
+
+		CloseHandle(event);
 	}
 }

@@ -2,14 +2,7 @@
 #include "DirectX12_Tutorial.h"
 
 
-// @brief コンソール画面にフォーマットつき文字列を表示（プレースホルダー)
-// @param format フォーマット
-// @pram	可変長引数
-// @remarks	デバッグ
 
-//extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 602; }
-
-//extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 //main関数　メッセージループが入っている
 #ifdef _DEBUG
