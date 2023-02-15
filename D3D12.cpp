@@ -151,10 +151,10 @@ void Dx12::LoadAssets()
 
 	//頂点情報を手打ち
 	Vertex vertices[] = {
-		{{-0.4f,-0.7f,0.0f} ,{0.0f, 1.0f}},//左下
-		{{-0.4f, 0.7f,0.0f} ,{0.0f, 0.0f}},//左上
-		{{ 0.4f,-0.7f,0.0f} ,{1.0f, 1.0f}},//右下
-		{{ 0.4f, 0.7f,0.0f} ,{1.0f, 0.0f}},//右上
+		{{-0.5f,-0.5f,0.0f} ,{0.0f, 1.0f}},//左下
+		{{-0.5f, 0.5f,0.0f} ,{0.0f, 0.0f}},//左上
+		{{ 0.5f,-0.5f,0.0f} ,{1.0f, 1.0f}},//右下
+		{{ 0.5f, 0.5f,0.0f} ,{1.0f, 0.0f}},//右上
 	};
 
 	//頂点インデックス情報を手打ち
@@ -163,7 +163,7 @@ void Dx12::LoadAssets()
 		2, 1, 3
 	};
 
-	//テクスチャ情報を手打ち
+	/*//テクスチャ情報を手打ち
 	struct TexRGBA
 	{
 		unsigned char R, G, B, A;
@@ -178,7 +178,7 @@ void Dx12::LoadAssets()
 		rgba.B = rand() % 256;
 		rgba.A = 255;
 	}
-
+	*/
 
 	//DirectXTexライブラリのメソッドによりテクスチャ画像をロード
 	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -245,10 +245,7 @@ void Dx12::LoadAssets()
 	ibView.Format = DXGI_FORMAT_R16_UINT;
 	ibView.SizeInBytes = sizeof(indices);
 
-	//シェーダーオブジェクトの宣言
-	ID3DBlob* _vsBlob = nullptr;
-	ID3DBlob* _psBlob = nullptr;
-	ID3DBlob* errorBlob = nullptr;
+
 
 	//頂点シェーダーオブジェクトの生成
 	result = D3DCompileFromFile(
@@ -270,7 +267,7 @@ void Dx12::LoadAssets()
 			errstr.resize(errorBlob->GetBufferSize());
 			std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errstr.begin());
 			errstr += "\n";
-			OutputDebugStringA(errstr.c_str());
+			::OutputDebugStringA(errstr.c_str());
 		}
 		exit(1);
 	}
