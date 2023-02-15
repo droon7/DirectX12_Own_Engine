@@ -11,6 +11,7 @@ Dx12::Dx12(UINT width, UINT height) :
 }
 
 //初期化、パイプラインの初期化とアセット類のロードを分ける
+
 void Dx12::OnInit()
 {
 	LoadPipeline();
@@ -19,6 +20,7 @@ void Dx12::OnInit()
 
 
 //パイプラインに必要なオブジェクトの生成、初期化を行う
+//TODO: オブジェクトの初期化はThrowIfFailed()関数に入れる
 void Dx12::LoadPipeline()
 {
 
