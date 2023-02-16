@@ -559,19 +559,31 @@ void Dx12::LoadAssets()
 	//PSOの設定の終了
 
 
-	//ルートシグネチャに設定するルートパラメータ及びディスクリプタテーブルの設定
-	D3D12_DESCRIPTOR_RANGE descTblRange = {};
-	descTblRange.NumDescriptors = 1;
-	descTblRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descTblRange.BaseShaderRegister = 0;
-	descTblRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	//ルートシグネチャに設定するルートパラメータ及びディスクリプタテーブル、ディスクリプタレンジの設定
+	//１つ目はシェーダーリソースビューの設定、２つ目は定数バッファービューの設定
+	D3D12_DESCRIPTOR_RANGE descTblRange[2] = {};
+	descTblRange[0].NumDescriptors = 1;
+	descTblRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descTblRange[0].BaseShaderRegister = 0;
+	descTblRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_ROOT_PARAMETER rootparam{};
+	descTblRange[1].NumDescriptors = 1;
+	descTblRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	descTblRange[1].BaseShaderRegister = 0;
+	descTblRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	rootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootparam.DescriptorTable.NumDescriptorRanges = 1;
-	rootparam.DescriptorTable.pDescriptorRanges = &descTblRange;
+	//ルートパラメーターの設定
+	D3D12_ROOT_PARAMETER rootparam[2] = {};
+
+	rootparam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootparam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootparam[0].DescriptorTable.NumDescriptorRanges = 1;
+	rootparam[0].DescriptorTable.pDescriptorRanges = &descTblRange[0];
+
+	rootparam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootparam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootparam[1].DescriptorTable.NumDescriptorRanges = 1;
+	rootparam[1].DescriptorTable.pDescriptorRanges = &descTblRange[1];
 
 	//ルートシグネチャに設定するサンプラーの設定
 	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
@@ -592,8 +604,8 @@ void Dx12::LoadAssets()
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//ディスクリプタテーブルの実体であるルートパラメーターを設定
-	rootSignatureDesc.pParameters = &rootparam;
-	rootSignatureDesc.NumParameters = 1;
+	rootSignatureDesc.pParameters = &rootparam[0];
+	rootSignatureDesc.NumParameters = 2;
 	//サンプラーを設定
 	rootSignatureDesc.pStaticSamplers = &samplerDesc;
 	rootSignatureDesc.NumStaticSamplers = 1;
