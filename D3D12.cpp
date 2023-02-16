@@ -445,15 +445,15 @@ void Dx12::LoadAssets()
 		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
 	}
 
-	//シェーダーリソースビュー用のディスクリプタヒープの作成
+	//シェーダーリソースビューと定数バッファービュー用のディスクリプタヒープの作成
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
 	//シェーダーから見えるように
 	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	descHeapDesc.NodeMask = 0;
-	descHeapDesc.NumDescriptors = 1;
+	descHeapDesc.NumDescriptors = 2;
 	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&srvHeaps));
+	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&basicDescHeaps));
 
 	//シェーダーリソースビューの作成
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -463,11 +463,12 @@ void Dx12::LoadAssets()
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 
+	auto basicHeaphandle = basicDescHeaps->GetCPUDescriptorHandleForHeapStart();
 
 	_dev->CreateShaderResourceView(
 		texbuff.Get(),
 		&srvDesc,
-		srvHeaps->GetCPUDescriptorHandleForHeapStart()
+		basicHeaphandle
 	);
 
 
@@ -486,7 +487,24 @@ void Dx12::LoadAssets()
 		nullptr,
 		IID_PPV_ARGS(&constBuff)
 	);
+	
+	//マップによる定数の転送
+	XMMATRIX* mapMatrix;
+	result = constBuff->Map(0, nullptr, (void**)&mapMatrix);
+	*mapMatrix = matrix;
+	
+	//定数バッファービューの作成のための設定
+	basicHeaphandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
+	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
+	constBufferViewDesc.BufferLocation = constBuff->GetGPUVirtualAddress();
+	constBufferViewDesc.SizeInBytes = constBuff->GetDesc().Width;
+
+	//定数バッファービューの作成
+	_dev->CreateConstantBufferView(
+		&constBufferViewDesc,
+		basicHeaphandle
+	);
 
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
@@ -704,10 +722,10 @@ void Dx12::PopulateCommandList()
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//SRVのディスクリプタヒープの指定コマンドをセット
-	ID3D12DescriptorHeap* ppHeaps[] = { srvHeaps.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { basicDescHeaps.Get() };
 	_cmdList->SetDescriptorHeaps(1, ppHeaps);
 	//ルートパラメタとsrvディスクリプタヒープのアドレスの関連付け
-	_cmdList->SetGraphicsRootDescriptorTable(0, srvHeaps->GetGPUDescriptorHandleForHeapStart());
+	_cmdList->SetGraphicsRootDescriptorTable(0, basicDescHeaps->GetGPUDescriptorHandleForHeapStart());
 
 	//頂点バッファーのセット
 	_cmdList->IASetVertexBuffers(0, 1, &vbView);

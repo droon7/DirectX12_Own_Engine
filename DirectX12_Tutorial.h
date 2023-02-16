@@ -61,7 +61,7 @@ private:
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	ComPtr<ID3D12DescriptorHeap> rtvHeaps = nullptr;
-	ComPtr<ID3D12DescriptorHeap> srvHeaps = nullptr;
+	ComPtr<ID3D12DescriptorHeap> basicDescHeaps = nullptr;
 	ComPtr<ID3D12RootSignature> rootsignature = nullptr;
 	ComPtr<ID3D12PipelineState> _pipelinestate = nullptr;
 	std::vector<ID3D12Resource*> _backBuffers;
