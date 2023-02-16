@@ -573,6 +573,15 @@ void Dx12::LoadAssets()
 	descTblRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	//ルートパラメーターの設定
+	D3D12_ROOT_PARAMETER rootparam{};
+
+	rootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootparam.DescriptorTable.NumDescriptorRanges = 2;
+	rootparam.DescriptorTable.pDescriptorRanges = &descTblRange[0];
+
+
+	/*
 	D3D12_ROOT_PARAMETER rootparam[2] = {};
 
 	rootparam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -584,6 +593,7 @@ void Dx12::LoadAssets()
 	rootparam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootparam[1].DescriptorTable.NumDescriptorRanges = 1;
 	rootparam[1].DescriptorTable.pDescriptorRanges = &descTblRange[1];
+	*/
 
 	//ルートシグネチャに設定するサンプラーの設定
 	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
@@ -604,8 +614,8 @@ void Dx12::LoadAssets()
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//ディスクリプタテーブルの実体であるルートパラメーターを設定
-	rootSignatureDesc.pParameters = &rootparam[0];
-	rootSignatureDesc.NumParameters = 2;
+	rootSignatureDesc.pParameters = &rootparam;
+	rootSignatureDesc.NumParameters = 1;
 	//サンプラーを設定
 	rootSignatureDesc.pStaticSamplers = &samplerDesc;
 	rootSignatureDesc.NumStaticSamplers = 1;
@@ -740,11 +750,13 @@ void Dx12::PopulateCommandList()
 
 	_cmdList->SetGraphicsRootDescriptorTable(0, basicDescHeaps->GetGPUDescriptorHandleForHeapStart());
 
+	/*
 	//ルートパラメタと定数バッファーディスクリプタヒープのアドレスの関連付け
 	auto heapHandle = basicDescHeaps->GetGPUDescriptorHandleForHeapStart();
 	heapHandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	_cmdList->SetGraphicsRootDescriptorTable(1, heapHandle);
+	*/
 
 	//頂点バッファーのセット
 	_cmdList->IASetVertexBuffers(0, 1, &vbView);
