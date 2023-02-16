@@ -75,6 +75,7 @@ private:
 	D3D12_TEXTURE_COPY_LOCATION src = {};
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
 	ComPtr<ID3D12Resource> texbuff = nullptr;
+	ComPtr<ID3D12Resource> constBuff = nullptr;
 	//シェーダーオブジェクトの宣言
 	ID3DBlob* _vsBlob = nullptr;
 	ID3DBlob* _psBlob = nullptr;

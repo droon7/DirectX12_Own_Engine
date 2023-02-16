@@ -470,6 +470,24 @@ void Dx12::LoadAssets()
 		srvHeaps->GetCPUDescriptorHandleForHeapStart()
 	);
 
+
+	//単位行列の転送
+	XMMATRIX matrix = XMMatrixIdentity();
+
+	//定数バッファーの作成
+	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(matrix) + 0xff) & ~0xff);
+
+	_dev->CreateCommittedResource(
+		&constHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&constHeapDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&constBuff)
+	);
+
+
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
 	//シェーダーを設定
