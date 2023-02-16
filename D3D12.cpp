@@ -737,7 +737,14 @@ void Dx12::PopulateCommandList()
 	ID3D12DescriptorHeap* ppHeaps[] = { basicDescHeaps.Get() };
 	_cmdList->SetDescriptorHeaps(1, ppHeaps);
 	//ルートパラメタとsrvディスクリプタヒープのアドレスの関連付け
+
 	_cmdList->SetGraphicsRootDescriptorTable(0, basicDescHeaps->GetGPUDescriptorHandleForHeapStart());
+
+	//ルートパラメタと定数バッファーディスクリプタヒープのアドレスの関連付け
+	auto heapHandle = basicDescHeaps->GetGPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	_cmdList->SetGraphicsRootDescriptorTable(1, heapHandle);
 
 	//頂点バッファーのセット
 	_cmdList->IASetVertexBuffers(0, 1, &vbView);

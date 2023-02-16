@@ -1,6 +1,12 @@
 Texture2D<float4> tex : register(t0);
 SamplerState smp : register(s0);
 
+//定数バッファー
+cbuffer cbuff0 : register(b0)
+{
+	matrix mat;
+};
+
 //頂点シェーダーとピクセルシェーダー間で使う構造体
 struct Output
 {
