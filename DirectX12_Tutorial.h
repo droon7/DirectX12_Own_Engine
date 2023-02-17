@@ -25,6 +25,14 @@
 
 using Microsoft::WRL::ComPtr;
 
+//PMDヘッダー構造体
+struct PMDHeader
+{
+	float version;
+	char model_name[20];
+	char comment[256];
+};
+
 class Dx12
 {
 public:
@@ -97,9 +105,12 @@ private:
 	UINT64 _fenceVal = 0;
 	HANDLE _fenceevent;
 
-
+	//PMDデータの宣言
+	PMDHeader pmdheader;
 
 };
+
+
 
 //ウィンドウアプリクラス
 class Win32App

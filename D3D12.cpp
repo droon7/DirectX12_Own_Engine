@@ -529,6 +529,18 @@ void Dx12::LoadAssets()
 		basicHeaphandle
 	);
 
+
+	//PMDヘッダー読み込み
+	char signature[3] = {};
+	auto fp = fopen("Model/初音ミク.pmd", "rb");
+
+	fread(signature, sizeof(signature), 1, fp);
+	fread(&pmdheader, sizeof(pmdheader), 1, fp);
+
+	fclose(fp);
+
+
+
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
 	//シェーダーを設定
