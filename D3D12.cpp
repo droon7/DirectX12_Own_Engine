@@ -151,10 +151,10 @@ void Dx12::LoadAssets()
 
 	//頂点情報を手打ち
 	Vertex vertices[] = {
-		{{  0.0f,100.0f,0.0f} ,{0.0f, 1.0f}},//左下
-		{{  0.0f,  0.0f,0.0f} ,{0.0f, 0.0f}},//左上
-		{{100.0f,100.0f,0.0f} ,{1.0f, 1.0f}},//右下
-		{{100.0f,  0.0f,0.0f} ,{1.0f, 0.0f}},//右上
+		{{ -1.0f, -1.0f,0.0f} ,{0.0f, 1.0f}},//左下
+		{{ -1.0f,  1.0f,0.0f} ,{0.0f, 0.0f}},//左上
+		{{  1.0f, -1.0f,0.0f} ,{1.0f, 1.0f}},//右下
+		{{  1.0f,  1.0f,0.0f} ,{1.0f, 0.0f}},//右上
 	};
 
 	//頂点インデックス情報を手打ち
@@ -473,11 +473,28 @@ void Dx12::LoadAssets()
 
 
 	//行列の転送。ピクセル座標系からシェーダー座標系への変換行列を送る。
-	XMMATRIX matrix = XMMatrixIdentity();
-	matrix.r[0].m128_f32[0] = 2.0f / window_width;
-	matrix.r[1].m128_f32[1] = -2.0f / window_height;
-	matrix.r[3].m128_f32[0] = -1.0f;
-	matrix.r[3].m128_f32[1] = 1.0f;
+	//XMMATRIX matrix = XMMatrixIdentity();
+	//matrix.r[0].m128_f32[0] = 2.0f / window_width;
+	//matrix.r[1].m128_f32[1] = -2.0f / window_height;
+	//matrix.r[3].m128_f32[0] = -1.0f;
+	//matrix.r[3].m128_f32[1] = 1.0f;
+
+	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
+	XMMATRIX matrix = XMMatrixRotationY(XM_PIDIV4);
+
+	XMFLOAT3 eye(0, 0, -5); 
+	XMFLOAT3 target(0, 0, 0); // eye座標とtarget座標から視線ベクトルを作る
+	XMFLOAT3 up(0, 1, 0);
+
+	matrix *= XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+
+	matrix *= XMMatrixPerspectiveFovLH(
+		XM_PIDIV2,
+		static_cast<float>(window_width) / static_cast<float>(window_height),
+		1.0f,
+		10.0f
+	);
+
 
 	//定数バッファーの作成
 	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
