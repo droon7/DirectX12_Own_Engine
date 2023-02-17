@@ -480,20 +480,23 @@ void Dx12::LoadAssets()
 	//matrix.r[3].m128_f32[1] = 1.0f;
 
 	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
-	XMMATRIX matrix = XMMatrixRotationY(XM_PIDIV4);
+	worldMat = XMMatrixRotationY(0);
+	matrix = worldMat;
 
 	XMFLOAT3 eye(0, 0, -5); 
 	XMFLOAT3 target(0, 0, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
-	matrix *= XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+	matrix *= viewMat;
 
-	matrix *= XMMatrixPerspectiveFovLH(
+	projMat = XMMatrixPerspectiveFovLH(
 		XM_PIDIV2,
 		static_cast<float>(window_width) / static_cast<float>(window_height),
 		1.0f,
 		10.0f
 	);
+	matrix *= projMat;
 
 
 	//定数バッファーの作成
@@ -510,7 +513,6 @@ void Dx12::LoadAssets()
 	);
 	
 	//マップによる定数の転送
-	XMMATRIX* mapMatrix;
 	result = constBuff->Map(0, nullptr, (void**)&mapMatrix);
 	*mapMatrix = matrix;
 	
@@ -686,10 +688,15 @@ void Dx12::LoadAssets()
 void Dx12::OnUpdate()
 {
 
+	//行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
+	angle += 0.1f;
+	worldMat = XMMatrixRotationY(angle);
+	*mapMatrix = worldMat * viewMat * projMat;
+
 }
 
 
-//レンダリングする
+//レンダリングする。メインループの内部
 void Dx12::OnRender() 
 {
 	//コマンドリストに実際に実行するレンダリングコマンドを集める

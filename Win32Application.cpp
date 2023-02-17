@@ -80,6 +80,7 @@ int Win32App::WindowRun(Dx12* pdx12)
 		}
 
 		//DirectX12の処理
+		pdx12->OnUpdate();
 		pdx12->OnRender();
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
