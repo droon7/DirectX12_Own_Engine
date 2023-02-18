@@ -321,9 +321,29 @@ void Dx12::LoadAssets()
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
 		},
+		{//法線ベクトル情報
+			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
 		{//uv情報
 			"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,
 			0, D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//ボーン情報
+			"BONE_NO", 0, DXGI_FORMAT_R16G16_UINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//ボーンウェイト情報
+			"WEIGHT", 0, DXGI_FORMAT_R8_UINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//輪郭線フラグ情報
+			"EDGE_FLG", 0, DXGI_FORMAT_R8_UINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
 		},
 	};
@@ -500,8 +520,8 @@ void Dx12::LoadAssets()
 	worldMat = XMMatrixRotationY(0);
 	matrix = worldMat;
 
-	XMFLOAT3 eye(0, 0, -5); 
-	XMFLOAT3 target(0, 0, 0); // eye座標とtarget座標から視線ベクトルを作る
+	XMFLOAT3 eye(0, 10, -15); 
+	XMFLOAT3 target(0, 10, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
 	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
@@ -511,7 +531,7 @@ void Dx12::LoadAssets()
 		XM_PIDIV2,
 		static_cast<float>(window_width) / static_cast<float>(window_height),
 		1.0f,
-		10.0f
+		100.0f
 	);
 	matrix *= projMat;
 
@@ -781,7 +801,7 @@ void Dx12::PopulateCommandList()
 	r = (float)(0xff & frame >> 4) / 255.0f;
 	g = (float)(0xff & frame >> 8) / 255.0f;
 	b = (float)(0xff & frame >> 0) / 255.0f;
-	float clearColor[] = { r,g,b, 1.0f };// 
+	float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };// 
 	_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
 	++frame;
 
@@ -791,7 +811,7 @@ void Dx12::PopulateCommandList()
 	_cmdList->SetGraphicsRootSignature(rootsignature.Get());
 	_cmdList->RSSetViewports(1, &viewport);
 	_cmdList->RSSetScissorRects(1, &scissorrect);
-	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 	//SRVのディスクリプタヒープの指定コマンドをセット
 	ID3D12DescriptorHeap* ppHeaps[] = { basicDescHeaps.Get() };
@@ -815,8 +835,8 @@ void Dx12::PopulateCommandList()
 	_cmdList->IASetIndexBuffer(&ibView);
 
 	//実際の描画命令
-	//_cmdList->DrawInstanced(4, 1, 0, 0); //頂点インデックス非使用
-	_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0); //頂点インデックス使用
+	_cmdList->DrawInstanced(vertNum, 1, 0, 0); //頂点インデックス非使用
+	//_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0); //頂点インデックス使用
 
 
 	//リソースバリアの状態の設定
