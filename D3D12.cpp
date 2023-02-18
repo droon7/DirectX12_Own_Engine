@@ -149,13 +149,13 @@ void Dx12::LoadAssets()
 		XMFLOAT2 uv;
 	};
 
-	//頂点情報を手打ち
-	Vertex vertices[] = {
-		{{ -1.0f, -1.0f,0.0f} ,{0.0f, 1.0f}},//左下
-		{{ -1.0f,  1.0f,0.0f} ,{0.0f, 0.0f}},//左上
-		{{  1.0f, -1.0f,0.0f} ,{1.0f, 1.0f}},//右下
-		{{  1.0f,  1.0f,0.0f} ,{1.0f, 0.0f}},//右上
-	};
+	////頂点情報を手打ち
+	//Vertex vertices[] = {
+	//	{{ -1.0f, -1.0f,0.0f} ,{0.0f, 1.0f}},//左下
+	//	{{ -1.0f,  1.0f,0.0f} ,{0.0f, 0.0f}},//左上
+	//	{{  1.0f, -1.0f,0.0f} ,{1.0f, 1.0f}},//右下
+	//	{{  1.0f,  1.0f,0.0f} ,{1.0f, 0.0f}},//右上
+	//};
 
 	//頂点インデックス情報を手打ち
 	unsigned short indices[] = {
@@ -180,6 +180,23 @@ void Dx12::LoadAssets()
 	}
 	*/
 
+	//PMDヘッダー読み込み
+	char signature[3] = {};
+	auto fp = fopen("Model/初音ミク.pmd", "rb");
+
+	fread(signature, sizeof(signature), 1, fp);
+	fread(&pmdheader, sizeof(pmdheader), 1, fp);
+
+	//PMD頂点情報読み込み
+
+	fread(&vertNum, sizeof(vertNum), 1, fp);
+	std::vector<unsigned char> vertices(vertNum* pmdvertex_size);
+	fread(vertices.data(), vertices.size(), 1, fp);
+
+	fclose(fp);
+
+
+
 	//DirectXTexライブラリのメソッドによりテクスチャ画像をロード
 	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
 	TexMetadata metadata = {};
@@ -194,7 +211,7 @@ void Dx12::LoadAssets()
 
 	//頂点バッファーの生成
 	D3D12_HEAP_PROPERTIES heapprop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	D3D12_RESOURCE_DESC resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices));
+	D3D12_RESOURCE_DESC resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(vertices.size());
 
 	vertBuff = nullptr;
 	result = _dev->CreateCommittedResource(
@@ -207,7 +224,7 @@ void Dx12::LoadAssets()
 	);
 
 	//MapメソッドでビデオメモリvertBuff上に頂点を書き込む
-	Vertex* vertMap = nullptr;
+	unsigned char* vertMap = nullptr;
 	result = vertBuff->Map(0, nullptr, (void**)&vertMap); //vertMap上にvertBuffの仮想メモリを置く
 	std::copy(std::begin(vertices), std::end(vertices), vertMap);
 	vertBuff->Unmap(0, nullptr);  //仮想メモリを解除
@@ -215,8 +232,8 @@ void Dx12::LoadAssets()
 	//頂点バッファービューの生成
 	vbView = {};
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
-	vbView.SizeInBytes = sizeof(vertices);
-	vbView.StrideInBytes = sizeof(vertices[0]);
+	vbView.SizeInBytes = vertices.size();
+	vbView.StrideInBytes = pmdvertex_size;
 
 	//インデックスバッファーの生成
 	idxBuff = nullptr;
@@ -530,14 +547,7 @@ void Dx12::LoadAssets()
 	);
 
 
-	//PMDヘッダー読み込み
-	char signature[3] = {};
-	auto fp = fopen("Model/初音ミク.pmd", "rb");
 
-	fread(signature, sizeof(signature), 1, fp);
-	fread(&pmdheader, sizeof(pmdheader), 1, fp);
-
-	fclose(fp);
 
 
 

@@ -108,6 +108,9 @@ private:
 	//PMDƒf[ƒ^‚ÌéŒ¾
 	PMDHeader pmdheader;
 
+	static constexpr size_t pmdvertex_size = 38;
+	unsigned int vertNum;
+
 };
 
 
