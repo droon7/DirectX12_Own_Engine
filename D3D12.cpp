@@ -595,8 +595,8 @@ void Dx12::LoadAssets()
 
 	//クリアバリューの設定
 	D3D12_CLEAR_VALUE depthClearValue = {};
-	depthClearValue.DepthStencil.Depth = 1.0f;
-	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	depthClearValue.DepthStencil.Depth = 1.0f;  //　深さを最大値でクリア
+	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT; //32bit floatでクリア
 
 	//深度バッファーの作成
 	result = _dev->CreateCommittedResource(
@@ -659,8 +659,11 @@ void Dx12::LoadAssets()
 	gpipeline.RasterizerState.AntialiasedLineEnable = false;
 	gpipeline.RasterizerState.ForcedSampleCount = 0;
 	gpipeline.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-	gpipeline.DepthStencilState.DepthEnable = false;
+	gpipeline.DepthStencilState.DepthEnable = true;
+	gpipeline.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; //深度バッファーに深度値を書き込みか否かの指定
+	gpipeline.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS; //深度値の小さいほうを採用する。　つまり距離が近い法？
 	gpipeline.DepthStencilState.StencilEnable = false;
+	gpipeline.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
 	//入力レイアウトの設定
 	gpipeline.InputLayout.pInputElementDescs = inputLayout;
@@ -849,7 +852,9 @@ void Dx12::PopulateCommandList()
 	//レンダーターゲットをバックバッファにセット 
 	auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
 	rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	_cmdList->OMSetRenderTargets(1, &rtvH, true, nullptr);
+
+	auto dsvH = dsvHeaps->GetCPUDescriptorHandleForHeapStart();
+	_cmdList->OMSetRenderTargets(1, &rtvH, true, &dsvH);
 
 	//画面クリア
 	float r, g, b;
@@ -859,6 +864,10 @@ void Dx12::PopulateCommandList()
 	float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };// 
 	_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
 	++frame;
+
+	//深度バッファークリア
+	_cmdList->ClearDepthStencilView(dsvH, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
 
 	//描画命令
 	//PSO、RootSignature,Primitive topologyのセット
