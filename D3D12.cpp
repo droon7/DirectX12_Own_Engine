@@ -575,9 +575,56 @@ void Dx12::LoadAssets()
 	);
 
 
+	//深度バッファーの作成
+
+	//深度バッファーディスクリプタの設定
+	D3D12_RESOURCE_DESC depthResourceDescriptor = {};
+	depthResourceDescriptor.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthResourceDescriptor.Width = window_width;
+	depthResourceDescriptor.Height = window_height;
+	depthResourceDescriptor.DepthOrArraySize = 1;
+	depthResourceDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
+	depthResourceDescriptor.SampleDesc.Count = 1;
+	depthResourceDescriptor.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	//深度バッファーヒープの設定
+	D3D12_HEAP_PROPERTIES depthHeapProperty = {};
+	depthHeapProperty.Type = D3D12_HEAP_TYPE_DEFAULT;
+	depthHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	depthHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+	//クリアバリューの設定
+	D3D12_CLEAR_VALUE depthClearValue = {};
+	depthClearValue.DepthStencil.Depth = 1.0f;
+	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+
+	//深度バッファーの作成
+	result = _dev->CreateCommittedResource(
+		&depthHeapProperty,
+		D3D12_HEAP_FLAG_NONE,
+		&depthResourceDescriptor,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(&depthBuffer)
+	);
 
 
+	//深度のためのディスクリプタヒープの作成
+	D3D12_DESCRIPTOR_HEAP_DESC depthStencilViewHeapDescriptor = {};
+	depthStencilViewHeapDescriptor.NumDescriptors = 1;
+	depthStencilViewHeapDescriptor.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	result = _dev->CreateDescriptorHeap(&depthStencilViewHeapDescriptor, IID_PPV_ARGS(&dsvHeaps));
 
+	//深度ビューの作成
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDescriptor = {};
+	dsvDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDescriptor.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDescriptor.Flags = D3D12_DSV_FLAG_NONE;
+	_dev->CreateDepthStencilView(
+		depthBuffer.Get(),
+		&dsvDescriptor,
+		dsvHeaps->GetCPUDescriptorHandleForHeapStart()
+	);
 
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};

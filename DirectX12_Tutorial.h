@@ -84,6 +84,8 @@ private:
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
 	ComPtr<ID3D12Resource> texbuff = nullptr;
 	ComPtr<ID3D12Resource> constBuff = nullptr;
+	ComPtr<ID3D12Resource> depthBuffer = nullptr;
+	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
 
 	//行列アセット
 	DirectX::XMMATRIX matrix;
@@ -111,6 +113,8 @@ private:
 	static constexpr size_t pmdvertex_size = 38;
 	unsigned int vertNum;
 	unsigned int indicesNum;
+
+	
 
 };
 
