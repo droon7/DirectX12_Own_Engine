@@ -110,6 +110,7 @@ private:
 
 	static constexpr size_t pmdvertex_size = 38;
 	unsigned int vertNum;
+	unsigned int indicesNum;
 
 };
 

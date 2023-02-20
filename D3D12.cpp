@@ -157,11 +157,11 @@ void Dx12::LoadAssets()
 	//	{{  1.0f,  1.0f,0.0f} ,{1.0f, 0.0f}},//右上
 	//};
 
-	//頂点インデックス情報を手打ち
-	unsigned short indices[] = {
-		0, 1, 2,
-		2, 1, 3
-	};
+	////頂点インデックス情報を手打ち
+	//unsigned short indices[] = {
+	//	0, 1, 2,
+	//	2, 1, 3
+	//};
 
 	/*//テクスチャ情報を手打ち
 	struct TexRGBA
@@ -191,8 +191,14 @@ void Dx12::LoadAssets()
 	//PMD頂点情報読み込み
 
 	fread(&vertNum, sizeof(vertNum), 1, fp);
+	
 	std::vector<unsigned char> vertices(vertNum* pmdvertex_size);
 	fread(vertices.data(), vertices.size(), 1, fp);
+
+	std::vector<unsigned short> indices;
+	fread(&indicesNum, sizeof(indicesNum), 1, fp);
+	indices.resize(indicesNum);
+	fread(indices.data(), indices.size() * sizeof(indices[0]), 1, fp);
 
 	fclose(fp);
 
@@ -239,7 +245,7 @@ void Dx12::LoadAssets()
 	//インデックスバッファーの生成
 	idxBuff = nullptr;
 
-	resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices));
+	resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(indices.size() * sizeof(indices[0]));
 
 	result = _dev->CreateCommittedResource(
 		&heapprop,
@@ -261,7 +267,7 @@ void Dx12::LoadAssets()
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
 	ibView.Format = DXGI_FORMAT_R16_UINT;
-	ibView.SizeInBytes = sizeof(indices);
+	ibView.SizeInBytes = indices.size() * sizeof(indices[0]);
 
 
 
@@ -812,7 +818,7 @@ void Dx12::PopulateCommandList()
 	_cmdList->SetGraphicsRootSignature(rootsignature.Get());
 	_cmdList->RSSetViewports(1, &viewport);
 	_cmdList->RSSetScissorRects(1, &scissorrect);
-	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//SRVのディスクリプタヒープの指定コマンドをセット
 	ID3D12DescriptorHeap* ppHeaps[] = { basicDescHeaps.Get() };
@@ -836,8 +842,8 @@ void Dx12::PopulateCommandList()
 	_cmdList->IASetIndexBuffer(&ibView);
 
 	//実際の描画命令
-	_cmdList->DrawInstanced(vertNum, 1, 0, 0); //頂点インデックス非使用
-	//_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0); //頂点インデックス使用
+	//_cmdList->DrawInstanced(vertNum, 1, 0, 0); //頂点インデックス非使用
+	_cmdList->DrawIndexedInstanced(indicesNum, 1, 0, 0, 0); //頂点インデックス使用
 
 
 	//リソースバリアの状態の設定
