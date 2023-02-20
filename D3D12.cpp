@@ -546,7 +546,7 @@ void Dx12::LoadAssets()
 
 	//定数バッファーの作成
 	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(matrix) + 0xff) & ~0xff);
+	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(MatricesData) + 0xff) & ~0xff);
 
 	_dev->CreateCommittedResource(
 		&constHeapProp,
@@ -559,7 +559,8 @@ void Dx12::LoadAssets()
 	
 	//マップによる定数の転送
 	result = constBuff->Map(0, nullptr, (void**)&mapMatrix);
-	*mapMatrix = matrix;
+	mapMatrix->world = worldMat;
+	mapMatrix->viewproj = viewMat * projMat;
 	
 	//定数バッファービューの作成のための設定
 	basicHeaphandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -788,11 +789,10 @@ void Dx12::LoadAssets()
 void Dx12::OnUpdate()
 {
 
-	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	//angle += 0.1f;
-	//worldMat = XMMatrixRotationY(angle);
-	//*mapMatrix = worldMat * viewMat * projMat;
-
+	//行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
+	angle += 0.02f;
+	worldMat = XMMatrixRotationY(angle);
+	mapMatrix->world = worldMat;
 }
 
 

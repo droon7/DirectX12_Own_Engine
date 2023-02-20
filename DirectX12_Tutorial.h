@@ -33,6 +33,13 @@ struct PMDHeader
 	char comment[256];
 };
 
+//シェーダーに渡すための基本的な行列データ
+struct MatricesData
+{
+	DirectX::XMMATRIX world;
+	DirectX::XMMATRIX viewproj;
+};
+
 class Dx12
 {
 public:
@@ -89,10 +96,10 @@ private:
 
 	//行列アセット
 	DirectX::XMMATRIX matrix;
-	DirectX::XMMATRIX* mapMatrix = nullptr;
 	DirectX::XMMATRIX worldMat;
 	DirectX::XMMATRIX viewMat;
 	DirectX::XMMATRIX projMat;
+	MatricesData* mapMatrix = nullptr;
 	float angle = 0.0f;
 
 
