@@ -195,7 +195,8 @@ void Dx12::LoadAssets()
 	std::vector<unsigned char> vertices(vertNum* pmdvertex_size);
 	fread(vertices.data(), vertices.size(), 1, fp);
 
-	std::vector<unsigned short> indices;
+	//PMDインデックスデータ読み込み
+	std::vector<unsigned short> indices; //2バイトのデータを扱うためunsigned shortを使う
 	fread(&indicesNum, sizeof(indicesNum), 1, fp);
 	indices.resize(indicesNum);
 	fread(indices.data(), indices.size() * sizeof(indices[0]), 1, fp);
@@ -737,10 +738,10 @@ void Dx12::LoadAssets()
 void Dx12::OnUpdate()
 {
 
-	//行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	angle += 0.1f;
-	worldMat = XMMatrixRotationY(angle);
-	*mapMatrix = worldMat * viewMat * projMat;
+	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
+	//angle += 0.1f;
+	//worldMat = XMMatrixRotationY(angle);
+	//*mapMatrix = worldMat * viewMat * projMat;
 
 }
 
