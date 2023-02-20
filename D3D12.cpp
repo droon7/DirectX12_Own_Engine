@@ -182,10 +182,11 @@ void Dx12::LoadAssets()
 
 	//PMDヘッダー読み込み
 	char signature[3] = {};
-	auto fp = fopen("Model/初音ミク.pmd", "rb");
+	FILE* fp ;
+	auto err = fopen_s(&fp,"Model/初音ミク.pmd", "rb");
 
 	fread(signature, sizeof(signature), 1, fp);
-	fread(&pmdheader, sizeof(pmdheader), 1, fp);
+	fread(&pmdheader, sizeof(pmdheader), 1,fp);
 
 	//PMD頂点情報読み込み
 
