@@ -40,6 +40,52 @@ struct MatricesData
 	DirectX::XMMATRIX viewproj;
 };
 
+//PMDマテリアル構造体、PMDマテリアルデータの読み込みのために使う
+//パディングがあるため#pragma pack(1)でアライメントを詰める
+#pragma pack(1)
+struct PMDMaterial
+{
+	DirectX::XMFLOAT3 diffuse;   //ディフューズの色
+	float alpha;				 //ディフューズα
+	DirectX::XMFLOAT3 specular;  //スペキュラの色
+	float specularity;			 //スペキュラの強さ
+	DirectX::XMFLOAT3 ambient;   //アンビエント色
+	unsigned char toonIdx;       //トゥーン番号
+	unsigned char edgeFlag;      //マテリアル毎の輪郭線フラグ
+	// 2 byte padding
+	unsigned int indicesNum;     //このマテリアルが割り当てられるインデックス数
+
+	char texFilePath[20];        //テクスチャファイルパス＋α
+};
+#pragma pack()
+
+//シェーダー用マテリアルデータ
+struct MaterialForHlsl
+{
+	DirectX::XMFLOAT3 diffuse;
+	float alpha;
+	DirectX::XMFLOAT3 specular;
+	float specularity;
+	DirectX::XMFLOAT3 ambient;
+};
+
+
+//その他マテリアルデータ
+struct AdditionalMaterial
+{
+	std::string texPath;
+	int toonIdx;
+	bool edgeflag;
+};
+
+//マテリアルデータをまとめる
+struct Material
+{
+	unsigned int indicesNum;
+	MaterialForHlsl material;
+	AdditionalMaterial additional;
+};
+
 class Dx12
 {
 public:
@@ -120,7 +166,7 @@ private:
 	static constexpr size_t pmdvertex_size = 38;
 	unsigned int vertNum;
 	unsigned int indicesNum;
-
+	unsigned int materialNum;
 	
 
 };
