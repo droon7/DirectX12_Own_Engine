@@ -1,3 +1,3 @@
-# Grimoire_of_the_DirectX12
+# DirectX12_Own_Engine
 
-Directx12の魔導書の学習のためのリポジトリ
+DirectX12による自作のグラフィックエンジン
