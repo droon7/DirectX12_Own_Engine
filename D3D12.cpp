@@ -643,6 +643,32 @@ void Dx12::LoadAssets()
 		dsvHeaps->GetCPUDescriptorHandleForHeapStart()
 	);
 
+	//マテリアルバッファーの作成、バッファーサイズを256バイトでアライメントする
+	auto materialBuffSize = sizeof(MaterialForHlsl);
+	materialBuffSize = (materialBuffSize + 0xff) & ~0xff;
+
+	auto materialHeapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto materialResourceDescriptor = CD3DX12_RESOURCE_DESC::Buffer(materialBuffSize * materialNum);
+
+	result = _dev->CreateCommittedResource(
+		&materialHeapProperty,
+		D3D12_HEAP_FLAG_NONE,
+		&materialResourceDescriptor,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&materialBuff)
+	);
+
+	result = materialBuff->Map(0, nullptr, (void**)&mapMaterial);
+
+	for (auto& m : materials) {
+		*reinterpret_cast<MaterialForHlsl*>(mapMaterial) = m.material;
+		mapMaterial += materialBuffSize;
+	}
+	materialBuff->Unmap(0, nullptr);
+
+
+
 	//パイプラインステートの作成、設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline = {};
 	//シェーダーを設定

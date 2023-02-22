@@ -168,7 +168,9 @@ private:
 	unsigned int indicesNum;
 	unsigned int materialNum;
 	
-
+	//マテリアルデータ
+	ComPtr<ID3D12Resource> materialBuff = nullptr;
+	char* mapMaterial = nullptr;
 };
 
 
