@@ -752,8 +752,8 @@ void Dx12::LoadAssets()
 
 
 	//ルートシグネチャに設定するルートパラメータ及びディスクリプタテーブル、ディスクリプタレンジの設定
-	//１つ目はシェーダーリソースビューの設定、２つ目は定数バッファービューの設定
-	D3D12_DESCRIPTOR_RANGE descTblRange[2] = {};
+	//１つ目はシェーダーリソースビューの設定、２つ目は行列用定数バッファービューの設定、3つ目はマテリアル用定数バッファ
+	D3D12_DESCRIPTOR_RANGE descTblRange[3] = {};
 	descTblRange[0].NumDescriptors = 1;
 	descTblRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descTblRange[0].BaseShaderRegister = 0;
@@ -764,28 +764,25 @@ void Dx12::LoadAssets()
 	descTblRange[1].BaseShaderRegister = 0;
 	descTblRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+	descTblRange[2].NumDescriptors = 1; //ディスクリプタヒープは複数だが一度に使うのは一つのため
+	descTblRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	descTblRange[2].BaseShaderRegister = 1;
+	descTblRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	//ルートパラメーターの設定
-	D3D12_ROOT_PARAMETER rootparam{};
-
-	rootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	rootparam.DescriptorTable.NumDescriptorRanges = 2;
-	rootparam.DescriptorTable.pDescriptorRanges = &descTblRange[0];
-
-
-	/*
 	D3D12_ROOT_PARAMETER rootparam[2] = {};
 
 	rootparam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootparam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootparam[0].DescriptorTable.NumDescriptorRanges = 1;
+	rootparam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootparam[0].DescriptorTable.NumDescriptorRanges = 2;
 	rootparam[0].DescriptorTable.pDescriptorRanges = &descTblRange[0];
 
 	rootparam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootparam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootparam[1].DescriptorTable.pDescriptorRanges = &descTblRange[2];
 	rootparam[1].DescriptorTable.NumDescriptorRanges = 1;
-	rootparam[1].DescriptorTable.pDescriptorRanges = &descTblRange[1];
-	*/
+	rootparam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+
 
 	//ルートシグネチャに設定するサンプラーの設定
 	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
@@ -806,8 +803,8 @@ void Dx12::LoadAssets()
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//ディスクリプタテーブルの実体であるルートパラメーターを設定
-	rootSignatureDesc.pParameters = &rootparam;
-	rootSignatureDesc.NumParameters = 1;
+	rootSignatureDesc.pParameters = &rootparam[0];
+	rootSignatureDesc.NumParameters = 2;
 	//サンプラーを設定
 	rootSignatureDesc.pStaticSamplers = &samplerDesc;
 	rootSignatureDesc.NumStaticSamplers = 1;
