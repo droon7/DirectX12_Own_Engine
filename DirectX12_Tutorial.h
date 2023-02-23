@@ -148,6 +148,18 @@ private:
 	MatricesData* mapMatrix = nullptr;
 	float angle = 0.0f;
 
+	//PMDデータの宣言
+	PMDHeader pmdheader;
+
+	static constexpr size_t pmdvertex_size = 38;
+	unsigned int vertNum;
+	unsigned int indicesNum;
+	unsigned int materialNum;
+
+	//マテリアルデータ
+	ComPtr<ID3D12Resource> materialBuff = nullptr;
+	char* mapMaterial = nullptr;
+	ComPtr<ID3D12DescriptorHeap> materialDescHeap = nullptr;
 
 	//シェーダーオブジェクトの宣言
 	ID3DBlob* _vsBlob = nullptr;
@@ -160,17 +172,7 @@ private:
 	UINT64 _fenceVal = 0;
 	HANDLE _fenceevent;
 
-	//PMDデータの宣言
-	PMDHeader pmdheader;
 
-	static constexpr size_t pmdvertex_size = 38;
-	unsigned int vertNum;
-	unsigned int indicesNum;
-	unsigned int materialNum;
-	
-	//マテリアルデータ
-	ComPtr<ID3D12Resource> materialBuff = nullptr;
-	char* mapMaterial = nullptr;
 };
 
 

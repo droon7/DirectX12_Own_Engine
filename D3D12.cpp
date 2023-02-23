@@ -661,11 +661,37 @@ void Dx12::LoadAssets()
 
 	result = materialBuff->Map(0, nullptr, (void**)&mapMaterial);
 
+	//char*をmaterialForHlsl*型に変換
 	for (auto& m : materials) {
 		*reinterpret_cast<MaterialForHlsl*>(mapMaterial) = m.material;
 		mapMaterial += materialBuffSize;
 	}
 	materialBuff->Unmap(0, nullptr);
+
+	//マテリアル用ディスクリプタヒープの作成。
+	D3D12_DESCRIPTOR_HEAP_DESC matDescHeapDesc = {};
+	matDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	matDescHeapDesc.NodeMask = 0;
+	matDescHeapDesc.NumDescriptors = materialNum;
+	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	
+	result = _dev->CreateDescriptorHeap(
+		&matDescHeapDesc, IID_PPV_ARGS(&materialDescHeap)
+	);
+
+	//マテリアル用定数バッファービューの作成、マテリアルの数だけ作る。
+	D3D12_CONSTANT_BUFFER_VIEW_DESC matCBVDesc = {};
+	matCBVDesc.BufferLocation = materialBuff->GetGPUVirtualAddress();
+	matCBVDesc.SizeInBytes = materialBuffSize;
+
+	auto matDescHeapHead = materialDescHeap->GetCPUDescriptorHandleForHeapStart(); //先頭を記録
+	
+	for (int i = 0; i < materialNum; ++i)
+	{
+		_dev->CreateConstantBufferView(&matCBVDesc, matDescHeapHead);
+		matDescHeapHead.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		matCBVDesc.BufferLocation += materialBuffSize;
+	}
 
 
 
