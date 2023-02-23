@@ -160,6 +160,8 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="D3D12.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -183,7 +183,8 @@ void Dx12::LoadAssets()
 	//PMDヘッダー読み込み
 	char signature[3] = {};
 	FILE* fp ;
-	auto err = fopen_s(&fp,"Model/初音ミク.pmd", "rb");
+	std::string strModelPath = "Model/初音ミク.pmd";
+	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 
 	fread(signature, sizeof(signature), 1, fp);
 	fread(&pmdheader, sizeof(pmdheader), 1,fp);
@@ -223,14 +224,7 @@ void Dx12::LoadAssets()
 
 	//DirectXTexライブラリのメソッドによりテクスチャ画像をロード
 	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
-	TexMetadata metadata = {};
-	ScratchImage scratchImg = {};
 
-	result = LoadFromWICFile(
-		L"img/Family_Computer.png", WIC_FLAGS_NONE,
-		&metadata, scratchImg);
-
-	auto img = scratchImg.GetImage(0, 0, 0);
 
 
 	//頂点バッファーの生成
@@ -372,165 +366,31 @@ void Dx12::LoadAssets()
 		},
 	};
 
-
-	//テクスチャの中間バッファーとしてのアップロードヒープの設定
-	D3D12_HEAP_PROPERTIES uploadHeapProp = {};
-	uploadHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
-	//UPLOAD用なのでUNKNOWNに設定
-	uploadHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	uploadHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	uploadHeapProp.CreationNodeMask = 0;
-	uploadHeapProp.VisibleNodeMask = 0;
-
-	//テクスチャの中間バッファリソースディスクリプタの設定
-	//中間バッファーなのでテクスチャとして指定しない
-	D3D12_RESOURCE_DESC textureBuffDesc = {};
-
-	textureBuffDesc.Format = DXGI_FORMAT_UNKNOWN;
-	textureBuffDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	textureBuffDesc.Width = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT)
-		* img->height;
-	textureBuffDesc.Height = 1;
-	textureBuffDesc.DepthOrArraySize = 1;
-	textureBuffDesc.MipLevels = 1;
-	textureBuffDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	textureBuffDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	textureBuffDesc.SampleDesc.Count = 1;
-	textureBuffDesc.SampleDesc.Quality = 0;
-
-	//テクスチャの中間バッファーの作成
-	ID3D12Resource* uploadbuff = nullptr;
-
-	result = _dev->CreateCommittedResource(
-		&uploadHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&textureBuffDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&uploadbuff)
-	);
-
-	//中間バッファからのコピー先のテクスチャバッファーの作成
-
-	D3D12_HEAP_PROPERTIES textureHeapProp = {};
-
-	//テクスチャのヒープの設定
-	textureHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
-	textureHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	textureHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	textureHeapProp.CreationNodeMask = 0;
-	textureHeapProp.VisibleNodeMask = 0;
-
-	//テクスチャのリソースの設定
-	textureBuffDesc.Format = metadata.format;
-	textureBuffDesc.Width = metadata.width;
-	textureBuffDesc.Height = metadata.height;
-	textureBuffDesc.DepthOrArraySize = metadata.arraySize;
-	textureBuffDesc.MipLevels = metadata.mipLevels;
-	textureBuffDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
-	textureBuffDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-
-
-	//コピー先のテクスチャバッファーの作成
-	result = _dev->CreateCommittedResource(
-		&textureHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&textureBuffDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS(&texbuff)
-	);
-
-	//中間バッファーへテクスチャデータをコピー
-	uint8_t* mapforImg = nullptr;
-	result = uploadbuff->Map(0, nullptr, (void**)&mapforImg);
-
-	//std::copy_n(img->pixels, img->slicePitch, mapforImg);
-	auto srcAddress = img->pixels;
-	auto rowPitch = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-
-	for (int y = 0; y < img->height; ++y)
+	textureResource.resize(pmdMaterials.size());
+	
+	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを返す。
+	for (int i = 0; i < pmdMaterials.size(); ++i)
 	{
-		std::copy_n(srcAddress, rowPitch, mapforImg);
-
-		srcAddress += img->rowPitch;
-		mapforImg += rowPitch;
-	}
-	uploadbuff->Unmap(0, nullptr);
-
-
-	//CommandList::CopyTextureRegion()の引数の構造体を作る
-	//アップロード側の作成
-	src.pResource = uploadbuff;
-	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-	src.PlacedFootprint.Offset = 0;
-	src.PlacedFootprint.Footprint.Width = metadata.width;
-	src.PlacedFootprint.Footprint.Height = metadata.height;
-	src.PlacedFootprint.Footprint.Depth = metadata.depth;
-	src.PlacedFootprint.Footprint.RowPitch = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-	src.PlacedFootprint.Footprint.Format = img->format;
-
-	//コピー先の設定
-	dst.pResource = texbuff.Get();
-	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-	dst.SubresourceIndex = 0;
-
-	_cmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
-
-	{
-
-		//テクスチャのコピーのためのリソースバリアの設定
-
-		D3D12_RESOURCE_BARRIER BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-			texbuff.Get(),
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
-		);
-		_cmdList->ResourceBarrier(1, &BarrierDesc);
-
-		_cmdList->Close();
-
-		ID3D12CommandList* cmdlists[] = { _cmdList.Get()};
-		_cmdQueue->ExecuteCommandLists(1, cmdlists);
-
-		_cmdQueue->Signal(_fence.Get(), ++_fenceVal);
-
-		if (_fence->GetCompletedValue() != _fenceVal)
+		if (strlen(pmdMaterials[i].texFilePath) == 0)
 		{
-			auto event = CreateEvent(nullptr, false, false, nullptr);
-			_fence->SetEventOnCompletion(_fenceVal, event);
-			WaitForSingleObject(event, INFINITE);
-			CloseHandle(event);
+			textureResource[i] = nullptr;
 		}
-		_cmdAllocator->Reset();
-		_cmdList->Reset(_cmdAllocator.Get(), nullptr);
+
+		auto texFilePath = GetTexturePathFromModelAndTexPath(
+			strModelPath,
+			pmdMaterials[i].texFilePath);
+
+		textureResource[i] = LoadTextureFromFile(texFilePath);
 	}
 
-	//シェーダーリソースビューと定数バッファービュー用のディスクリプタヒープの作成
-	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
-	//シェーダーから見えるように
-	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	descHeapDesc.NodeMask = 0;
-	descHeapDesc.NumDescriptors = 2;
-	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&basicDescHeaps));
 
-	//シェーダーリソースビューの作成
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-
-	auto basicHeaphandle = basicDescHeaps->GetCPUDescriptorHandleForHeapStart();
-
-	_dev->CreateShaderResourceView(
-		texbuff.Get(),
-		&srvDesc,
-		basicHeaphandle
-	);
+	//_dev->CreateShaderResourceView(
+	//	texbuff.Get(),
+	//	&srvDesc,
+	//	basicHeaphandle
+	//);
 
 
 	//行列の転送。ピクセル座標系からシェーダー座標系への変換行列を送る。
@@ -560,6 +420,7 @@ void Dx12::LoadAssets()
 	matrix *= projMat;
 
 
+
 	//定数バッファーの作成
 	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(MatricesData) + 0xff) & ~0xff);
@@ -579,7 +440,17 @@ void Dx12::LoadAssets()
 	mapMatrix->viewproj = viewMat * projMat;
 	
 	//定数バッファービューの作成のための設定
-	basicHeaphandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//行列用定数バッファービュー用のディスクリプタヒープの作成
+	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
+	//シェーダーから見えるように
+	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descHeapDesc.NodeMask = 0;
+	descHeapDesc.NumDescriptors = 1;
+	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&basicDescHeaps));
+
+	auto basicHeaphandle = basicDescHeaps->GetCPUDescriptorHandleForHeapStart();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
 	constBufferViewDesc.BufferLocation = constBuff->GetGPUVirtualAddress();
@@ -668,16 +539,24 @@ void Dx12::LoadAssets()
 	}
 	materialBuff->Unmap(0, nullptr);
 
-	//マテリアル用ディスクリプタヒープの作成。
+	//マテリアルとテクスチャ用のディスクリプタヒープの作成。
 	D3D12_DESCRIPTOR_HEAP_DESC matDescHeapDesc = {};
 	matDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	matDescHeapDesc.NodeMask = 0;
-	matDescHeapDesc.NumDescriptors = materialNum;
+	matDescHeapDesc.NumDescriptors = materialNum * 2;
 	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	
 	result = _dev->CreateDescriptorHeap(
 		&matDescHeapDesc, IID_PPV_ARGS(&materialDescHeap)
 	);
+
+	//シェーダーリソースビューディスクリプタの作成
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+	srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
 
 	//マテリアル用定数バッファービューの作成、マテリアルの数だけ作る。
 	D3D12_CONSTANT_BUFFER_VIEW_DESC matCBVDesc = {};
@@ -685,12 +564,26 @@ void Dx12::LoadAssets()
 	matCBVDesc.SizeInBytes = materialBuffSize;
 
 	auto matDescHeapHead = materialDescHeap->GetCPUDescriptorHandleForHeapStart(); //先頭を記録
-	
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
 	for (int i = 0; i < materialNum; ++i)
 	{
 		_dev->CreateConstantBufferView(&matCBVDesc, matDescHeapHead);
-		matDescHeapHead.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		matDescHeapHead.ptr += inc;
 		matCBVDesc.BufferLocation += materialBuffSize;
+
+		if (textureResource[i] != nullptr)
+		{
+			srvDesc.Format = textureResource[i]->GetDesc().Format;
+		}
+
+		_dev->CreateShaderResourceView(
+			textureResource[i].Get(),
+			&srvDesc,
+			matDescHeapHead
+		);
+
+		matDescHeapHead.ptr += inc;
 	}
 
 
@@ -752,21 +645,21 @@ void Dx12::LoadAssets()
 
 
 	//ルートシグネチャに設定するルートパラメータ及びディスクリプタテーブル、ディスクリプタレンジの設定
-	//１つ目はシェーダーリソースビューの設定、２つ目は行列用定数バッファービューの設定、3つ目はマテリアル用定数バッファ
+	//１つ目は行列用定数バッファービューの設定、２つ目はマテリアル用定数バッファの設定、3つ目はシェーダーリソースビューの設定
 	D3D12_DESCRIPTOR_RANGE descTblRange[3] = {};
 	descTblRange[0].NumDescriptors = 1;
-	descTblRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descTblRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	descTblRange[0].BaseShaderRegister = 0;
 	descTblRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	descTblRange[1].NumDescriptors = 1;
+	descTblRange[1].NumDescriptors = 1;//ディスクリプタヒープは複数だが一度に使うのは一つのため
 	descTblRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	descTblRange[1].BaseShaderRegister = 0;
+	descTblRange[1].BaseShaderRegister = 1;
 	descTblRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	descTblRange[2].NumDescriptors = 1; //ディスクリプタヒープは複数だが一度に使うのは一つのため
-	descTblRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	descTblRange[2].BaseShaderRegister = 1;
+	descTblRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descTblRange[2].BaseShaderRegister = 0;
 	descTblRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	//ルートパラメーターの設定
@@ -774,13 +667,13 @@ void Dx12::LoadAssets()
 
 	rootparam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootparam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	rootparam[0].DescriptorTable.NumDescriptorRanges = 2;
+	rootparam[0].DescriptorTable.NumDescriptorRanges = 1;
 	rootparam[0].DescriptorTable.pDescriptorRanges = &descTblRange[0];
 
 	rootparam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootparam[1].DescriptorTable.pDescriptorRanges = &descTblRange[2];
-	rootparam[1].DescriptorTable.NumDescriptorRanges = 1;
-	rootparam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootparam[1].DescriptorTable.pDescriptorRanges = &descTblRange[1];
+	rootparam[1].DescriptorTable.NumDescriptorRanges = 2;
+	rootparam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 
 
@@ -970,7 +863,9 @@ void Dx12::PopulateCommandList()
 	//_cmdList->DrawIndexedInstanced(indicesNum, 1, 0, 0, 0); //頂点インデックス使用
 
 	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
+	//その上さらにテクスチャも描画していく。
 	auto materialH = materialDescHeap->GetGPUDescriptorHandleForHeapStart();
+	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 2;
 
 	unsigned int idxOffset = 0;
 	for (auto& m : materials)
@@ -979,7 +874,7 @@ void Dx12::PopulateCommandList()
 
 		_cmdList->DrawIndexedInstanced(m.indicesNum, 1, idxOffset, 0, 0);
 
-		materialH.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		materialH.ptr += cbvSrvIncSize;
 
 		idxOffset += m.indicesNum;
 	}

@@ -135,10 +135,13 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 	D3D12_TEXTURE_COPY_LOCATION src = {};
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
-	ComPtr<ID3D12Resource> texbuff = nullptr;
+	std::vector<ComPtr<ID3D12Resource>> textureResource;
 	ComPtr<ID3D12Resource> constBuff = nullptr;
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
+
+	DirectX::TexMetadata metadata;
+	DirectX::ScratchImage scratchImg;
 
 	//行列アセット
 	DirectX::XMMATRIX matrix;
@@ -174,6 +177,9 @@ private:
 	HANDLE _fenceevent;
 
 
+//WICテクスチャのロード
+	ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath);
+
 };
 
 
@@ -199,11 +205,15 @@ inline size_t AlignmentedSize(size_t size, size_t alignment)
 	return size + alignment - size % alignment;
 };
 
-//モデルパスからファイル名を取り除き、テクスチャパスと合成する
+//モデルパスからファイル名を取り除き、テクスチャパスと合成するメソッド
 inline std::string GetTexturePathFromModelAndTexPath(const std::string& modelPath, const char* texPath)
 {
-	auto folderPath = modelPath.substr(0, modelPath.rfind('/'));
+	auto folderPath = modelPath.substr(0, modelPath.rfind('/')+1);
 	return folderPath + texPath;
 }
+
+//文字列からワイド文字列を得るメソッド
+std::wstring GetWideStringFromString(const std::string& str);
+
 
 #endif
