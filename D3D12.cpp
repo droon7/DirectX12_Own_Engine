@@ -383,6 +383,8 @@ void Dx12::LoadAssets()
 		textureResource[i] = LoadTextureFromFile(texFilePath);
 	}
 
+	//白テクスチャの作成
+	whiteTex = CreateWhiteTexture();
 
 
 
@@ -572,16 +574,25 @@ void Dx12::LoadAssets()
 		matDescHeapHead.ptr += inc;
 		matCBVDesc.BufferLocation += materialBuffSize;
 
-		if (textureResource[i] != nullptr)
+		if (textureResource[i] != nullptr)		//テクスチャがあればそのテクスチャ、なければ白テクスチャを設定
 		{
 			srvDesc.Format = textureResource[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				textureResource[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
 		}
+		else
+		{
+			srvDesc.Format = whiteTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				whiteTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
 
-		_dev->CreateShaderResourceView(
-			textureResource[i].Get(),
-			&srvDesc,
-			matDescHeapHead
-		);
+		}
 
 		matDescHeapHead.ptr += inc;
 	}
@@ -747,10 +758,10 @@ void Dx12::LoadAssets()
 void Dx12::OnUpdate()
 {
 
-	//行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	angle += 0.02f;
-	worldMat = XMMatrixRotationY(angle);
-	mapMatrix->world = worldMat;
+	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
+	//angle += 0.02f;
+	//worldMat = XMMatrixRotationY(angle);
+	//mapMatrix->world = worldMat;
 }
 
 

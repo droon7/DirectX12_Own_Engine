@@ -136,6 +136,7 @@ private:
 	D3D12_TEXTURE_COPY_LOCATION src = {};
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
 	std::vector<ComPtr<ID3D12Resource>> textureResource;
+	ComPtr<ID3D12Resource> whiteTex;
 	ComPtr<ID3D12Resource> constBuff = nullptr;
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
@@ -180,6 +181,8 @@ private:
 //WICテクスチャのロード
 	ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath);
 
+//白テクスチャの作成
+	ComPtr<ID3D12Resource> CreateWhiteTexture();
 };
 
 
