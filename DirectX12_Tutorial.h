@@ -160,6 +160,7 @@ private:
 	ComPtr<ID3D12Resource> materialBuff = nullptr;
 	char* mapMaterial = nullptr;
 	ComPtr<ID3D12DescriptorHeap> materialDescHeap = nullptr;
+	std::vector<Material> materials;
 
 	//シェーダーオブジェクトの宣言
 	ID3DBlob* _vsBlob = nullptr;
@@ -198,6 +199,11 @@ inline size_t AlignmentedSize(size_t size, size_t alignment)
 	return size + alignment - size % alignment;
 };
 
-
+//モデルパスからファイル名を取り除き、テクスチャパスと合成する
+inline std::string GetTexturePathFromModelAndTexPath(const std::string& modelPath, const char* texPath)
+{
+	auto folderPath = modelPath.substr(0, modelPath.rfind('/'));
+	return folderPath + texPath;
+}
 
 #endif

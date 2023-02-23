@@ -206,7 +206,7 @@ void Dx12::LoadAssets()
 	std::vector<PMDMaterial> pmdMaterials(materialNum);
 	fread(pmdMaterials.data(), pmdMaterials.size() * sizeof(pmdMaterials), 1, fp);
 
-	std::vector<Material> materials(pmdMaterials.size());
+	materials.resize(pmdMaterials.size());
 	for (int i = 0; i < pmdMaterials.size(); ++i)
 	{
 		materials[i].indicesNum = pmdMaterials[i].indicesNum;
@@ -949,14 +949,13 @@ void Dx12::PopulateCommandList()
 
 	_cmdList->SetGraphicsRootDescriptorTable(0, basicDescHeaps->GetGPUDescriptorHandleForHeapStart());
 
-	
-	/*
-	//ルートパラメタと定数バッファーディスクリプタヒープのアドレスの関連付け
-	auto heapHandle = basicDescHeaps->GetGPUDescriptorHandleForHeapStart();
-	heapHandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//マテリアルディスクリプタヒープのセット
+	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
 
-	_cmdList->SetGraphicsRootDescriptorTable(1, heapHandle);
-	*/
+	_cmdList->SetDescriptorHeaps(1, ppHeaps1);
+	//_cmdList->SetGraphicsRootDescriptorTable(1, materialDescHeap->GetGPUDescriptorHandleForHeapStart());
+	
+
 
 	//頂点バッファーのセット
 	_cmdList->IASetVertexBuffers(0, 1, &vbView);
@@ -964,16 +963,26 @@ void Dx12::PopulateCommandList()
 	//インデックスバッファーのセット
 	_cmdList->IASetIndexBuffer(&ibView);
 
-	//マテリアルディスクリプタヒープのセット
-	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
 
-	_cmdList->SetDescriptorHeaps(1, ppHeaps1);
-	_cmdList->SetGraphicsRootDescriptorTable(1, materialDescHeap->GetGPUDescriptorHandleForHeapStart());
 
 	//実際の描画命令
 	//_cmdList->DrawInstanced(vertNum, 1, 0, 0); //頂点インデックス非使用
-	_cmdList->DrawIndexedInstanced(indicesNum, 1, 0, 0, 0); //頂点インデックス使用
+	//_cmdList->DrawIndexedInstanced(indicesNum, 1, 0, 0, 0); //頂点インデックス使用
 
+	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
+	auto materialH = materialDescHeap->GetGPUDescriptorHandleForHeapStart();
+
+	unsigned int idxOffset = 0;
+	for (auto& m : materials)
+	{
+		_cmdList->  SetGraphicsRootDescriptorTable(1, materialH);
+
+		_cmdList->DrawIndexedInstanced(m.indicesNum, 1, idxOffset, 0, 0);
+
+		materialH.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+		idxOffset += m.indicesNum;
+	}
 
 	//リソースバリアの状態の設定
 	BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
