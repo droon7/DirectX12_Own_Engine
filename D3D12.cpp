@@ -949,6 +949,7 @@ void Dx12::PopulateCommandList()
 
 	_cmdList->SetGraphicsRootDescriptorTable(0, basicDescHeaps->GetGPUDescriptorHandleForHeapStart());
 
+	
 	/*
 	//ルートパラメタと定数バッファーディスクリプタヒープのアドレスの関連付け
 	auto heapHandle = basicDescHeaps->GetGPUDescriptorHandleForHeapStart();
@@ -962,6 +963,12 @@ void Dx12::PopulateCommandList()
 
 	//インデックスバッファーのセット
 	_cmdList->IASetIndexBuffer(&ibView);
+
+	//マテリアルディスクリプタヒープのセット
+	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
+
+	_cmdList->SetDescriptorHeaps(1, ppHeaps1);
+	_cmdList->SetGraphicsRootDescriptorTable(1, materialDescHeap->GetGPUDescriptorHandleForHeapStart());
 
 	//実際の描画命令
 	//_cmdList->DrawInstanced(vertNum, 1, 0, 0); //頂点インデックス非使用
