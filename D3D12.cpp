@@ -202,8 +202,8 @@ void Dx12::LoadAssets()
 	fread(indices.data(), indices.size() * sizeof(indices[0]), 1, fp);
 
 	//PMDマテリアルデータ読み込み
-	std::vector<PMDMaterial> pmdMaterials(materialNum);
 	fread(&materialNum, sizeof(materialNum), 1, fp);
+	std::vector<PMDMaterial> pmdMaterials(materialNum);
 	fread(pmdMaterials.data(), pmdMaterials.size() * sizeof(pmdMaterials), 1, fp);
 
 	std::vector<Material> materials(pmdMaterials.size());
