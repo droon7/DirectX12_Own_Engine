@@ -183,7 +183,11 @@ void Dx12::LoadAssets()
 	//PMDヘッダー読み込み
 	char signature[3] = {};
 	FILE* fp ;
-	std::string strModelPath = "Model/初音ミク.pmd";
+	//std::string strModelPath = "Model/鏡音レン.pmd";
+	//std::string strModelPath = "Model/鏡音リン.pmd";
+	//std::string strModelPath = "Model/巡音ルカ.pmd";
+	std::string strModelPath = "Model/弱音ハク.pmd";
+	//std::string strModelPath = "Model/初音ミク.pmd";
 	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 
 	fread(signature, sizeof(signature), 1, fp);
@@ -193,7 +197,7 @@ void Dx12::LoadAssets()
 
 	fread(&vertNum, sizeof(vertNum), 1, fp);
 	
-	std::vector<unsigned char> vertices(vertNum* pmdvertex_size);
+	std::vector<unsigned char> vertices(vertNum * pmdvertex_size);
 	fread(vertices.data(), vertices.size(), 1, fp);
 
 	//PMDインデックスデータ読み込み
@@ -205,7 +209,7 @@ void Dx12::LoadAssets()
 	//PMDマテリアルデータ読み込み
 	fread(&materialNum, sizeof(materialNum), 1, fp);
 	std::vector<PMDMaterial> pmdMaterials(materialNum);
-	fread(pmdMaterials.data(), pmdMaterials.size() * sizeof(pmdMaterials), 1, fp);
+	fread(pmdMaterials.data(), pmdMaterials.size() * sizeof(PMDMaterial), 1, fp);
 
 	materials.resize(pmdMaterials.size());
 	for (int i = 0; i < pmdMaterials.size(); ++i)
@@ -278,7 +282,7 @@ void Dx12::LoadAssets()
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
 	ibView.Format = DXGI_FORMAT_R16_UINT;
-	ibView.SizeInBytes = indices.size() * sizeof(indices[0]);
+	ibView.SizeInBytes = static_cast<UINT>(indices.size() * sizeof(indices[0]));
 
 
 
@@ -759,9 +763,9 @@ void Dx12::OnUpdate()
 {
 
 	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	//angle += 0.02f;
-	//worldMat = XMMatrixRotationY(angle);
-	//mapMatrix->world = worldMat;
+	angle += 0.02f;
+	worldMat = XMMatrixRotationY(angle);
+	mapMatrix->world = worldMat;
 }
 
 
