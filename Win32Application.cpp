@@ -1,5 +1,5 @@
 
-#include "DirectX12_Tutorial.h"
+#include "MyDirectX12.h"
 
 HWND Win32App::m_hwnd = nullptr;
 

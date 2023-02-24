@@ -370,19 +370,38 @@ void Dx12::LoadAssets()
 		},
 	};
 
-	textureResource.resize(pmdMaterials.size());
 	
-	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを返す。
+	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
+	//テクスチャ名にセパレーターがあれば分離し、適切な名前を入れる
+	textureResource.resize(pmdMaterials.size());
+
 	for (int i = 0; i < pmdMaterials.size(); ++i)
 	{
-		if (strlen(pmdMaterials[i].texFilePath) == 0)
+		std::string texFileName = pmdMaterials[i].texFilePath;
+
+		if (texFileName.size() == 0)
 		{
 			textureResource[i] = nullptr;
+			continue;
+		}
+
+		if (std::count(texFileName.begin(), texFileName.end(), '*') > 0)
+		{
+			auto namepair = SplitFileName(texFileName, '*');
+			if (GetExtension(namepair.first) == "sph" ||
+				GetExtension(namepair.first) == "spa")
+			{
+				texFileName = namepair.second;
+			}
+			else
+			{
+				texFileName = namepair.first;
+			}
 		}
 
 		auto texFilePath = GetTexturePathFromModelAndTexPath(
 			strModelPath,
-			pmdMaterials[i].texFilePath);
+			texFileName.c_str());
 
 		textureResource[i] = LoadTextureFromFile(texFilePath);
 	}

@@ -3,7 +3,7 @@
 using namespace DirectX;
 
 
-//WICテクスチャのロード
+//WICテクスチャのロード、失敗すればnullptrを返す
 	ComPtr<ID3D12Resource> Dx12::LoadTextureFromFile(std::string& texPath)
 {
 	metadata = {};
