@@ -185,8 +185,8 @@ void Dx12::LoadAssets()
 	FILE* fp ;
 	//std::string strModelPath = "Model/鏡音レン.pmd";
 	//std::string strModelPath = "Model/鏡音リン.pmd";
-	//std::string strModelPath = "Model/巡音ルカ.pmd";
-	std::string strModelPath = "Model/弱音ハク.pmd";
+	std::string strModelPath = "Model/巡音ルカ.pmd";
+	//std::string strModelPath = "Model/弱音ハク.pmd";
 	//std::string strModelPath = "Model/初音ミク.pmd";
 	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 

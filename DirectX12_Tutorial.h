@@ -218,5 +218,10 @@ inline std::string GetTexturePathFromModelAndTexPath(const std::string& modelPat
 //文字列からワイド文字列を得るメソッド
 std::wstring GetWideStringFromString(const std::string& str);
 
+//ファイル名から拡張子を得るメソッド
+std::string GetExtension(const std::string& path);
+
+//テクスチャのパスをセパレーターで分離するメソッド
+std::pair<std::string, std::string> SplitFileName(const std::string& path, const char splitter);
 
 #endif
