@@ -447,9 +447,10 @@ void Dx12::LoadAssets()
 		toonResources[i] = LoadTextureFromFile(toonFilePath);
 	}
 
-	//白テクスチャの作成
+	//白、黒、グラデーションのテクスチャの作成
 	whiteTex = CreateWhiteTexture();
 	blackTex = CreateBlackTexture();
+	gradTex = CreateGradationTexture();
 
 
 	//_dev->CreateShaderResourceView(
@@ -611,7 +612,7 @@ void Dx12::LoadAssets()
 	D3D12_DESCRIPTOR_HEAP_DESC matDescHeapDesc = {};
 	matDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	matDescHeapDesc.NodeMask = 0;
-	matDescHeapDesc.NumDescriptors = materialNum * 4;
+	matDescHeapDesc.NumDescriptors = materialNum * 5;
 	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	
 	result = _dev->CreateDescriptorHeap(
@@ -634,6 +635,7 @@ void Dx12::LoadAssets()
 	auto matDescHeapHead = materialDescHeap->GetCPUDescriptorHandleForHeapStart(); //先頭を記録
 	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
+	//以下実際にCBV、SRVを作る。
 	for (int i = 0; i < materialNum; ++i)
 	{
 		_dev->CreateConstantBufferView(&matCBVDesc, matDescHeapHead);
@@ -661,7 +663,7 @@ void Dx12::LoadAssets()
 		}
 		matDescHeapHead.ptr += inc;
 	
-		if (sphResources[i] != nullptr)		//SPHがあればそのテクスチャ、なければ白テクスチャを設定
+		if (sphResources[i] != nullptr)		//SPHがあればそのSPH、なければ白テクスチャを設定
 		{
 			srvDesc.Format = sphResources[i]->GetDesc().Format;
 			_dev->CreateShaderResourceView(
@@ -682,7 +684,7 @@ void Dx12::LoadAssets()
 		}
 		matDescHeapHead.ptr += inc;
 
-		if (spaResources[i] != nullptr)		//SPAがあればそのテクスチャ、なければ黒テクスチャを設定
+		if (spaResources[i] != nullptr)		//SPAがあればそのSPA、なければ黒テクスチャを設定
 		{
 			srvDesc.Format = spaResources[i]->GetDesc().Format;
 			_dev->CreateShaderResourceView(
@@ -702,6 +704,27 @@ void Dx12::LoadAssets()
 
 		}
 
+		matDescHeapHead.ptr += inc;
+
+		if (toonResources[i] != nullptr)	//トゥーンリソースがあればトゥーン用、なければグラデーションテクスチャを設定
+		{
+			srvDesc.Format = toonResources[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				toonResources[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+		}
+		else
+		{
+			srvDesc.Format = gradTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				gradTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+
+		}
 		matDescHeapHead.ptr += inc;
 	
 	}
@@ -777,7 +800,8 @@ void Dx12::LoadAssets()
 	descTblRange[1].BaseShaderRegister = 1;
 	descTblRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	descTblRange[2].NumDescriptors = 3; //ディスクリプタヒープは複数だが一度に使うのは一つのため
+	//srvにはテクスチャ、sph、spa、トゥーンテクスチャを設定
+	descTblRange[2].NumDescriptors = 4; //ディスクリプタヒープは複数だが一度に使うのは一つのため
 	descTblRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descTblRange[2].BaseShaderRegister = 0;
 	descTblRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -983,9 +1007,9 @@ void Dx12::PopulateCommandList()
 	//_cmdList->DrawIndexedInstanced(indicesNum, 1, 0, 0, 0); //頂点インデックス使用
 
 	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
-	//その上さらにテクスチャも描画していく。
+	//その上さらにテクスチャ、sph、spa、トゥーンテクスチャも描画していく。
 	auto materialH = materialDescHeap->GetGPUDescriptorHandleForHeapStart();
-	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 4;
+	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 5;
 
 	unsigned int idxOffset = 0;
 	for (auto& m : materials)

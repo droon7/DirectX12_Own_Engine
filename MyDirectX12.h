@@ -137,8 +137,6 @@ private:
 	ComPtr<ID3D12Resource> idxBuff = nullptr;
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
-	ComPtr<ID3D12Resource> whiteTex;
-	ComPtr<ID3D12Resource> blackTex;
 	ComPtr<ID3D12Resource> constBuff = nullptr;
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
@@ -153,6 +151,9 @@ private:
 	DirectX::TexMetadata metadata;
 	DirectX::ScratchImage scratchImg;
 	std::map<std::string, ComPtr<ID3D12Resource>> _resourceTable;
+	ComPtr<ID3D12Resource> whiteTex;
+	ComPtr<ID3D12Resource> blackTex;
+	ComPtr<ID3D12Resource> gradTex;
 
 
 	//行列アセット
@@ -195,6 +196,7 @@ private:
 //白テクスチャの作成
 	ComPtr<ID3D12Resource> CreateWhiteTexture();
 	ComPtr<ID3D12Resource> CreateBlackTexture();
+	ComPtr<ID3D12Resource> CreateGradationTexture();
 
 };
 
