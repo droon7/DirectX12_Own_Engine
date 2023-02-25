@@ -188,6 +188,7 @@ void Dx12::LoadAssets()
 	//std::string strModelPath = "Model/巡音ルカ.pmd";
 	//std::string strModelPath = "Model/弱音ハク.pmd";
 	std::string strModelPath = "Model/初音ミク.pmd";
+	//std::string strModelPath = "Model/初音ミクmetal.pmd";
 	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 
 	fread(signature, sizeof(signature), 1, fp);
@@ -438,8 +439,8 @@ void Dx12::LoadAssets()
 	worldMat = XMMatrixRotationY(0);
 	matrix = worldMat;
 
-	XMFLOAT3 eye(0, 10, -15); 
-	XMFLOAT3 target(0, 10, 0); // eye座標とtarget座標から視線ベクトルを作る
+	XMFLOAT3 eye(0, 15, -15);
+	XMFLOAT3 target(0, 15, 0);
 	XMFLOAT3 up(0, 1, 0);
 
 	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
@@ -811,10 +812,10 @@ void Dx12::LoadAssets()
 void Dx12::OnUpdate()
 {
 
-	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	angle += 0.02f;
-	worldMat = XMMatrixRotationY(angle);
-	mapMatrix->world = worldMat;
+	//////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
+	//angle += 0.02f;
+	//worldMat = XMMatrixRotationY(angle);
+	//mapMatrix->world = worldMat;
 }
 
 
