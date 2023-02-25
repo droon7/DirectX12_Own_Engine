@@ -8,7 +8,7 @@ float4 BasicPS(Output input) : SV_TARGET
 	//ディフューズ計算
 	float diffuseB = saturate(dot(-light, input.normal));
 	//トゥーンシェーダー計算
-	float4 toonDif = toon.Sample(smp, float2(0, 1.0 - diffuseB));
+	float4 toonDif = toon.Sample(smpToon, float2(0, 1.0 - diffuseB));
 
 	//スペキュラー計算
 	float3 reflectLight = normalize(reflect(light, input.normal.xyz)); //反射ベクトル作成
