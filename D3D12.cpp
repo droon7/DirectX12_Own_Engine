@@ -391,22 +391,22 @@ void Dx12::LoadAssets()
 			continue;
 		}
 
-		if (std::count(texFileName.begin(), texFileName.end(), '*') > 0)
+		//if (std::count(texFileName.begin(), texFileName.end(), '*') > 0)
 		{
 			auto namepair = SplitFileName(texFileName, '*');
-			if (GetExtension(namepair.first) == "sph" )
+			if (GetExtension(namepair.second) == "sph" )
 			{
-				sphFileName = namepair.first;
-				texFileName = namepair.second;
+				sphFileName = namepair.second;
+				texFileName = namepair.first;
 			}
-			else if (GetExtension(namepair.first) == "spa")
+			else if (GetExtension(namepair.second) == "spa")
 			{
-				spaFileName = namepair.first;
-				texFileName = namepair.second;
+				spaFileName = namepair.second;
+				texFileName = namepair.first;
 			}
 			else
 			{
-				texFileName = namepair.first;
+				texFileName = namepair.second;
 			}
 		}
 

@@ -10,5 +10,6 @@ float4 BasicPS(Output input) : SV_TARGET
 			* diffuse 
 			* tex.Sample(smp, input.uv)
 			* sph.Sample(smp, normalUV)
-			+ spa.Sample(smp, normalUV);
+			+ spa.Sample(smp, normalUV)
+			;
 }
