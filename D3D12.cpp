@@ -427,6 +427,26 @@ void Dx12::LoadAssets()
 
 	}
 
+	//トゥーンシェーダーのためのカラールックアップテーブルのロード
+	toonResources.resize(pmdMaterials.size());
+
+	for (int i = 0; i < pmdMaterials.size(); ++i)
+	{
+		std::string toonFilePath = "toon/";
+		char toonFileName[16];
+
+		sprintf_s(
+			toonFileName,
+			16,
+			"toon%02d.bmp",
+			pmdMaterials[i].toonIdx + 1
+		);
+
+		toonFilePath += toonFileName;
+
+		toonResources[i] = LoadTextureFromFile(toonFilePath);
+	}
+
 	//白テクスチャの作成
 	whiteTex = CreateWhiteTexture();
 	blackTex = CreateBlackTexture();

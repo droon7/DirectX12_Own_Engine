@@ -143,15 +143,17 @@ private:
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
 
-	//テクスチャ
+	//テクスチャアセット
 	D3D12_TEXTURE_COPY_LOCATION src = {};
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
 	std::vector<ComPtr<ID3D12Resource>> textureResource;
 	std::vector<ComPtr<ID3D12Resource>> sphResources;
 	std::vector<ComPtr<ID3D12Resource>> spaResources;
+	std::vector<ComPtr<ID3D12Resource>> toonResources;
 	DirectX::TexMetadata metadata;
 	DirectX::ScratchImage scratchImg;
 	std::map<std::string, ComPtr<ID3D12Resource>> _resourceTable;
+
 
 	//行列アセット
 	//DirectX::XMMATRIX matrix;
