@@ -185,10 +185,10 @@ void Dx12::LoadAssets()
 	FILE* fp ;
 	//std::string strModelPath = "Model/鏡音レン.pmd";
 	//std::string strModelPath = "Model/鏡音リン.pmd";
-	//std::string strModelPath = "Model/巡音ルカ.pmd";
+	std::string strModelPath = "Model/巡音ルカ.pmd";
 	//std::string strModelPath = "Model/弱音ハク.pmd";
 	//std::string strModelPath = "Model/初音ミク.pmd";
-	std::string strModelPath = "Model/初音ミクmetal.pmd";
+	//std::string strModelPath = "Model/初音ミクmetal.pmd";
 
 	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 
@@ -450,7 +450,7 @@ void Dx12::LoadAssets()
 	worldMat = XMMatrixRotationY(0);
 	matrix = worldMat;
 
-	XMFLOAT3 eye(0, 15, -5); 
+	XMFLOAT3 eye(0, 15, -10); 
 	XMFLOAT3 target(0, 15, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
