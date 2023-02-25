@@ -6,7 +6,9 @@ float4 BasicPS(Output input) : SV_TARGET
 	float3 lightColor = float3(1, 1, 1);
 
 	//ディフューズ計算
-	float diffuseB = dot(-light, input.normal);
+	float diffuseB = saturate(dot(-light, input.normal));
+	//トゥーンシェーダー計算
+	float4 toonDif = toon.Sample(smp, float2(0, 1.0 - diffuseB));
 
 	//スペキュラー計算
 	float3 reflectLight = normalize(reflect(light, input.normal.xyz)); //反射ベクトル作成
@@ -20,11 +22,12 @@ float4 BasicPS(Output input) : SV_TARGET
 	float2 sphereMapUV = (input.vnormal.xy + float2(1, -1)) * float2(0.5, -0.5);
 
 	//描画する値を返す
-	return  max(diffuseB
+	return  max(
+		saturate(toonDif)
 		* diffuse
 		* texColor
 		* sph.Sample(smp, sphereMapUV)
-		+ spa.Sample(smp, sphereMapUV)
+		+ saturate(spa.Sample(smp, sphereMapUV))
 		+ float4(specularB * specular.rgb, 1)
 		//, float4(texColor * ambient, 1));
 		,0);
