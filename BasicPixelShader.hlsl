@@ -19,19 +19,15 @@ float4 BasicPS(Output input) : SV_TARGET
 	//float2 normalUV = (input.normal.xy + float2(1, -1)) * float2(0.5, -0.5);
 	float2 sphereMapUV = (input.vnormal.xy + float2(1, -1)) * float2(0.5, -0.5);
 
-
-
-
-
-
-	return  max(diffuseB 
-			* diffuse 
-			* texColor
-			* sph.Sample(smp, sphereMapUV)
-			+ spa.Sample(smp, sphereMapUV)
-			+ float4(specularB * specular.rgb, 1)
-			//, float4(texColor * ambient, 1)
-			,0);
+	//•`‰æ‚·‚é’l‚ð•Ô‚·
+	return  max(diffuseB
+		* diffuse
+		* texColor
+		* sph.Sample(smp, sphereMapUV)
+		+ spa.Sample(smp, sphereMapUV)
+		+ float4(specularB * specular.rgb, 1)
+		//, float4(texColor * ambient, 1));
+		,0);
 
 	//return float4(specularB * specular.rgb, 1);
 }

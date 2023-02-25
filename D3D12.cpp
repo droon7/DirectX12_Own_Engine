@@ -847,10 +847,10 @@ void Dx12::LoadAssets()
 void Dx12::OnUpdate()
 {
 
-	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	//angle += 0.02f;
-	//worldMat = XMMatrixRotationY(angle);
-	//mapMatrix->world = worldMat;
+	//行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
+	angle += 0.02f;
+	worldMat = XMMatrixRotationY(angle);
+	mapMatrix->world = worldMat;
 }
 
 

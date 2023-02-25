@@ -13,6 +13,7 @@ Output BasicVS(
 
 	float3 worldPos = mul(world, pos);
 	output.ray = normalize(worldPos.xyz - eye);
+	//output.ray = normalize(pos.xyz - eye);
 	output.uv = uv;
 	output.normal = mul(world, normal);
 	output.vnormal = mul(view, output.normal);

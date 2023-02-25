@@ -49,8 +49,8 @@ struct PMDMaterial
 {
 	DirectX::XMFLOAT3 diffuse;   //ディフューズの色
 	float alpha;				 //ディフューズα
-	DirectX::XMFLOAT3 specular;  //スペキュラの色
 	float specularity;			 //スペキュラの強さ
+	DirectX::XMFLOAT3 specular;  //スペキュラの色
 	DirectX::XMFLOAT3 ambient;   //アンビエント色
 	unsigned char toonIdx;       //トゥーン番号
 	unsigned char edgeFlag;      //マテリアル毎の輪郭線フラグ
