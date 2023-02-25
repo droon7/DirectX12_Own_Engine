@@ -185,9 +185,9 @@ void Dx12::LoadAssets()
 	FILE* fp ;
 	//std::string strModelPath = "Model/鏡音レン.pmd";
 	//std::string strModelPath = "Model/鏡音リン.pmd";
-	std::string strModelPath = "Model/巡音ルカ.pmd";
+	//std::string strModelPath = "Model/巡音ルカ.pmd";
 	//std::string strModelPath = "Model/弱音ハク.pmd";
-	//std::string strModelPath = "Model/初音ミク.pmd";
+	std::string strModelPath = "Model/初音ミク.pmd";
 	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 
 	fread(signature, sizeof(signature), 1, fp);
@@ -374,10 +374,13 @@ void Dx12::LoadAssets()
 	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
 	//テクスチャ名にセパレーターがあれば分離し、適切な名前を入れる
 	textureResource.resize(pmdMaterials.size());
+	sphResources.resize(pmdMaterials.size());
+	spaResources.resize(pmdMaterials.size());
 
 	for (int i = 0; i < pmdMaterials.size(); ++i)
 	{
 		std::string texFileName = pmdMaterials[i].texFilePath;
+		std::string sphFileName = {};
 
 		if (texFileName.size() == 0)
 		{
@@ -391,6 +394,7 @@ void Dx12::LoadAssets()
 			if (GetExtension(namepair.first) == "sph" ||
 				GetExtension(namepair.first) == "spa")
 			{
+				sphFileName = namepair.first;
 				texFileName = namepair.second;
 			}
 			else
@@ -403,7 +407,12 @@ void Dx12::LoadAssets()
 			strModelPath,
 			texFileName.c_str());
 
+		auto sphFilePath = GetTexturePathFromModelAndTexPath(
+			strModelPath,
+			sphFileName.c_str());
+
 		textureResource[i] = LoadTextureFromFile(texFilePath);
+		sphResources[i] = LoadTextureFromFile(sphFilePath);
 	}
 
 	//白テクスチャの作成
@@ -568,7 +577,7 @@ void Dx12::LoadAssets()
 	D3D12_DESCRIPTOR_HEAP_DESC matDescHeapDesc = {};
 	matDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	matDescHeapDesc.NodeMask = 0;
-	matDescHeapDesc.NumDescriptors = materialNum * 2;
+	matDescHeapDesc.NumDescriptors = materialNum * 3;
 	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	
 	result = _dev->CreateDescriptorHeap(
@@ -583,7 +592,7 @@ void Dx12::LoadAssets()
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 
-	//マテリアル用定数バッファービューの作成、マテリアルの数だけ作る。
+	//マテリアル用CBV、SRVの作成、マテリアルの数だけ作る。
 	D3D12_CONSTANT_BUFFER_VIEW_DESC matCBVDesc = {};
 	matCBVDesc.BufferLocation = materialBuff->GetGPUVirtualAddress();
 	matCBVDesc.SizeInBytes = materialBuffSize;
@@ -616,8 +625,29 @@ void Dx12::LoadAssets()
 			);
 
 		}
-
 		matDescHeapHead.ptr += inc;
+	
+		if (sphResources[i] != nullptr)		//SPHがあればそのテクスチャ、なければ白テクスチャを設定
+		{
+			srvDesc.Format = sphResources[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				sphResources[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+		}
+		else
+		{
+			srvDesc.Format = whiteTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				whiteTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+
+		}
+		matDescHeapHead.ptr += inc;
+	
 	}
 
 
@@ -691,7 +721,7 @@ void Dx12::LoadAssets()
 	descTblRange[1].BaseShaderRegister = 1;
 	descTblRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	descTblRange[2].NumDescriptors = 1; //ディスクリプタヒープは複数だが一度に使うのは一つのため
+	descTblRange[2].NumDescriptors = 2; //ディスクリプタヒープは複数だが一度に使うのは一つのため
 	descTblRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descTblRange[2].BaseShaderRegister = 0;
 	descTblRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -899,7 +929,7 @@ void Dx12::PopulateCommandList()
 	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
 	//その上さらにテクスチャも描画していく。
 	auto materialH = materialDescHeap->GetGPUDescriptorHandleForHeapStart();
-	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 2;
+	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 3;
 
 	unsigned int idxOffset = 0;
 	for (auto& m : materials)

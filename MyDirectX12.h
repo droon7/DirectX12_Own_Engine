@@ -136,6 +136,8 @@ private:
 	D3D12_TEXTURE_COPY_LOCATION src = {};
 	D3D12_TEXTURE_COPY_LOCATION dst = {};
 	std::vector<ComPtr<ID3D12Resource>> textureResource;
+	std::vector<ComPtr<ID3D12Resource>> sphResources;
+	std::vector<ComPtr<ID3D12Resource>> spaResources;
 	ComPtr<ID3D12Resource> whiteTex;
 	ComPtr<ID3D12Resource> constBuff = nullptr;
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;

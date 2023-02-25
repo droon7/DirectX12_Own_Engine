@@ -38,6 +38,7 @@ std::string GetExtension(const std::string& path)
 	return path.substr(idx + 1, path.length() - idx -1);
 }
 
+//セパレータでファイル名を分割してペアを返す
 std::pair<std::string, std::string> SplitFileName(const std::string& path, const char splitter = '*')
 {
 	int idx = path.find(splitter);
