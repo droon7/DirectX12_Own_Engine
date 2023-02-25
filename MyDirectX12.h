@@ -34,11 +34,12 @@ struct PMDHeader
 };
 
 //シェーダーに渡すための基本的な行列データ
-struct MatricesData
+struct SceneMatrix
 {
 	DirectX::XMMATRIX world;
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
+	DirectX::XMFLOAT3 eye;
 };
 
 //PMDマテリアル構造体、PMDマテリアルデータの読み込みのために使う
@@ -153,7 +154,7 @@ private:
 	DirectX::XMMATRIX worldMat;
 	DirectX::XMMATRIX viewMat;
 	DirectX::XMMATRIX projMat;
-	MatricesData* mapMatrix = nullptr;
+	SceneMatrix* mapMatrix = nullptr;
 	float angle = 0.0f;
 
 	//PMDデータの宣言

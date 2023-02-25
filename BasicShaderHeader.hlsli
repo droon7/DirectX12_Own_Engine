@@ -10,6 +10,7 @@ cbuffer cbuff0 : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
+	float3 eye;
 };
 
 //マテリアル定数バッファー
@@ -28,5 +29,5 @@ struct Output
 	float4 normal : NORMAL0;
 	float4 vnormal : NORMAL1;
 	float2 uv	 : TEXCOORD;
-	
+	float3 ray :VECTOR;
 };

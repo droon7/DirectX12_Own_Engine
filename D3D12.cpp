@@ -185,10 +185,10 @@ void Dx12::LoadAssets()
 	FILE* fp ;
 	//std::string strModelPath = "Model/鏡音レン.pmd";
 	//std::string strModelPath = "Model/鏡音リン.pmd";
-	std::string strModelPath = "Model/巡音ルカ.pmd";
+	//std::string strModelPath = "Model/巡音ルカ.pmd";
 	//std::string strModelPath = "Model/弱音ハク.pmd";
 	//std::string strModelPath = "Model/初音ミク.pmd";
-	//std::string strModelPath = "Model/初音ミクmetal.pmd";
+	std::string strModelPath = "Model/初音ミクmetal.pmd";
 
 	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 
@@ -469,7 +469,7 @@ void Dx12::LoadAssets()
 
 	//定数バッファーの作成
 	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(MatricesData) + 0xff) & ~0xff);
+	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
 
 	_dev->CreateCommittedResource(
 		&constHeapProp,
@@ -485,6 +485,7 @@ void Dx12::LoadAssets()
 	mapMatrix->world = worldMat;
 	mapMatrix->view = viewMat ;
 	mapMatrix->projection = projMat;
+	mapMatrix->eye = eye;
 	
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成
@@ -846,10 +847,10 @@ void Dx12::LoadAssets()
 void Dx12::OnUpdate()
 {
 
-	//////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	//angle += 0.02f;
-	//worldMat = XMMatrixRotationY(angle);
-	//mapMatrix->world = worldMat;
+	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
+	angle += 0.02f;
+	worldMat = XMMatrixRotationY(angle);
+	mapMatrix->world = worldMat;
 }
 
 
