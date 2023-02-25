@@ -187,8 +187,9 @@ void Dx12::LoadAssets()
 	//std::string strModelPath = "Model/鏡音リン.pmd";
 	//std::string strModelPath = "Model/巡音ルカ.pmd";
 	//std::string strModelPath = "Model/弱音ハク.pmd";
-	std::string strModelPath = "Model/初音ミク.pmd";
-	//std::string strModelPath = "Model/初音ミクmetal.pmd";
+	//std::string strModelPath = "Model/初音ミク.pmd";
+	std::string strModelPath = "Model/初音ミクmetal.pmd";
+
 	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
 
 	fread(signature, sizeof(signature), 1, fp);
@@ -382,6 +383,7 @@ void Dx12::LoadAssets()
 	{
 		std::string texFileName = pmdMaterials[i].texFilePath;
 		std::string sphFileName = {};
+		std::string spaFileName = {};
 
 		if (texFileName.size() == 0)
 		{
@@ -392,10 +394,14 @@ void Dx12::LoadAssets()
 		if (std::count(texFileName.begin(), texFileName.end(), '*') > 0)
 		{
 			auto namepair = SplitFileName(texFileName, '*');
-			if (GetExtension(namepair.first) == "sph" ||
-				GetExtension(namepair.first) == "spa")
+			if (GetExtension(namepair.first) == "sph" )
 			{
 				sphFileName = namepair.first;
+				texFileName = namepair.second;
+			}
+			else if (GetExtension(namepair.first) == "spa")
+			{
+				spaFileName = namepair.first;
 				texFileName = namepair.second;
 			}
 			else
@@ -411,14 +417,19 @@ void Dx12::LoadAssets()
 		auto sphFilePath = GetTexturePathFromModelAndTexPath(
 			strModelPath,
 			sphFileName.c_str());
+		auto spaFilePath = GetTexturePathFromModelAndTexPath(
+			strModelPath,
+			spaFileName.c_str());
 
 		textureResource[i] = LoadTextureFromFile(texFilePath);
 		sphResources[i] = LoadTextureFromFile(sphFilePath);
+		spaResources[i] = LoadTextureFromFile(spaFilePath);
+
 	}
 
 	//白テクスチャの作成
 	whiteTex = CreateWhiteTexture();
-
+	blackTex = CreateBlackTexture();
 
 
 	//_dev->CreateShaderResourceView(
@@ -439,8 +450,8 @@ void Dx12::LoadAssets()
 	worldMat = XMMatrixRotationY(0);
 	matrix = worldMat;
 
-	XMFLOAT3 eye(0, 15, -15);
-	XMFLOAT3 target(0, 15, 0);
+	XMFLOAT3 eye(0, 15, -5); 
+	XMFLOAT3 target(0, 15, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
 	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
@@ -578,7 +589,7 @@ void Dx12::LoadAssets()
 	D3D12_DESCRIPTOR_HEAP_DESC matDescHeapDesc = {};
 	matDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	matDescHeapDesc.NodeMask = 0;
-	matDescHeapDesc.NumDescriptors = materialNum * 3;
+	matDescHeapDesc.NumDescriptors = materialNum * 4;
 	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	
 	result = _dev->CreateDescriptorHeap(
@@ -647,6 +658,28 @@ void Dx12::LoadAssets()
 			);
 
 		}
+		matDescHeapHead.ptr += inc;
+
+		if (spaResources[i] != nullptr)		//SPAがあればそのテクスチャ、なければ黒テクスチャを設定
+		{
+			srvDesc.Format = spaResources[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				spaResources[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+		}
+		else
+		{
+			srvDesc.Format = blackTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				blackTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+
+		}
+
 		matDescHeapHead.ptr += inc;
 	
 	}
@@ -722,7 +755,7 @@ void Dx12::LoadAssets()
 	descTblRange[1].BaseShaderRegister = 1;
 	descTblRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	descTblRange[2].NumDescriptors = 2; //ディスクリプタヒープは複数だが一度に使うのは一つのため
+	descTblRange[2].NumDescriptors = 3; //ディスクリプタヒープは複数だが一度に使うのは一つのため
 	descTblRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descTblRange[2].BaseShaderRegister = 0;
 	descTblRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -930,7 +963,7 @@ void Dx12::PopulateCommandList()
 	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
 	//その上さらにテクスチャも描画していく。
 	auto materialH = materialDescHeap->GetGPUDescriptorHandleForHeapStart();
-	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 3;
+	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 4;
 
 	unsigned int idxOffset = 0;
 	for (auto& m : materials)

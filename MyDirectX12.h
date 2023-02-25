@@ -139,6 +139,7 @@ private:
 	std::vector<ComPtr<ID3D12Resource>> sphResources;
 	std::vector<ComPtr<ID3D12Resource>> spaResources;
 	ComPtr<ID3D12Resource> whiteTex;
+	ComPtr<ID3D12Resource> blackTex;
 	ComPtr<ID3D12Resource> constBuff = nullptr;
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
@@ -185,6 +186,8 @@ private:
 
 //白テクスチャの作成
 	ComPtr<ID3D12Resource> CreateWhiteTexture();
+	ComPtr<ID3D12Resource> CreateBlackTexture();
+
 };
 
 

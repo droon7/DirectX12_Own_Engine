@@ -217,3 +217,54 @@ ComPtr<ID3D12Resource> Dx12::CreateWhiteTexture()
 	return whiteBuff;
 }
 
+//黒テクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
+ComPtr<ID3D12Resource> Dx12::CreateBlackTexture()
+{
+	D3D12_HEAP_PROPERTIES textureHeapProperty = {};
+
+	textureHeapProperty.Type = D3D12_HEAP_TYPE_CUSTOM;
+	textureHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+	textureHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+	textureHeapProperty.CreationNodeMask = 0;
+	textureHeapProperty.VisibleNodeMask = 0;
+
+	D3D12_RESOURCE_DESC resourceDescriptor = {};
+	resourceDescriptor.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	resourceDescriptor.Width = 4;
+	resourceDescriptor.Height = 4;
+	resourceDescriptor.DepthOrArraySize = 1;
+	resourceDescriptor.SampleDesc.Count = 1;
+	resourceDescriptor.SampleDesc.Quality = 0;
+	resourceDescriptor.MipLevels = 1;
+	resourceDescriptor.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDescriptor.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDescriptor.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	ComPtr<ID3D12Resource> whiteBuff = nullptr;
+
+	auto result = _dev->CreateCommittedResource(
+		&textureHeapProperty,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDescriptor,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		nullptr,
+		IID_PPV_ARGS(&whiteBuff)
+	);
+
+	if (FAILED(result)) {
+		return nullptr;
+	}
+	std::vector<unsigned char> data(4 * 4 * 4);
+	std::fill(data.begin(), data.end(), 0x0);
+
+	result = whiteBuff->WriteToSubresource(
+		0,
+		nullptr,
+		data.data(),
+		4 * 4,
+		data.size()
+	);
+
+	return whiteBuff;
+}
+
