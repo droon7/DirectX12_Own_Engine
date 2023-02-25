@@ -13,5 +13,6 @@ Output BasicVS(
 
 	output.uv = uv;
 	output.normal = mul(world, normal);
+	output.vnormal = mul(view, output.normal);
 	return output;
 }
