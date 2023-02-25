@@ -37,7 +37,8 @@ struct PMDHeader
 struct MatricesData
 {
 	DirectX::XMMATRIX world;
-	DirectX::XMMATRIX viewproj;
+	DirectX::XMMATRIX view;
+	DirectX::XMMATRIX projection;
 };
 
 //PMDマテリアル構造体、PMDマテリアルデータの読み込みのために使う
@@ -148,7 +149,7 @@ private:
 	DirectX::ScratchImage scratchImg;
 
 	//行列アセット
-	DirectX::XMMATRIX matrix;
+	//DirectX::XMMATRIX matrix;
 	DirectX::XMMATRIX worldMat;
 	DirectX::XMMATRIX viewMat;
 	DirectX::XMMATRIX projMat;

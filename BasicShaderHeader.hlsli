@@ -8,7 +8,8 @@ SamplerState smp : register(s0);
 cbuffer cbuff0 : register(b0)
 {
 	matrix world;
-	matrix viewproj;
+	matrix view;
+	matrix projection;
 };
 
 //マテリアル定数バッファー
