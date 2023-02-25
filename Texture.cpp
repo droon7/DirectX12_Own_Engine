@@ -6,6 +6,14 @@ using namespace DirectX;
 //WICテクスチャのロード、失敗すればnullptrを返す
 	ComPtr<ID3D12Resource> Dx12::LoadTextureFromFile(std::string& texPath)
 {
+	//flyweightパターンの仕様により同じリソースを再ロードせず再利用する
+	auto iterator = _resourceTable.find(texPath);
+	if (iterator != _resourceTable.end())
+	{
+		return (*iterator).second;
+	}
+
+
 	metadata = {};
 	scratchImg = {};
 

@@ -5,6 +5,7 @@
 #include <tchar.h>
 #include<vector>
 #include<string>
+#include<map>
 #include<wrl.h>
 #ifdef _DEBUG
 #include <iostream>
@@ -135,19 +136,22 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vbView = {};
 	ComPtr<ID3D12Resource> idxBuff = nullptr;
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
-	D3D12_TEXTURE_COPY_LOCATION src = {};
-	D3D12_TEXTURE_COPY_LOCATION dst = {};
-	std::vector<ComPtr<ID3D12Resource>> textureResource;
-	std::vector<ComPtr<ID3D12Resource>> sphResources;
-	std::vector<ComPtr<ID3D12Resource>> spaResources;
+
 	ComPtr<ID3D12Resource> whiteTex;
 	ComPtr<ID3D12Resource> blackTex;
 	ComPtr<ID3D12Resource> constBuff = nullptr;
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
 
+	//テクスチャ
+	D3D12_TEXTURE_COPY_LOCATION src = {};
+	D3D12_TEXTURE_COPY_LOCATION dst = {};
+	std::vector<ComPtr<ID3D12Resource>> textureResource;
+	std::vector<ComPtr<ID3D12Resource>> sphResources;
+	std::vector<ComPtr<ID3D12Resource>> spaResources;
 	DirectX::TexMetadata metadata;
 	DirectX::ScratchImage scratchImg;
+	std::map<std::string, ComPtr<ID3D12Resource>> _resourceTable;
 
 	//行列アセット
 	//DirectX::XMMATRIX matrix;
