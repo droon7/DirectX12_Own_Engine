@@ -28,7 +28,7 @@ LRESULT Win32App::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
 }
 
 
-int Win32App::WindowRun(Dx12* pdx12)
+int Win32App::WindowRun(Application* pdx12)
 {
 
 	//ウィンドウクラスの生成

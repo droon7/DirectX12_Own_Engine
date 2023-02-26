@@ -3,7 +3,7 @@
 using namespace::DirectX;
 
 //ウィンドウサイズの初期値を入れる。レンダーターゲット数を入れる。
-Dx12::Dx12(UINT width, UINT height) :
+Application::Application(UINT width, UINT height) :
 	window_width(width),
 	window_height(height),
 	_backBuffers(buffer_count)
@@ -12,7 +12,14 @@ Dx12::Dx12(UINT width, UINT height) :
 
 //初期化、パイプラインの初期化とアセット類のロードを分ける
 
-void Dx12::OnInit()
+Application& Application::Instance(UINT width, UINT height)
+{
+
+	static Application app{width, height};
+	return app;
+}
+
+void Application::OnInit()
 {
 	LoadPipeline();
 	LoadAssets();
@@ -21,7 +28,7 @@ void Dx12::OnInit()
 
 //パイプラインに必要なオブジェクトの生成、初期化を行う
 //TODO: オブジェクトの初期化はThrowIfFailed()関数に入れる
-void Dx12::LoadPipeline()
+void Application::LoadPipeline()
 {
 
 #ifdef _DEBUG
@@ -145,7 +152,7 @@ void Dx12::LoadPipeline()
 
 
 //アセットのロード、現状は頂点、頂点インデックス、シェーダー、PSO、ルートシグネチャ等
-void Dx12::LoadAssets()
+void Application::LoadAssets()
 {
 	//リソースの生成
 	// 
@@ -849,7 +856,7 @@ void Dx12::LoadAssets()
 }
 
 //フレームによって更新する値を入れる予定
-void Dx12::OnUpdate()
+void Application::OnUpdate()
 {
 
 	////行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
@@ -860,7 +867,7 @@ void Dx12::OnUpdate()
 
 
 //レンダリングする。メインループの内部
-void Dx12::OnRender() 
+void Application::OnRender() 
 {
 	//コマンドリストに実際に実行するレンダリングコマンドを集める
 	PopulateCommandList();
@@ -881,7 +888,7 @@ void Dx12::OnRender()
 }
 
 //DirectX12が終了するときコマンドが全て実行されている確認
-void Dx12::OnDestroy() 
+void Application::OnDestroy() 
 {
 	WaitForPreviousFrame();
 
@@ -890,7 +897,7 @@ void Dx12::OnDestroy()
 
 
 //コマンドリストに実際に実行するコマンドを追加
-void Dx12::PopulateCommandList()
+void Application::PopulateCommandList()
 {
 
 
@@ -996,7 +1003,7 @@ void Dx12::PopulateCommandList()
 
 
 //GPUがコマンドを全て実行完了するまで待つ
-void Dx12::WaitForPreviousFrame()
+void Application::WaitForPreviousFrame()
 {
 	//命令の完了を待ち、チェック
 	//TODO: このSignal()メソッドによる実装は単純なので他の方法を考える

@@ -89,31 +89,22 @@ struct Material
 	AdditionalMaterial additional;
 };
 
-class Dx12
+class Application
 {
-public:
-	Dx12(UINT window_width, UINT window_height);
-	//~Dx12() {
+private:
+
+	//シングルトンクラスにするためコンストラクタをprivate
+	Application(UINT window_width, UINT window_height);
+
+	//~Application() {
 	//	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
 	//	debugDevice->Release();
 	//};
 
-	void OnInit();
-	void OnUpdate();
-	void OnRender();
-	void OnDestroy();
-	void LoadPipeline();
-	void LoadAssets();
-	void PopulateCommandList();
-	void WaitForPreviousFrame();
+	//コピーコンストラクタと代入演算子を禁止
+	Application(const Application&) = delete;
+	void operator=(const Application&) = delete;
 
-	//ウィンドウサイズ
-	UINT window_width;
-	UINT window_height;
-	//レンダーターゲットとなるバッファの数
-	static const int buffer_count = 2;
-
-private:
 	int frame = 0;
 
 	//Directxパイプラインオブジェクトの宣言
@@ -204,6 +195,26 @@ private:
 	ComPtr<ID3D12Resource> CreateBlackTexture();
 	ComPtr<ID3D12Resource> CreateGradationTexture();
 
+
+public:
+
+	static Application& Instance(UINT width, UINT height);
+	void OnInit();
+	void OnUpdate();
+	void OnRender();
+	void OnDestroy();
+	void LoadPipeline();
+	void LoadAssets();
+	void PopulateCommandList();
+	void WaitForPreviousFrame();
+
+	//ウィンドウサイズ
+	UINT window_width;
+	UINT window_height;
+	//レンダーターゲットとなるバッファの数
+	static const int buffer_count = 2;
+
+
 };
 
 
@@ -212,7 +223,7 @@ private:
 class Win32App
 {
 public:
-	static int WindowRun(Dx12* pdx12);
+	static int WindowRun(Application* pdx12);
 	static HWND GetHwnd() { return m_hwnd; } 
 
 	static void DebugOutputFormatString(const char* format, ...); //ウィンドウデバッグ用関数
