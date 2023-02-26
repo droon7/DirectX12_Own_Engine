@@ -177,25 +177,11 @@ using namespace DirectX;
 //白テクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
 ComPtr<ID3D12Resource> Dx12::CreateWhiteTexture()
 {
-	D3D12_HEAP_PROPERTIES textureHeapProperty = {};
+	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
+		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
+		D3D12_MEMORY_POOL_L0);
 
-	textureHeapProperty.Type = D3D12_HEAP_TYPE_CUSTOM;
-	textureHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-	textureHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-	textureHeapProperty.CreationNodeMask = 0;
-	textureHeapProperty.VisibleNodeMask = 0;
-
-	D3D12_RESOURCE_DESC resourceDescriptor = {};
-	resourceDescriptor.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	resourceDescriptor.Width = 4;
-	resourceDescriptor.Height = 4;
-	resourceDescriptor.DepthOrArraySize = 1;
-	resourceDescriptor.SampleDesc.Count = 1;
-	resourceDescriptor.SampleDesc.Quality = 0;
-	resourceDescriptor.MipLevels = 1;
-	resourceDescriptor.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resourceDescriptor.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	resourceDescriptor.Flags = D3D12_RESOURCE_FLAG_NONE;
+	D3D12_RESOURCE_DESC resourceDescriptor = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, 4, 4);
 
 	ComPtr<ID3D12Resource> whiteBuff = nullptr;
 
@@ -228,25 +214,11 @@ ComPtr<ID3D12Resource> Dx12::CreateWhiteTexture()
 //黒テクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
 ComPtr<ID3D12Resource> Dx12::CreateBlackTexture()
 {
-	D3D12_HEAP_PROPERTIES textureHeapProperty = {};
+	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
+		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
+		D3D12_MEMORY_POOL_L0);
 
-	textureHeapProperty.Type = D3D12_HEAP_TYPE_CUSTOM;
-	textureHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-	textureHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-	textureHeapProperty.CreationNodeMask = 0;
-	textureHeapProperty.VisibleNodeMask = 0;
-
-	D3D12_RESOURCE_DESC resourceDescriptor = {};
-	resourceDescriptor.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	resourceDescriptor.Width = 4;
-	resourceDescriptor.Height = 4;
-	resourceDescriptor.DepthOrArraySize = 1;
-	resourceDescriptor.SampleDesc.Count = 1;
-	resourceDescriptor.SampleDesc.Quality = 0;
-	resourceDescriptor.MipLevels = 1;
-	resourceDescriptor.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resourceDescriptor.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	resourceDescriptor.Flags = D3D12_RESOURCE_FLAG_NONE;
+	D3D12_RESOURCE_DESC resourceDescriptor = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, 4, 4);
 
 	ComPtr<ID3D12Resource> blackBuff = nullptr;
 
@@ -279,25 +251,11 @@ ComPtr<ID3D12Resource> Dx12::CreateBlackTexture()
 //トゥーンシェーダーしない場合のデフォルトグラデーションテクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
 ComPtr<ID3D12Resource> Dx12::CreateGradationTexture()
 {
-	D3D12_HEAP_PROPERTIES textureHeapProperty = {};
+	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
+		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
+		D3D12_MEMORY_POOL_L0);
 
-	textureHeapProperty.Type = D3D12_HEAP_TYPE_CUSTOM;
-	textureHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-	textureHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-	textureHeapProperty.CreationNodeMask = 0;
-	textureHeapProperty.VisibleNodeMask = 0;
-
-	D3D12_RESOURCE_DESC resourceDescriptor = {};
-	resourceDescriptor.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	resourceDescriptor.Width = 4;
-	resourceDescriptor.Height = 256;
-	resourceDescriptor.DepthOrArraySize = 1;
-	resourceDescriptor.SampleDesc.Count = 1;
-	resourceDescriptor.SampleDesc.Quality = 0;
-	resourceDescriptor.MipLevels = 1;
-	resourceDescriptor.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resourceDescriptor.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	resourceDescriptor.Flags = D3D12_RESOURCE_FLAG_NONE;
+	D3D12_RESOURCE_DESC resourceDescriptor = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, 4, 256);
 
 	ComPtr<ID3D12Resource> gradBuff = nullptr;
 
