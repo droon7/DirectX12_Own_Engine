@@ -50,7 +50,7 @@ void Dx12::LoadPipeline()
 	D3D_FEATURE_LEVEL featurelevel;
 	for (auto lv : levels)
 	{
-		if (D3D12CreateDevice(nullptr, lv, IID_PPV_ARGS(&_dev)) == S_OK)
+		if (D3D12CreateDevice(nullptr, lv, IID_PPV_ARGS(_dev.ReleaseAndGetAddressOf())) == S_OK)
 		{
 			featurelevel = lv;
 			break;
@@ -62,18 +62,18 @@ void Dx12::LoadPipeline()
 
 	//DXGIFactory生成
 #ifdef _DEBUG
-	result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&_dxgiFactory));
+	result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(_dxgiFactory.ReleaseAndGetAddressOf()));
 #else
-	auto result = CreateDXGIFactory1(IID_PPV_ARGS(&_dxgiFactory));
+	auto result = CreateDXGIFactory1(IID_PPV_ARGS(_dxgiFactory.ReleaseAndGetAddressOf()));
 #endif
 
 	//コマンドアロケーターの生成
 	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-		IID_PPV_ARGS(&_cmdAllocator));
+		IID_PPV_ARGS(_cmdAllocator.ReleaseAndGetAddressOf()));
 
 	//コマンドリストの生成
 	result = _dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-		_cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
+		_cmdAllocator.Get(), nullptr, IID_PPV_ARGS(_cmdList.ReleaseAndGetAddressOf()));
 
 	//コマンドキューの設定および生成
 	D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
@@ -81,7 +81,7 @@ void Dx12::LoadPipeline()
 	cmdQueueDesc.NodeMask = 0;
 	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL; //プライオリティ指定なし
 	cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //コマンドリストと同じタイプ
-	result = _dev->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&_cmdQueue));
+	result = _dev->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(_cmdQueue.ReleaseAndGetAddressOf()));
 
 	//スワップチェーンの設定および生成
 	swapchainDesc.Width = window_width;
@@ -112,7 +112,7 @@ void Dx12::LoadPipeline()
 	heapDesc.NodeMask = 0;
 	heapDesc.NumDescriptors = buffer_count;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&rtvHeaps));
+	result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeaps.ReleaseAndGetAddressOf()));
 
 	//　SRGBレンダーターゲットビュー
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
