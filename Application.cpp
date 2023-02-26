@@ -154,46 +154,6 @@ void Application::LoadPipeline()
 //アセットのロード、現状は頂点、頂点インデックス、シェーダー、PSO、ルートシグネチャ等
 void Application::LoadAssets()
 {
-	//リソースの生成
-	// 
-	//頂点データ構造体
-	struct Vertex
-	{
-		XMFLOAT3 pos;
-		XMFLOAT2 uv;
-	};
-
-	////頂点情報を手打ち
-	//Vertex vertices[] = {
-	//	{{ -1.0f, -1.0f,0.0f} ,{0.0f, 1.0f}},//左下
-	//	{{ -1.0f,  1.0f,0.0f} ,{0.0f, 0.0f}},//左上
-	//	{{  1.0f, -1.0f,0.0f} ,{1.0f, 1.0f}},//右下
-	//	{{  1.0f,  1.0f,0.0f} ,{1.0f, 0.0f}},//右上
-	//};
-
-	////頂点インデックス情報を手打ち
-	//unsigned short indices[] = {
-	//	0, 1, 2,
-	//	2, 1, 3
-	//};
-
-	/*//テクスチャ情報を手打ち
-	struct TexRGBA
-	{
-		unsigned char R, G, B, A;
-	};
-
-	std::vector<TexRGBA> texturedata(256 * 256);
-
-	for (auto& rgba : texturedata)
-	{
-		rgba.R = rand() % 256;
-		rgba.G = rand() % 256;
-		rgba.B = rand() % 256;
-		rgba.A = 255;
-	}
-	*/
-
 	//PMDヘッダー読み込み
 	char signature[3] = {};
 	FILE* fp ;
@@ -405,7 +365,6 @@ void Application::LoadAssets()
 			continue;
 		}
 
-		//if (std::count(texFileName.begin(), texFileName.end(), '*') > 0)
 		{
 			auto namepair = SplitFileName(texFileName, '*');
 			if (GetExtension(namepair.second) == "sph" )
@@ -467,30 +426,14 @@ void Application::LoadAssets()
 	gradTex = CreateGradationTexture();
 
 
-	//_dev->CreateShaderResourceView(
-	//	texbuff.Get(),
-	//	&srvDesc,
-	//	basicHeaphandle
-	//);
-
-
-	//行列の転送。ピクセル座標系からシェーダー座標系への変換行列を送る。
-	//XMMATRIX matrix = XMMatrixIdentity();
-	//matrix.r[0].m128_f32[0] = 2.0f / window_width;
-	//matrix.r[1].m128_f32[1] = -2.0f / window_height;
-	//matrix.r[3].m128_f32[0] = -1.0f;
-	//matrix.r[3].m128_f32[1] = 1.0f;
-
 	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
 	worldMat = XMMatrixRotationY(0);
-	//matrix = worldMat;
 
 	XMFLOAT3 eye(0, 15, -15); 
 	XMFLOAT3 target(0, 15, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
 	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
-	//matrix *= viewMat;
 
 	projMat = XMMatrixPerspectiveFovLH(
 		XM_PIDIV4,
@@ -498,8 +441,6 @@ void Application::LoadAssets()
 		1.0f,
 		100.0f
 	);
-	//matrix *= projMat;
-
 
 
 	//定数バッファーの作成
@@ -968,11 +909,6 @@ void Application::PopulateCommandList()
 	//インデックスバッファーのセット
 	_cmdList->IASetIndexBuffer(&ibView);
 
-
-
-	//実際の描画命令
-	//_cmdList->DrawInstanced(vertNum, 1, 0, 0); //頂点インデックス非使用
-	//_cmdList->DrawIndexedInstanced(indicesNum, 1, 0, 0, 0); //頂点インデックス使用
 
 	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
 	//その上さらにテクスチャ、sph、spa、トゥーンテクスチャも描画していく。
