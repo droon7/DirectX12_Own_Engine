@@ -27,11 +27,13 @@ void Dx12::LoadPipeline()
 #ifdef _DEBUG
 	//デバッグレイヤーの有効化をする
 
-	ID3D12Debug* debugLayer = nullptr;
+	ID3D12Debug* debugLayer ;
 	auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
 
 	debugLayer->EnableDebugLayer(); //デバッグレイヤーの有効化
 	debugLayer->Release(); //インターフェイスの解放
+
+
 	
 #endif
 
@@ -65,6 +67,11 @@ void Dx12::LoadPipeline()
 	result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(_dxgiFactory.ReleaseAndGetAddressOf()));
 #else
 	auto result = CreateDXGIFactory1(IID_PPV_ARGS(_dxgiFactory.ReleaseAndGetAddressOf()));
+#endif
+
+	//DebugDevice生成
+#ifdef _DEBUG
+	result = _dev->QueryInterface(&debugDevice);
 #endif
 
 	//コマンドアロケーターの生成
@@ -104,7 +111,7 @@ void Dx12::LoadPipeline()
 		&swapchainDesc,
 		nullptr,
 		nullptr,
-		&swapChain);
+		swapChain.ReleaseAndGetAddressOf());
 	swapChain.As(&_swapchain);
 
 	//RTVのディスクリプタヒープの設定

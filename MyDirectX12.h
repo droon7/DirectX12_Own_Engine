@@ -93,7 +93,10 @@ class Dx12
 {
 public:
 	Dx12(UINT window_width, UINT window_height);
-	//~Dx12();
+	//~Dx12() {
+	//	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
+	//	debugDevice->Release();
+	//};
 
 	void OnInit();
 	void OnUpdate();
@@ -188,6 +191,9 @@ private:
 	ComPtr<ID3D12Fence> _fence = nullptr;
 	UINT64 _fenceVal = 0;
 	HANDLE _fenceevent;
+
+	//デバッグオブジェクトの宣言
+	ID3D12DebugDevice* debugDevice;
 
 
 //WICテクスチャのロード
