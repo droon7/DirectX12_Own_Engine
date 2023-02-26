@@ -131,7 +131,7 @@ void Dx12::LoadPipeline()
 	}
 
 	//フェンスの生成
-	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.ReleaseAndGetAddressOf()));
 
 
 }
@@ -244,7 +244,7 @@ void Dx12::LoadAssets()
 		&resourcedesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&vertBuff)
+		IID_PPV_ARGS(vertBuff.ReleaseAndGetAddressOf())
 	);
 
 	//MapメソッドでビデオメモリvertBuff上に頂点を書き込む
@@ -270,7 +270,7 @@ void Dx12::LoadAssets()
 		&resourcedesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&idxBuff)
+		IID_PPV_ARGS(idxBuff.ReleaseAndGetAddressOf())
 	);
 
 	unsigned short* mappedIdx = nullptr;
@@ -498,7 +498,7 @@ void Dx12::LoadAssets()
 		&constHeapDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&constBuff)
+		IID_PPV_ARGS(constBuff.ReleaseAndGetAddressOf())
 	);
 	
 	//マップによる定数の転送
@@ -517,7 +517,7 @@ void Dx12::LoadAssets()
 	descHeapDesc.NumDescriptors = 1;
 	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&basicDescHeaps));
+	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(basicDescHeaps.ReleaseAndGetAddressOf()));
 
 	auto basicHeaphandle = basicDescHeaps->GetCPUDescriptorHandleForHeapStart();
 
@@ -562,7 +562,7 @@ void Dx12::LoadAssets()
 		&depthResourceDescriptor,
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&depthClearValue,
-		IID_PPV_ARGS(&depthBuffer)
+		IID_PPV_ARGS(depthBuffer.ReleaseAndGetAddressOf())
 	);
 
 
@@ -570,7 +570,7 @@ void Dx12::LoadAssets()
 	D3D12_DESCRIPTOR_HEAP_DESC depthStencilViewHeapDescriptor = {};
 	depthStencilViewHeapDescriptor.NumDescriptors = 1;
 	depthStencilViewHeapDescriptor.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	result = _dev->CreateDescriptorHeap(&depthStencilViewHeapDescriptor, IID_PPV_ARGS(&dsvHeaps));
+	result = _dev->CreateDescriptorHeap(&depthStencilViewHeapDescriptor, IID_PPV_ARGS(dsvHeaps.ReleaseAndGetAddressOf()));
 
 	//深度ビューの作成
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDescriptor = {};
@@ -596,7 +596,7 @@ void Dx12::LoadAssets()
 		&materialResourceDescriptor,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&materialBuff)
+		IID_PPV_ARGS(materialBuff.ReleaseAndGetAddressOf())
 	);
 
 	result = materialBuff->Map(0, nullptr, (void**)&mapMaterial);
@@ -616,7 +616,7 @@ void Dx12::LoadAssets()
 	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	
 	result = _dev->CreateDescriptorHeap(
-		&matDescHeapDesc, IID_PPV_ARGS(&materialDescHeap)
+		&matDescHeapDesc, IID_PPV_ARGS(materialDescHeap.ReleaseAndGetAddressOf())
 	);
 
 	//シェーダーリソースビューディスクリプタの作成
@@ -815,14 +815,14 @@ void Dx12::LoadAssets()
 		0,
 		rootSigBlob->GetBufferPointer(),
 		rootSigBlob->GetBufferSize(),
-		IID_PPV_ARGS(&rootsignature));
+		IID_PPV_ARGS(rootsignature.ReleaseAndGetAddressOf()));
 
 	rootSigBlob->Release();
 
 	//グラフィクスPSOオブジェクトの生成
 	gpipeline.pRootSignature = rootsignature.Get();
 	_pipelinestate = nullptr;
-	result = _dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(&_pipelinestate));
+	result = _dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(_pipelinestate.ReleaseAndGetAddressOf()));
 
 	//ビューポートの設定、生成
 	viewport.Width = window_width;

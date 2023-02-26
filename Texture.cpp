@@ -57,7 +57,7 @@ using namespace DirectX;
 	textureBuffDesc.SampleDesc.Quality = 0;
 
 	//テクスチャの中間バッファーの作成
-	ID3D12Resource* uploadbuff = nullptr;
+	ComPtr<ID3D12Resource> uploadbuff = nullptr;
 
 	result = _dev->CreateCommittedResource(
 		&uploadHeapProp,
@@ -65,7 +65,7 @@ using namespace DirectX;
 		&textureBuffDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&uploadbuff)
+		IID_PPV_ARGS(uploadbuff.ReleaseAndGetAddressOf())
 	);
 
 	//中間バッファからのコピー先のテクスチャバッファーの作成
@@ -97,7 +97,7 @@ using namespace DirectX;
 		&textureBuffDesc,
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
-		IID_PPV_ARGS(&texbuff)
+		IID_PPV_ARGS(texbuff.ReleaseAndGetAddressOf())
 	);
 
 	if (FAILED(result))
@@ -125,7 +125,7 @@ using namespace DirectX;
 
 	//CommandList::CopyTextureRegion()の引数の構造体を作る
 	//アップロード側の作成
-	src.pResource = uploadbuff;
+	src.pResource = uploadbuff.Get();
 	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	src.PlacedFootprint.Offset = 0;
 	src.PlacedFootprint.Footprint.Width = metadata.width;
@@ -191,7 +191,7 @@ ComPtr<ID3D12Resource> Dx12::CreateWhiteTexture()
 		&resourceDescriptor,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 		nullptr,
-		IID_PPV_ARGS(&whiteBuff)
+		IID_PPV_ARGS(whiteBuff.ReleaseAndGetAddressOf())
 	);
 
 	if (FAILED(result)) {
@@ -228,7 +228,7 @@ ComPtr<ID3D12Resource> Dx12::CreateBlackTexture()
 		&resourceDescriptor,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 		nullptr,
-		IID_PPV_ARGS(&blackBuff)
+		IID_PPV_ARGS(blackBuff.ReleaseAndGetAddressOf())
 	);
 
 	if (FAILED(result)) {
@@ -265,7 +265,7 @@ ComPtr<ID3D12Resource> Dx12::CreateGradationTexture()
 		&resourceDescriptor,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 		nullptr,
-		IID_PPV_ARGS(&gradBuff)
+		IID_PPV_ARGS(gradBuff.ReleaseAndGetAddressOf())
 	);
 
 	if (FAILED(result)) {
