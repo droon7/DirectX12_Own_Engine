@@ -1,57 +1,49 @@
 #include"PmdManager.h"
 
 
-//PMDデータを返す
-PMDData PmdLoader::getPMDData()
+//ファイルパスからPMDモデルのデータを読み込むメソッド
+void PmdData::loadPmdData(std::string strModelPath)
 {
-	return pmdData;
-}
-
-//PMDモデルのデータを読み込むメソッド
-PMDData PmdLoader::loadPmdData(std::string strModelPath)
-{
-
 	FILE* fp;
 	auto err = fopen_s(&fp, strModelPath.c_str(), "rb");
 
 	//PMDヘッダー読み込み
 	char signature[3] = {};
 	fread(signature, sizeof(signature), 1, fp);
-	fread(&pmdData.pmdHeader, sizeof(pmdData.pmdHeader), 1, fp);
+	fread(&pmdHeader, sizeof(pmdHeader), 1, fp);
 
 	//PMD頂点情報読み込み
-	fread(&pmdData.vertNum, sizeof(pmdData.vertNum), 1, fp);
-	pmdData.vertices.resize(pmdData.vertNum * pmdvertex_size);
-	fread(pmdData.vertices.data(), pmdData.vertices.size(), 1, fp);
+	fread(&vertNum, sizeof(vertNum), 1, fp);
+	vertices.resize(vertNum * pmdvertex_size);
+	fread(vertices.data(), vertices.size(), 1, fp);
 
 	//PMDインデックスデータ読み込み
 	 //2バイトのデータを扱うためunsigned shortを使う
-	fread(&pmdData.indicesNum, sizeof(pmdData.indicesNum), 1, fp);
-	pmdData.indices.resize(pmdData.indicesNum);
-	fread(pmdData.indices.data(), pmdData.indices.size() * sizeof(pmdData.indices[0]), 1, fp);
+	fread(&indicesNum, sizeof(indicesNum), 1, fp);
+	indices.resize(indicesNum);
+	fread(indices.data(), indices.size() * sizeof(indices[0]), 1, fp);
 
 
 	//PMDマテリアルデータ読み込み
-	fread(&pmdData.materialNum, sizeof(pmdData.materialNum), 1, fp);
-	std::vector<PMDMaterialForLoad> pmdMaterialForLoad(pmdData.materialNum);
+	fread(&materialNum, sizeof(materialNum), 1, fp);
+	std::vector<PMDMaterialForLoad> pmdMaterialForLoad(materialNum);
 
 	fread(pmdMaterialForLoad.data(), pmdMaterialForLoad.size() * sizeof(PMDMaterialForLoad), 1, fp);
 
-	pmdData.materials.resize(pmdMaterialForLoad.size());
+	materials.resize(pmdMaterialForLoad.size());
 	for (int i = 0; i < pmdMaterialForLoad.size(); ++i)
 	{
-		pmdData.materials[i].indicesNum = pmdMaterialForLoad[i].indicesNum;
-		pmdData.materials[i].material.diffuse = pmdMaterialForLoad[i].diffuse;
-		pmdData.materials[i].material.alpha = pmdMaterialForLoad[i].alpha;
-		pmdData.materials[i].material.specular = pmdMaterialForLoad[i].specular;
-		pmdData.materials[i].material.specularity = pmdMaterialForLoad[i].specularity;
-		pmdData.materials[i].material.ambient = pmdMaterialForLoad[i].ambient;
-		pmdData.materials[i].additional.toonIdx = pmdMaterialForLoad[i].toonIdx;
-		pmdData.materials[i].additional.texPath = pmdMaterialForLoad[i].texFilePath;
-		pmdData.materials[i].additional.edgeflag = pmdMaterialForLoad[i].edgeFlag;
+		materials[i].indicesNum = pmdMaterialForLoad[i].indicesNum;
+		materials[i].material.diffuse = pmdMaterialForLoad[i].diffuse;
+		materials[i].material.alpha = pmdMaterialForLoad[i].alpha;
+		materials[i].material.specular = pmdMaterialForLoad[i].specular;
+		materials[i].material.specularity = pmdMaterialForLoad[i].specularity;
+		materials[i].material.ambient = pmdMaterialForLoad[i].ambient;
+		materials[i].additional.toonIdx = pmdMaterialForLoad[i].toonIdx;
+		materials[i].additional.texPath = pmdMaterialForLoad[i].texFilePath;
+		materials[i].additional.edgeflag = pmdMaterialForLoad[i].edgeFlag;
 	}
 
 	fclose(fp);
 
-	return pmdData;
 }

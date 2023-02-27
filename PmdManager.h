@@ -64,30 +64,28 @@ struct Material
 	AdditionalMaterial additional;
 };
 
-struct PMDData
-{
-	unsigned int vertNum;
-	unsigned int indicesNum;
-	unsigned int materialNum;
 
-	PMDHeader pmdHeader;
+//PMDモデルのデータをまとめたクラス
+class PmdData
+{
+public:
+	PmdData() {};
+	
+	//頂点数、インデックス数、マテリアル数格納
+	unsigned int vertNum = 0;
+	unsigned int indicesNum = 0;
+	unsigned int materialNum = 0;
+
+	//頂点、インデックス、マテリアルのデータ
+	PMDHeader pmdHeader = {};
 	std::vector<unsigned char> vertices;
 	std::vector<unsigned short> indices;
 	std::vector<Material> materials;
-};
-
-class PmdLoader
-{
-private:
-	PMDData pmdData;
-
-public:
-	PmdLoader() {};
-
 	static constexpr size_t pmdvertex_size = 38;
-	PMDData getPMDData();
-	PMDData loadPmdData(std::string srcModelPath);
 
+
+	//ファイルパスからPMDモデルデータをロードする。
+	void loadPmdData(std::string srcModelPath);
 };
 
 

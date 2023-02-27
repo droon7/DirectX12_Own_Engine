@@ -1,7 +1,4 @@
-
 #include "Application.h"
-
-
 
 
 //main関数　メッセージループが入っている

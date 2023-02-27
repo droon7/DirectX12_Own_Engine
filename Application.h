@@ -29,8 +29,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-
-
 //シェーダーに渡すための基本的な行列データ
 struct SceneMatrix
 {
@@ -39,9 +37,6 @@ struct SceneMatrix
 	DirectX::XMMATRIX projection;
 	DirectX::XMFLOAT3 eye;
 };
-
-
-
 
 
 class Application
@@ -104,7 +99,6 @@ private:
 	ComPtr<ID3D12Resource> blackTex;
 	ComPtr<ID3D12Resource> gradTex;
 
-
 	//行列アセット
 	//DirectX::XMMATRIX matrix;
 	DirectX::XMMATRIX worldMat;
@@ -112,11 +106,6 @@ private:
 	DirectX::XMMATRIX projMat;
 	SceneMatrix* mapMatrix = nullptr;
 	float angle = 0.0f;
-
-	//PMDデータの宣言
-
-
-
 
 	//マテリアルデータ
 	ComPtr<ID3D12Resource> materialBuff = nullptr;
@@ -127,7 +116,6 @@ private:
 	ID3DBlob* _vsBlob = nullptr;
 	ID3DBlob* _psBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
-
 
 	//同期オブジェクトの宣言
 	ComPtr<ID3D12Fence> _fence = nullptr;
@@ -146,10 +134,8 @@ private:
 	ComPtr<ID3D12Resource> CreateBlackTexture();
 	ComPtr<ID3D12Resource> CreateGradationTexture();
 
-
 // PMDローダー
-	PmdLoader pmdLoader;
-	PMDData pmdData;
+	PmdData pmdData;
 
 public:
 

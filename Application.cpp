@@ -163,8 +163,8 @@ void Application::LoadAssets()
 	//std::string strModelPath = "Model/弱音ハク.pmd";
 	//std::string strModelPath = "Model/初音ミク.pmd";
 
-	pmdLoader.loadPmdData(strModelPath);
-	pmdData = pmdLoader.getPMDData();
+	
+	pmdData.loadPmdData(strModelPath);
 
 
 	//DirectXTexライブラリのメソッドによりテクスチャ画像をロード
@@ -196,7 +196,7 @@ void Application::LoadAssets()
 	vbView = {};
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
 	vbView.SizeInBytes = pmdData.vertices.size();
-	vbView.StrideInBytes = pmdLoader.pmdvertex_size;
+	vbView.StrideInBytes = pmdData.pmdvertex_size;
 
 	//インデックスバッファーの生成
 	idxBuff = nullptr;
