@@ -520,7 +520,7 @@ void Application::LoadAssets()
 	result = materialBuff->Map(0, nullptr, (void**)&mapMaterial);
 
 	//char*をmaterialForHlsl*型に変換
-	for (auto& m : materials) {
+	for (auto& m : pmdData.materials) {
 		*reinterpret_cast<MaterialForHlsl*>(mapMaterial) = m.material;
 		mapMaterial += materialBuffSize;
 	}
@@ -879,7 +879,7 @@ void Application::PopulateCommandList()
 	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 5;
 
 	unsigned int idxOffset = 0;
-	for (auto& m : materials)
+	for (auto& m : pmdData.materials)
 	{
 		_cmdList->  SetGraphicsRootDescriptorTable(1, materialH);
 

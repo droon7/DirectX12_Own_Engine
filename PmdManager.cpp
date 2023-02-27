@@ -46,6 +46,9 @@ PMDData PmdLoader::loadPmdData(std::string strModelPath)
 		pmdData.materials[i].material.specular = pmdMaterialForLoad[i].specular;
 		pmdData.materials[i].material.specularity = pmdMaterialForLoad[i].specularity;
 		pmdData.materials[i].material.ambient = pmdMaterialForLoad[i].ambient;
+		pmdData.materials[i].additional.toonIdx = pmdMaterialForLoad[i].toonIdx;
+		pmdData.materials[i].additional.texPath = pmdMaterialForLoad[i].texFilePath;
+		pmdData.materials[i].additional.edgeflag = pmdMaterialForLoad[i].edgeFlag;
 	}
 
 	fclose(fp);
