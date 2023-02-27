@@ -47,7 +47,7 @@ void Application::LoadPipeline()
 
 	D3D_FEATURE_LEVEL levels[] =
 	{
-		D3D_FEATURE_LEVEL_12_2,
+		//D3D_FEATURE_LEVEL_12_2,
 		D3D_FEATURE_LEVEL_12_1,
 		D3D_FEATURE_LEVEL_12_0,
 		D3D_FEATURE_LEVEL_11_1,
@@ -154,9 +154,6 @@ void Application::LoadPipeline()
 //アセットのロード、現状は頂点、頂点インデックス、シェーダー、PSO、ルートシグネチャ等
 void Application::LoadAssets()
 {
-	//PMDヘッダー読み込み
-	char signature[3] = {};
-	FILE* fp ;
 	//std::string strModelPath = "Model/鏡音レン.pmd";
 	//std::string strModelPath = "Model/鏡音リン.pmd";
 	//std::string strModelPath = "Model/巡音ルカ.pmd";
@@ -164,42 +161,8 @@ void Application::LoadAssets()
 	//std::string strModelPath = "Model/初音ミク.pmd";
 	std::string strModelPath = "Model/初音ミクmetal.pmd";
 
-	auto err = fopen_s(&fp,strModelPath.c_str(), "rb");
-
-	fread(signature, sizeof(signature), 1, fp);
-	fread(&pmdheader, sizeof(pmdheader), 1,fp);
-
-	//PMD頂点情報読み込み
-
-	fread(&vertNum, sizeof(vertNum), 1, fp);
-	
-	std::vector<unsigned char> vertices(vertNum * pmdvertex_size);
-	fread(vertices.data(), vertices.size(), 1, fp);
-
-	//PMDインデックスデータ読み込み
-	std::vector<unsigned short> indices; //2バイトのデータを扱うためunsigned shortを使う
-	fread(&indicesNum, sizeof(indicesNum), 1, fp);
-	indices.resize(indicesNum);
-	fread(indices.data(), indices.size() * sizeof(indices[0]), 1, fp);
-
-	//PMDマテリアルデータ読み込み
-	fread(&materialNum, sizeof(materialNum), 1, fp);
-	std::vector<PMDMaterial> pmdMaterials(materialNum);
-	fread(pmdMaterials.data(), pmdMaterials.size() * sizeof(PMDMaterial), 1, fp);
-
-	materials.resize(pmdMaterials.size());
-	for (int i = 0; i < pmdMaterials.size(); ++i)
-	{
-		materials[i].indicesNum = pmdMaterials[i].indicesNum;
-		materials[i].material.diffuse = pmdMaterials[i].diffuse;
-		materials[i].material.alpha = pmdMaterials[i].alpha;
-		materials[i].material.specular = pmdMaterials[i].specular;
-		materials[i].material.specularity= pmdMaterials[i].specularity;
-		materials[i].material.ambient = pmdMaterials[i].ambient;
-	}
-
-	fclose(fp);
-
+	pmdLoader.loadPmdData(strModelPath);
+	pmdData = pmdLoader.getPMDData();
 
 
 	//DirectXTexライブラリのメソッドによりテクスチャ画像をロード
@@ -209,7 +172,7 @@ void Application::LoadAssets()
 
 	//頂点バッファーの生成
 	D3D12_HEAP_PROPERTIES heapprop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	D3D12_RESOURCE_DESC resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(vertices.size());
+	D3D12_RESOURCE_DESC resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(pmdData.vertices.size());
 
 	vertBuff = nullptr;
 	result = _dev->CreateCommittedResource(
@@ -224,19 +187,19 @@ void Application::LoadAssets()
 	//MapメソッドでビデオメモリvertBuff上に頂点を書き込む
 	unsigned char* vertMap = nullptr;
 	result = vertBuff->Map(0, nullptr, (void**)&vertMap); //vertMap上にvertBuffの仮想メモリを置く
-	std::copy(std::begin(vertices), std::end(vertices), vertMap);
+	std::copy(std::begin(pmdData.vertices), std::end(pmdData.vertices), vertMap);
 	vertBuff->Unmap(0, nullptr);  //仮想メモリを解除
 
 	//頂点バッファービューの生成
 	vbView = {};
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
-	vbView.SizeInBytes = vertices.size();
-	vbView.StrideInBytes = pmdvertex_size;
+	vbView.SizeInBytes = pmdData.vertices.size();
+	vbView.StrideInBytes = pmdLoader.pmdvertex_size;
 
 	//インデックスバッファーの生成
 	idxBuff = nullptr;
 
-	resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(indices.size() * sizeof(indices[0]));
+	resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(pmdData.indices.size() * sizeof(pmdData.indices[0]));
 
 	result = _dev->CreateCommittedResource(
 		&heapprop,
@@ -250,7 +213,7 @@ void Application::LoadAssets()
 	unsigned short* mappedIdx = nullptr;
 	idxBuff->Map(0, nullptr, (void**)&mappedIdx);
 
-	std::copy(std::begin(indices), std::end(indices), mappedIdx);
+	std::copy(std::begin(pmdData.indices), std::end(pmdData.indices), mappedIdx);
 	idxBuff->Unmap(0, nullptr);
 
 	//インデックスバッファービューの作成
@@ -258,7 +221,7 @@ void Application::LoadAssets()
 
 	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
 	ibView.Format = DXGI_FORMAT_R16_UINT;
-	ibView.SizeInBytes = static_cast<UINT>(indices.size() * sizeof(indices[0]));
+	ibView.SizeInBytes = static_cast<UINT>(pmdData.indices.size() * sizeof(pmdData.indices[0]));
 
 
 
@@ -349,13 +312,13 @@ void Application::LoadAssets()
 	
 	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
 	//テクスチャ名にセパレーターがあれば分離し、適切な名前を入れる
-	textureResource.resize(pmdMaterials.size());
-	sphResources.resize(pmdMaterials.size());
-	spaResources.resize(pmdMaterials.size());
+	textureResource.resize(pmdData.materials.size());
+	sphResources.resize(pmdData.materials.size());
+	spaResources.resize(pmdData.materials.size());
 
-	for (int i = 0; i < pmdMaterials.size(); ++i)
+	for (int i = 0; i < pmdData.materials.size(); ++i)
 	{
-		std::string texFileName = pmdMaterials[i].texFilePath;
+		std::string texFileName = pmdData.materials[i].additional.texPath;
 		std::string sphFileName = {};
 		std::string spaFileName = {};
 
@@ -401,9 +364,9 @@ void Application::LoadAssets()
 	}
 
 	//トゥーンシェーダーのためのカラールックアップテーブルのロード
-	toonResources.resize(pmdMaterials.size());
+	toonResources.resize(pmdData.materials.size());
 
-	for (int i = 0; i < pmdMaterials.size(); ++i)
+	for (int i = 0; i < pmdData.materials.size(); ++i)
 	{
 		std::string toonFilePath = "toon/";
 		char toonFileName[16];
@@ -412,7 +375,7 @@ void Application::LoadAssets()
 			toonFileName,
 			16,
 			"toon%02d.bmp",
-			pmdMaterials[i].toonIdx + 1
+			pmdData.materials[i].additional.toonIdx + 1
 		);
 
 		toonFilePath += toonFileName;
@@ -543,7 +506,7 @@ void Application::LoadAssets()
 	materialBuffSize = (materialBuffSize + 0xff) & ~0xff;
 
 	auto materialHeapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto materialResourceDescriptor = CD3DX12_RESOURCE_DESC::Buffer(materialBuffSize * materialNum);
+	auto materialResourceDescriptor = CD3DX12_RESOURCE_DESC::Buffer(materialBuffSize * pmdData.materialNum);
 
 	result = _dev->CreateCommittedResource(
 		&materialHeapProperty,
@@ -567,7 +530,7 @@ void Application::LoadAssets()
 	D3D12_DESCRIPTOR_HEAP_DESC matDescHeapDesc = {};
 	matDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	matDescHeapDesc.NodeMask = 0;
-	matDescHeapDesc.NumDescriptors = materialNum * 5;
+	matDescHeapDesc.NumDescriptors = pmdData.materialNum * 5;
 	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	
 	result = _dev->CreateDescriptorHeap(
@@ -591,7 +554,7 @@ void Application::LoadAssets()
 	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//以下実際にCBV、SRVを作る。
-	for (int i = 0; i < materialNum; ++i)
+	for (int i = 0; i < pmdData.materialNum; ++i)
 	{
 		_dev->CreateConstantBufferView(&matCBVDesc, matDescHeapHead);
 		matDescHeapHead.ptr += inc;

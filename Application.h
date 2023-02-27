@@ -11,12 +11,15 @@
 #include <iostream>
 #endif
 
+#include"PmdManager.h"
+
 #include<d3d12.h>
 #include<dxgi1_6.h>
 #include<DirectXMath.h>
 #include<d3dcompiler.h>
 #include<DirectXTex.h>
 #include<d3dx12.h>
+
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -26,13 +29,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-//PMDヘッダー構造体
-struct PMDHeader
-{
-	float version;
-	char model_name[20];
-	char comment[256];
-};
+
 
 //シェーダーに渡すための基本的な行列データ
 struct SceneMatrix
@@ -43,51 +40,9 @@ struct SceneMatrix
 	DirectX::XMFLOAT3 eye;
 };
 
-//PMDマテリアル構造体、PMDマテリアルデータの読み込みのために使う
-//パディングがあるため#pragma pack(1)でアライメントを詰める
-#pragma pack(1)
-struct PMDMaterial
-{
-	DirectX::XMFLOAT3 diffuse;   //ディフューズの色
-	float alpha;				 //ディフューズα
-	float specularity;			 //スペキュラの強さ
-	DirectX::XMFLOAT3 specular;  //スペキュラの色
-	DirectX::XMFLOAT3 ambient;   //アンビエント色
-	unsigned char toonIdx;       //トゥーン番号
-	unsigned char edgeFlag;      //マテリアル毎の輪郭線フラグ
-	// 2 byte padding
-	unsigned int indicesNum;     //このマテリアルが割り当てられるインデックス数
-
-	char texFilePath[20];        //テクスチャファイルパス＋α
-};
-#pragma pack()
-
-//シェーダー用マテリアルデータ
-struct MaterialForHlsl
-{
-	DirectX::XMFLOAT3 diffuse;
-	float alpha;
-	DirectX::XMFLOAT3 specular;
-	float specularity;
-	DirectX::XMFLOAT3 ambient;
-};
 
 
-//その他マテリアルデータ
-struct AdditionalMaterial
-{
-	std::string texPath;
-	int toonIdx;
-	bool edgeflag;
-};
 
-//マテリアルデータをまとめる
-struct Material
-{
-	unsigned int indicesNum;
-	MaterialForHlsl material;
-	AdditionalMaterial additional;
-};
 
 class Application
 {
@@ -159,12 +114,9 @@ private:
 	float angle = 0.0f;
 
 	//PMDデータの宣言
-	PMDHeader pmdheader;
 
-	static constexpr size_t pmdvertex_size = 38;
-	unsigned int vertNum;
-	unsigned int indicesNum;
-	unsigned int materialNum;
+
+
 
 	//マテリアルデータ
 	ComPtr<ID3D12Resource> materialBuff = nullptr;
@@ -195,6 +147,10 @@ private:
 	ComPtr<ID3D12Resource> CreateBlackTexture();
 	ComPtr<ID3D12Resource> CreateGradationTexture();
 
+
+// PMDローダー
+	PmdLoader pmdLoader;
+	PMDData pmdData;
 
 public:
 
