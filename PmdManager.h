@@ -11,12 +11,6 @@
 #include<DirectXTex.h>
 #include<d3dx12.h>
 
-
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dcompiler.lib")
-#pragma comment(lib, "DirectXTex.lib")
-
 //PMDヘッダー構造体
 struct PMDHeader
 {
@@ -25,12 +19,10 @@ struct PMDHeader
 	char comment[256];
 };
 
-
-
 //PMDマテリアル構造体、PMDマテリアルデータの読み込みのために使う
 //パディングがあるため#pragma pack(1)でアライメントを詰める
 #pragma pack(1)
-struct PMDMaterial
+struct PMDMaterialForLoad
 {
 	DirectX::XMFLOAT3 diffuse;   //ディフューズの色
 	float alpha;				 //ディフューズα
@@ -89,11 +81,8 @@ class PmdLoader
 private:
 	PMDData pmdData;
 
-
 public:
 	PmdLoader() {};
-
-
 
 	static constexpr size_t pmdvertex_size = 38;
 	PMDData getPMDData();

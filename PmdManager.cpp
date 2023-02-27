@@ -1,21 +1,21 @@
 #include"PmdManager.h"
 
 
-
+//PMDデータを返す
 PMDData PmdLoader::getPMDData()
 {
 	return pmdData;
 }
 
+//PMDモデルのデータを読み込むメソッド
 PMDData PmdLoader::loadPmdData(std::string strModelPath)
 {
 
-	//PMDヘッダー読み込み
-	char signature[3] = {};
 	FILE* fp;
-
 	auto err = fopen_s(&fp, strModelPath.c_str(), "rb");
 
+	//PMDヘッダー読み込み
+	char signature[3] = {};
 	fread(signature, sizeof(signature), 1, fp);
 	fread(&pmdData.pmdHeader, sizeof(pmdData.pmdHeader), 1, fp);
 
@@ -33,9 +33,9 @@ PMDData PmdLoader::loadPmdData(std::string strModelPath)
 
 	//PMDマテリアルデータ読み込み
 	fread(&pmdData.materialNum, sizeof(pmdData.materialNum), 1, fp);
-	std::vector<PMDMaterial> pmdMaterialForLoad(pmdData.materialNum);
+	std::vector<PMDMaterialForLoad> pmdMaterialForLoad(pmdData.materialNum);
 
-	fread(pmdMaterialForLoad.data(), pmdMaterialForLoad.size() * sizeof(PMDMaterial), 1, fp);
+	fread(pmdMaterialForLoad.data(), pmdMaterialForLoad.size() * sizeof(PMDMaterialForLoad), 1, fp);
 
 	pmdData.materials.resize(pmdMaterialForLoad.size());
 	for (int i = 0; i < pmdMaterialForLoad.size(); ++i)

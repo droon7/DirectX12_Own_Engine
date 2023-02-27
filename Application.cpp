@@ -154,12 +154,14 @@ void Application::LoadPipeline()
 //アセットのロード、現状は頂点、頂点インデックス、シェーダー、PSO、ルートシグネチャ等
 void Application::LoadAssets()
 {
+	
+	//PMDデータのロード
+	std::string strModelPath = "Model/初音ミクmetal.pmd";
 	//std::string strModelPath = "Model/鏡音レン.pmd";
 	//std::string strModelPath = "Model/鏡音リン.pmd";
 	//std::string strModelPath = "Model/巡音ルカ.pmd";
 	//std::string strModelPath = "Model/弱音ハク.pmd";
 	//std::string strModelPath = "Model/初音ミク.pmd";
-	std::string strModelPath = "Model/初音ミクmetal.pmd";
 
 	pmdLoader.loadPmdData(strModelPath);
 	pmdData = pmdLoader.getPMDData();
