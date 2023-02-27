@@ -122,7 +122,6 @@ private:
 	ComPtr<ID3D12Resource> materialBuff = nullptr;
 	char* mapMaterial = nullptr;
 	ComPtr<ID3D12DescriptorHeap> materialDescHeap = nullptr;
-	std::vector<Material> materials;
 
 	//シェーダーオブジェクトの宣言
 	ID3DBlob* _vsBlob = nullptr;
