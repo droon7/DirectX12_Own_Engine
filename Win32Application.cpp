@@ -3,6 +3,12 @@
 
 HWND Win32Application::m_hwnd = nullptr;
 
+Win32Application::Win32Application(UINT width, UINT height)
+	: mwidth(width), mheight(height)
+{
+	pdx12 = Application::Instance(mwidth, mheight);
+}
+
 //デバッグ用関数
 void Win32Application::DebugOutputFormatString(const char* format, ...)
 {
@@ -28,7 +34,7 @@ LRESULT Win32Application::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LP
 }
 
 
-int Win32Application::WindowRun(Application* pdx12)
+int Win32Application::WindowRun()
 {
 
 	//ウィンドウクラスの生成
@@ -42,7 +48,7 @@ int Win32Application::WindowRun(Application* pdx12)
 	RegisterClassEx(&w); //application class
 
 
-	RECT wrc = { 0, 0, pdx12->window_width, pdx12->window_height };//ウィンドウサイズの決定
+	RECT wrc = { 0, 0, mwidth, mheight};//ウィンドウサイズの決定
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false); //ウィンドウサイズ補正
 

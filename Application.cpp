@@ -15,11 +15,11 @@ Application::Application(UINT width, UINT height) :
 
 //初期化、パイプラインの初期化とアセット類のロードを分ける
 //シングルトンを実現する。
-Application& Application::Instance(UINT width, UINT height)
+Application* Application::Instance(UINT width, UINT height)
 {
 
 	static Application app{width, height};
-	return app;
+	return &app;
 }
 
 void Application::OnInit()

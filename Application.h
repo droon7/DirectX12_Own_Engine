@@ -122,7 +122,7 @@ private:
 
 public:
 
-	static Application& Instance(UINT width, UINT height);
+	static Application* Instance(UINT width, UINT height);
 	void OnInit();
 	void OnUpdate();
 	void OnRender();

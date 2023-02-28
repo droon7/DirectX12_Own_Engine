@@ -12,8 +12,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
 #endif
 
-	Application &dx12 = Application::Instance(1920, 1080);
-	Win32Application::WindowRun(&dx12);
+	Win32Application win32(1920, 1080);
+	win32.WindowRun();
 
 	return 0;
 }
