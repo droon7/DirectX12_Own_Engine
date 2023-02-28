@@ -1,5 +1,8 @@
 #ifndef PMDMANAGER_H
 #define PMDMANAGER_H
+//PMDデータの管理をする
+//現在PMDデータのロードするクラスとpmd構造体について記述
+
 
 //PMDヘッダー構造体
 struct PMDHeader

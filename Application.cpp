@@ -43,10 +43,7 @@ void Application::LoadPipeline()
 	debugLayer->EnableDebugLayer(); //デバッグレイヤーの有効化
 	debugLayer->Release(); //インターフェイスの解放
 
-
-	
 #endif
-
 
 	D3D_FEATURE_LEVEL levels[] =
 	{
@@ -101,6 +98,7 @@ void Application::LoadPipeline()
 	result = _dev->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(_cmdQueue.ReleaseAndGetAddressOf()));
 
 	//スワップチェーンの設定および生成
+	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	swapchainDesc.Width = window_width;
 	swapchainDesc.Height = window_height;
 	swapchainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -125,6 +123,7 @@ void Application::LoadPipeline()
 	swapChain.As(&_swapchain);
 
 	//RTVのディスクリプタヒープの設定
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	heapDesc.NodeMask = 0;
 	heapDesc.NumDescriptors = buffer_count;
@@ -440,9 +439,9 @@ void Application::LoadAssets()
 	descHeapDesc.NumDescriptors = 1;
 	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(basicDescHeaps.ReleaseAndGetAddressOf()));
+	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(matrixCsvHeaps.ReleaseAndGetAddressOf()));
 
-	auto basicHeaphandle = basicDescHeaps->GetCPUDescriptorHandleForHeapStart();
+	auto matrixHeaphandle = matrixCsvHeaps->GetCPUDescriptorHandleForHeapStart();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
 	constBufferViewDesc.BufferLocation = constBuff->GetGPUVirtualAddress();
@@ -451,7 +450,7 @@ void Application::LoadAssets()
 	//定数バッファービューの作成
 	_dev->CreateConstantBufferView(
 		&constBufferViewDesc,
-		basicHeaphandle
+		matrixHeaphandle
 	);
 
 
@@ -857,11 +856,11 @@ void Application::PopulateCommandList()
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//SRVのディスクリプタヒープの指定コマンドをセット
-	ID3D12DescriptorHeap* ppHeaps[] = { basicDescHeaps.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { matrixCsvHeaps.Get() };
 	_cmdList->SetDescriptorHeaps(1, ppHeaps);
 	//ルートパラメタとsrvディスクリプタヒープのアドレスの関連付け
 
-	_cmdList->SetGraphicsRootDescriptorTable(0, basicDescHeaps->GetGPUDescriptorHandleForHeapStart());
+	_cmdList->SetGraphicsRootDescriptorTable(0, matrixCsvHeaps->GetGPUDescriptorHandleForHeapStart());
 
 	//マテリアルディスクリプタヒープのセット
 	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };

@@ -182,6 +182,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="PmdManager.cpp" />
+    <ClCompile Include="PmdActor.h" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Win32Application.cpp" />

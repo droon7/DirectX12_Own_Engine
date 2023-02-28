@@ -49,16 +49,16 @@ private:
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator ;
 	ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 	ComPtr<ID3D12CommandQueue> _cmdQueue = nullptr;
-	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	ComPtr<ID3D12DescriptorHeap> rtvHeaps = nullptr;
-	ComPtr<ID3D12DescriptorHeap> basicDescHeaps = nullptr;
 	ComPtr<ID3D12RootSignature> rootsignature = nullptr;
 	ComPtr<ID3D12PipelineState> _pipelinestate = nullptr;
 	std::vector<ID3D12Resource*> _backBuffers;
 
-	//アセットの宣言
 
+	//アセットの宣言
+	ComPtr<ID3D12DescriptorHeap> matrixCsvHeaps = nullptr;
+
+	//消す予定
 	ComPtr<ID3D12Resource> vertBuff = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vbView = {};
 	ComPtr<ID3D12Resource> idxBuff = nullptr;
