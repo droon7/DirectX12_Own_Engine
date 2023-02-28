@@ -1,4 +1,5 @@
-﻿#include "Application.h"
+﻿#include"pch.h"
+#include "Application.h"
 
 using namespace::DirectX;
 
@@ -11,7 +12,7 @@ Application::Application(UINT width, UINT height) :
 }
 
 //初期化、パイプラインの初期化とアセット類のロードを分ける
-
+//シングルトンを実現する。
 Application& Application::Instance(UINT width, UINT height)
 {
 

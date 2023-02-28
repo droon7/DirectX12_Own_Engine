@@ -1,5 +1,5 @@
+#include"pch.h"
 #include "Application.h"
-
 
 //main関数　メッセージループが入っている
 #ifdef _DEBUG

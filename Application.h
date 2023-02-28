@@ -1,25 +1,8 @@
 #ifndef TUTORIAL_H
 #define TUTORIAL_H
 
-#include <Windows.h>
-#include <tchar.h>
-#include<vector>
-#include<string>
-#include<map>
-#include<wrl.h>
-#ifdef _DEBUG
-#include <iostream>
-#endif
-
+#include"pch.h"
 #include"PmdManager.h"
-
-#include<d3d12.h>
-#include<dxgi1_6.h>
-#include<DirectXMath.h>
-#include<d3dcompiler.h>
-#include<DirectXTex.h>
-#include<d3dx12.h>
-
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")

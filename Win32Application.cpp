@@ -1,3 +1,4 @@
+#include"pch.h"
 #include "Application.h"
 
 HWND Win32App::m_hwnd = nullptr;

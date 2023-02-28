@@ -1,15 +1,7 @@
 #ifndef PMDMANAGER_H
 #define PMDMANAGER_H
 
-#include<vector>
-#include<string>
-
-#include<d3d12.h>
-#include<dxgi1_6.h>
-#include<DirectXMath.h>
-#include<d3dcompiler.h>
-#include<DirectXTex.h>
-#include<d3dx12.h>
+#include"pch.h"
 
 //PMDヘッダー構造体
 struct PMDHeader
