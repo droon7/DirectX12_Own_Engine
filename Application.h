@@ -1,5 +1,5 @@
-#ifndef TUTORIAL_H
-#define TUTORIAL_H
+#ifndef APPLICATIONL_H
+#define APPLICATIONL_H
 
 #include"pch.h"
 #include"PmdManager.h"
@@ -143,19 +143,7 @@ public:
 
 
 
-//ウィンドウアプリクラス
-class Win32App
-{
-public:
-	static int WindowRun(Application* pdx12);
-	static HWND GetHwnd() { return m_hwnd; } 
 
-	static void DebugOutputFormatString(const char* format, ...); //ウィンドウデバッグ用関数
-	LRESULT static WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); //ウィンドウ初期化関数
-
-private:
-	 static HWND m_hwnd;
-};
 
 
 //端数を切り捨てるメソッド

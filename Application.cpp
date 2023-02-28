@@ -1,5 +1,7 @@
 ﻿#include"pch.h"
-#include "Application.h"
+#include"Application.h"
+#include"PmdManager.h"
+#include"Win32Application.h"
 
 using namespace::DirectX;
 
@@ -115,7 +117,7 @@ void Application::LoadPipeline()
 	ComPtr<IDXGISwapChain1> swapChain;
 	result = _dxgiFactory->CreateSwapChainForHwnd(
 		_cmdQueue.Get(),
-		Win32App::GetHwnd(),
+		Win32Application::GetHwnd(),
 		&swapchainDesc,
 		nullptr,
 		nullptr,

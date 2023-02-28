@@ -1,10 +1,10 @@
 #include"pch.h"
-#include "Application.h"
+#include "Win32Application.h"
 
-HWND Win32App::m_hwnd = nullptr;
+HWND Win32Application::m_hwnd = nullptr;
 
 //デバッグ用関数
-void Win32App::DebugOutputFormatString(const char* format, ...)
+void Win32Application::DebugOutputFormatString(const char* format, ...)
 {
 #ifdef _DEBUG
 	va_list valist;
@@ -16,7 +16,7 @@ void Win32App::DebugOutputFormatString(const char* format, ...)
 
 
 //ウィンドウに必要な関数
-LRESULT Win32App::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT Win32Application::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	// ウィンドウが破壊されたら呼ばれる
 	if (msg == WM_DESTROY)
@@ -28,14 +28,14 @@ LRESULT Win32App::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpa
 }
 
 
-int Win32App::WindowRun(Application* pdx12)
+int Win32Application::WindowRun(Application* pdx12)
 {
 
 	//ウィンドウクラスの生成
 	WNDCLASSEX w = {};
 
 	w.cbSize = sizeof(WNDCLASSEX);
-	w.lpfnWndProc = (WNDPROC)Win32App::WindowProcedure; //コールバック関数の指定
+	w.lpfnWndProc = (WNDPROC)Win32Application::WindowProcedure; //コールバック関数の指定
 	w.lpszClassName = _T(" DX 12 Sample");
 	w.hInstance = GetModuleHandle(nullptr);
 

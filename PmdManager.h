@@ -1,8 +1,6 @@
 #ifndef PMDMANAGER_H
 #define PMDMANAGER_H
 
-#include"pch.h"
-
 //PMDヘッダー構造体
 struct PMDHeader
 {
