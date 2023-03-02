@@ -131,4 +131,61 @@ HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 	//PSOの作成
 
 	result = app->_dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(pipelinestate.ReleaseAndGetAddressOf()));
+	return result;
+}
+
+HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
+{
+	//ルートシグネチャに設定するルートパラメータ及びディスクリプタテーブル、ディスクリプタレンジの設定
+	CD3DX12_DESCRIPTOR_RANGE descTblRange[3] = {};
+	descTblRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);//CBV b0 viewProjectMatrix
+	descTblRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);//CBV b1 worldTransformMatrix
+	descTblRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);//CBV b2 Material
+	descTblRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0);//SRV t0 - t3 Textures
+
+	//ルートパラメーターの設定
+	CD3DX12_ROOT_PARAMETER rootparam[2] = {};
+
+	rootparam[0].InitAsDescriptorTable(1, &descTblRange[0]);
+	rootparam[1].InitAsDescriptorTable(1, &descTblRange[1]);
+	rootparam[2].InitAsDescriptorTable(2, &descTblRange[2]);
+
+
+	//ルートシグネチャに設定するサンプラーの設定
+	CD3DX12_STATIC_SAMPLER_DESC samplerDesc[2] = {};
+
+	samplerDesc[0].Init(0);
+	samplerDesc[1].Init(1, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+
+	//ルートシグネチャの設定、生成
+	//ルートシグネチャディスクリプタの設定
+	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	//ディスクリプタテーブルの実体であるルートパラメーターを設定
+	rootSignatureDesc.pParameters = rootparam;
+	rootSignatureDesc.NumParameters = 3;
+	//サンプラーを設定
+	rootSignatureDesc.pStaticSamplers = samplerDesc;
+	rootSignatureDesc.NumStaticSamplers = 2;
+
+	//ルートシグネチャのBlobの作成
+	ComPtr<ID3DBlob> rootSigBlob = nullptr;
+	ComPtr<ID3DBlob> errorBlob = nullptr;
+
+	auto result = D3D12SerializeRootSignature(
+		&rootSignatureDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1_0,
+		&rootSigBlob,
+		&errorBlob);
+
+	//ルートシグネチャオブジェクトの作成
+	result = app->_dev->CreateRootSignature(
+		0,
+		rootSigBlob->GetBufferPointer(),
+		rootSigBlob->GetBufferSize(),
+		IID_PPV_ARGS(rootsignature.ReleaseAndGetAddressOf()));
+
+
+	return result;
 }

@@ -12,7 +12,7 @@ private:
 
 
 	HRESULT CreateGraphicsPipelineForPmd(DX12Application* app);
-	HRESULT CreateRootSignature();
+	HRESULT CreateRootSignature(DX12Application* app);
 
 public:
 };
