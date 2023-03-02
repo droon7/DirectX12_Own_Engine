@@ -11,7 +11,6 @@ class PmdTexture
 public:
 	PmdTexture();
 	//マテリアル、テクスチャリソース情報
-	ComPtr<ID3D12Resource> materialBuff;
 	std::vector<ComPtr<ID3D12Resource>> textureResources;
 	std::vector<ComPtr<ID3D12Resource>> sphResources;
 	std::vector<ComPtr<ID3D12Resource>> spaResources;
@@ -20,8 +19,6 @@ public:
 	//flyweightパターンのためのキャッシュ
 	std::map<std::string, ComPtr<ID3D12Resource>> _resourceTable;
 
-	//マテリアルをリソースにロードする
-	ComPtr<ID3D12Resource> LoadMaterialResource(DX12Application* app);
 
 	//テクスチャをリソースにロードする
 	ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath, DX12Application* app);

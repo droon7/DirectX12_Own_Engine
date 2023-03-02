@@ -533,14 +533,14 @@ void DX12Application::LoadAssets()
 	materialBuff->Unmap(0, nullptr);
 
 	//マテリアルとテクスチャ用のディスクリプタヒープの作成。
-	D3D12_DESCRIPTOR_HEAP_DESC matDescHeapDesc = {};
-	matDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	matDescHeapDesc.NodeMask = 0;
-	matDescHeapDesc.NumDescriptors = pmdData.materialNum * 5;
-	matDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	D3D12_DESCRIPTOR_HEAP_DESC DescHeapDesc = {};
+	DescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	DescHeapDesc.NodeMask = 0;
+	DescHeapDesc.NumDescriptors = pmdData.materialNum * 5;
+	DescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	
 	result = _dev->CreateDescriptorHeap(
-		&matDescHeapDesc, IID_PPV_ARGS(materialDescHeap.ReleaseAndGetAddressOf())
+		&DescHeapDesc, IID_PPV_ARGS(materialDescHeap.ReleaseAndGetAddressOf())
 	);
 
 	//シェーダーリソースビューディスクリプタの作成
