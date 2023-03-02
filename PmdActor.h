@@ -1,8 +1,12 @@
 #ifndef PMDACTOR_H
 #define PMDACTOR_H
 
+#include"pch.h"
 #include"PmdManager.h"
 #include"Application.h"
+#include"Material.h"
+using Microsoft::WRL::ComPtr;
+
 //PMDモデル一キャラ分の情報を持つクラス
 // PMDモデルの頂点、テクスチャ、マテリアルをロード、更新する
 
@@ -19,10 +23,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
 	//マテリアル、テクスチャ情報
-	std::vector<ComPtr<ID3D12Resource>> textureResource;
-	std::vector<ComPtr<ID3D12Resource>> sphResources;
-	std::vector<ComPtr<ID3D12Resource>> spaResources;
-	std::vector<ComPtr<ID3D12Resource>> toonResources;
+	Material material;
 
 	//ワールド座標情報
 	DirectX::XMMATRIX worldMatrix;
@@ -30,8 +31,12 @@ private:
 public:
 
 	//ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath);
+	//pmdモデルロード
 	void LoadPmdData(std::string ModelName);
-	void CreateVertexViewIndexView(Application* app); //pmdモデルロード　vbViewとibViewに設定
+	//vbViewとibViewに設定
+	void CreateVertexViewIndexView(Application* app); 
+	//textureResources等を設定
+	void CreateMaterialAndTextureVIEW(Application* app);
 	void PmdDraw(Application* app);   //pmdモデル描画命令
 
 	void PmdUpdate(); //pmdモデルアップデート、現在は空

@@ -58,3 +58,8 @@ void PmdActor::CreateVertexViewIndexView(Application* app)
 
 
 }
+
+void PmdActor::CreateMaterialAndTextureVIEW(Application* app)
+{
+
+}
