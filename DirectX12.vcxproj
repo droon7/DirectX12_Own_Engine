@@ -181,8 +181,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="pmdActor.cpp" />
     <ClCompile Include="PmdManager.cpp" />
-    <ClCompile Include="PmdActor.h" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Win32Application.cpp" />
@@ -224,6 +224,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PmdActor.h" />
     <ClInclude Include="PmdManager.h" />
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>

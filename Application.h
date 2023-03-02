@@ -43,7 +43,6 @@ private:
 	//Directxパイプラインオブジェクトの宣言
 	D3D12_RECT scissorrect = {};
 	D3D12_VIEWPORT viewport = {};
-	ComPtr<ID3D12Device> _dev ;
 	ComPtr<IDXGIFactory6> _dxgiFactory ;
 	ComPtr<IDXGISwapChain4> _swapchain ;
 	ComPtr<ID3D12CommandAllocator> _cmdAllocator ;
@@ -59,9 +58,9 @@ private:
 	ComPtr<ID3D12DescriptorHeap> matrixCsvHeaps = nullptr;
 
 	//消す予定
-	ComPtr<ID3D12Resource> vertBuff = nullptr;
+	//ComPtr<ID3D12Resource> vertBuff = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vbView = {};
-	ComPtr<ID3D12Resource> idxBuff = nullptr;
+	//ComPtr<ID3D12Resource> idxBuff = nullptr;
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
 	ComPtr<ID3D12Resource> constBuff = nullptr;
@@ -121,6 +120,8 @@ private:
 	PmdData pmdData;
 
 public:
+
+	ComPtr<ID3D12Device> _dev;
 
 	static Application* Instance(UINT width, UINT height);
 	void OnInit();

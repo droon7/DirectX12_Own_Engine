@@ -70,6 +70,10 @@ int Win32Application::WindowRun()
 	//DirectX12のパイプラインの初期化、リソースのロード
 	pdx12->OnInit();
 
+	pmdActors.resize(1);
+	pmdActors[0].LoadPmdData("Model/初音ミクmetal.pmd");
+	pmdActors[0].CreateVertexViewIndexView(pdx12);
+	//pmdActors[0].PmdDraw(pdx12);
 
 	//ウィンドウ表示
 	ShowWindow(m_hwnd, SW_SHOW);

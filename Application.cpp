@@ -24,6 +24,9 @@ Application* Application::Instance(UINT width, UINT height)
 
 void Application::OnInit()
 {
+	//DirectXTexライブラリのテクスチャロードのための準備
+	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
+
 	LoadPipeline();
 	LoadAssets();
 }
@@ -169,8 +172,7 @@ void Application::LoadAssets()
 	pmdData.loadPmdData(strModelPath);
 
 
-	//DirectXTexライブラリのメソッドによりテクスチャ画像をロード
-	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
+
 
 
 
@@ -178,8 +180,8 @@ void Application::LoadAssets()
 	D3D12_HEAP_PROPERTIES heapprop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	D3D12_RESOURCE_DESC resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(pmdData.vertices.size());
 
-	vertBuff = nullptr;
-	result = _dev->CreateCommittedResource(
+	ComPtr<ID3D12Resource> vertBuff = nullptr;
+	auto result = _dev->CreateCommittedResource(
 		&heapprop,
 		D3D12_HEAP_FLAG_NONE,
 		&resourcedesc,
@@ -201,7 +203,7 @@ void Application::LoadAssets()
 	vbView.StrideInBytes = pmdData.pmdvertex_size;
 
 	//インデックスバッファーの生成
-	idxBuff = nullptr;
+	ComPtr<ID3D12Resource> idxBuff = nullptr;
 
 	resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(pmdData.indices.size() * sizeof(pmdData.indices[0]));
 
