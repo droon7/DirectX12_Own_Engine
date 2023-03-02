@@ -6,10 +6,10 @@
 using Microsoft::WRL::ComPtr;
 
 //マテリアル及び、テクスチャ、sph、spa、トゥーンテクスチャの情報を取り扱うクラス
-class PmdMaterial
+class PmdTexture
 {
 public:
-	PmdMaterial();
+	PmdTexture();
 	//マテリアル、テクスチャリソース情報
 	ComPtr<ID3D12Resource> materialBuff;
 	std::vector<ComPtr<ID3D12Resource>> textureResources;

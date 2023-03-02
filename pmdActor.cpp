@@ -63,11 +63,11 @@ void PmdActor::GetResourceMaterialAndTexture(DX12Application* app)
 {
 	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
 	//テクスチャ名にセパレーターがあれば分離し、適切な名前を入れる
-	material.textureResources.resize(pmdData.materialDatas.size());
-	material.sphResources.resize(pmdData.materialDatas.size());
-	material.spaResources.resize(pmdData.materialDatas.size());
+	texture.textureResources.resize(pmdData.materialNum);
+	texture.sphResources.resize(pmdData.materialNum);
+	texture.spaResources.resize(pmdData.materialNum);
 
-	for (int i = 0; i < pmdData.materialDatas.size(); ++i)
+	for (int i = 0; i < pmdData.materialNum; ++i)
 	{
 		std::string texFileName = pmdData.materialDatas[i].additional.texPath;
 		std::string sphFileName = {};
@@ -75,7 +75,7 @@ void PmdActor::GetResourceMaterialAndTexture(DX12Application* app)
 
 		if (texFileName.size() == 0)
 		{
-			material.textureResources[i] = nullptr;
+			texture.textureResources[i] = nullptr;
 			continue;
 		}
 
@@ -108,14 +108,14 @@ void PmdActor::GetResourceMaterialAndTexture(DX12Application* app)
 			stringModelPath,
 			spaFileName.c_str());
 
-		material.textureResources[i] = material.LoadTextureFromFile(texFilePath,app);
-		material.sphResources[i] = material.LoadTextureFromFile(sphFilePath, app);
-		material.spaResources[i] = material.LoadTextureFromFile(spaFilePath, app);
+		texture.textureResources[i] =texture.LoadTextureFromFile(texFilePath,app);
+		texture.sphResources[i] =texture.LoadTextureFromFile(sphFilePath, app);
+		texture.spaResources[i] =texture.LoadTextureFromFile(spaFilePath, app);
 
 	}
 
 	//トゥーンシェーダーのためのカラールックアップテーブルのロード
-	material.toonResources.resize(pmdData.materialDatas.size());
+	texture.toonResources.resize(pmdData.materialDatas.size());
 
 	for (int i = 0; i < pmdData.materialDatas.size(); ++i)
 	{
@@ -131,10 +131,15 @@ void PmdActor::GetResourceMaterialAndTexture(DX12Application* app)
 
 		toonFilePath += toonFileName;
 
-		material.toonResources[i] = material.LoadTextureFromFile(toonFilePath, app);
+		texture.toonResources[i] =texture.LoadTextureFromFile(toonFilePath, app);
 	}
 
 
 
+
+}
+
+void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
+{
 
 }

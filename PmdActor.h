@@ -4,7 +4,7 @@
 #include"pch.h"
 #include"PmdManager.h"
 #include"Application.h"
-#include"Material.h"
+#include"PmdTexture.h"
 using Microsoft::WRL::ComPtr;
 
 //PMDモデル一キャラ分の情報を持つクラス
@@ -24,7 +24,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
 	//マテリアル、テクスチャ情報
-	PmdMaterial material;
+	PmdTexture texture;
 
 	//ワールド座標情報
 	DirectX::XMMATRIX worldMatrix;
