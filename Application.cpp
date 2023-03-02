@@ -180,7 +180,7 @@ void DX12Application::LoadAssets()
 	D3D12_HEAP_PROPERTIES heapprop = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	D3D12_RESOURCE_DESC resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(pmdData.vertices.size());
 
-	ComPtr<ID3D12Resource> vertBuff = nullptr;
+	vertBuff = nullptr;
 	auto result = _dev->CreateCommittedResource(
 		&heapprop,
 		D3D12_HEAP_FLAG_NONE,
@@ -203,7 +203,7 @@ void DX12Application::LoadAssets()
 	vbView.StrideInBytes = pmdData.pmdvertex_size;
 
 	//インデックスバッファーの生成
-	ComPtr<ID3D12Resource> idxBuff = nullptr;
+	idxBuff = nullptr;
 
 	resourcedesc = CD3DX12_RESOURCE_DESC::Buffer(pmdData.indices.size() * sizeof(pmdData.indices[0]));
 
@@ -230,90 +230,6 @@ void DX12Application::LoadAssets()
 	ibView.SizeInBytes = static_cast<UINT>(pmdData.indices.size() * sizeof(pmdData.indices[0]));
 
 
-
-	//頂点シェーダーオブジェクトの生成
-	result = D3DCompileFromFile(
-		L"BasicVertexShader.hlsl",  //シェーダー名
-		nullptr,
-		D3D_COMPILE_STANDARD_FILE_INCLUDE, //カレントディレクトリからインクルードする
-		"BasicVS", "vs_5_0",
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, //オプションにデバッグと最適化をスキップ
-		0,
-		&_vsBlob, &errorBlob);
-
-	//エラー発生時の処理
-	if (FAILED(result)) {
-		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
-			::OutputDebugStringA("ファイルが見当たりません");
-		}
-		else {
-			std::string errstr;
-			errstr.resize(errorBlob->GetBufferSize());
-			std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errstr.begin());
-			errstr += "\n";
-			::OutputDebugStringA(errstr.c_str());
-		}
-		exit(1);
-	}
-
-	//ピクセルシェーダーオブジェクトの生成
-	result = D3DCompileFromFile(
-		L"BasicPixelShader.hlsl",  //シェーダー名
-		nullptr,
-		D3D_COMPILE_STANDARD_FILE_INCLUDE, //カレントディレクトリからインクルードする
-		"BasicPS", "ps_5_0",
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-		0,
-		&_psBlob, &errorBlob);
-
-	//エラー発生時の処理
-	if (FAILED(result)) {
-		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
-			::OutputDebugStringA("ファイルが見当たりません");
-		}
-		else {
-			std::string errstr;
-			errstr.resize(errorBlob->GetBufferSize());
-			std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errstr.begin());
-			errstr += "\n";
-			OutputDebugStringA(errstr.c_str());
-		}
-		exit(1);
-	}
-
-	//頂点レイアウトの設定
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-		{//座標情報
-			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-		},
-		{//法線ベクトル情報
-			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-		},
-		{//uv情報
-			"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,
-			0, D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-		},
-		{//ボーン情報
-			"BONE_NO", 0, DXGI_FORMAT_R16G16_UINT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-		},
-		{//ボーンウェイト情報
-			"WEIGHT", 0, DXGI_FORMAT_R8_UINT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-		},
-		{//輪郭線フラグ情報
-			"EDGE_FLG", 0, DXGI_FORMAT_R8_UINT, 0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-		},
-	};
 
 	
 	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
@@ -394,6 +310,151 @@ void DX12Application::LoadAssets()
 	blackTex = CreateBlackTexture();
 	gradTex = CreateGradationTexture();
 
+	//マテリアルバッファーの作成、バッファーサイズを256バイトでアライメントする
+	auto materialBuffSize = sizeof(MaterialForHlsl);
+	materialBuffSize = (materialBuffSize + 0xff) & ~0xff;
+
+	auto materialHeapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto materialResourceDescriptor = CD3DX12_RESOURCE_DESC::Buffer(materialBuffSize * pmdData.materialNum);
+
+	result = _dev->CreateCommittedResource(
+		&materialHeapProperty,
+		D3D12_HEAP_FLAG_NONE,
+		&materialResourceDescriptor,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(materialBuff.ReleaseAndGetAddressOf())
+	);
+
+	result = materialBuff->Map(0, nullptr, (void**)&mapMaterial);
+
+	//char*をmaterialForHlsl*型に変換
+	for (auto& m : pmdData.materialDatas) {
+		*reinterpret_cast<MaterialForHlsl*>(mapMaterial) = m.material;
+		mapMaterial += materialBuffSize;
+	}
+	materialBuff->Unmap(0, nullptr);
+
+	//マテリアルとテクスチャ用のディスクリプタヒープの作成。
+	D3D12_DESCRIPTOR_HEAP_DESC DescHeapDesc = {};
+	DescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	DescHeapDesc.NodeMask = 0;
+	DescHeapDesc.NumDescriptors = pmdData.materialNum * 5;
+	DescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	result = _dev->CreateDescriptorHeap(
+		&DescHeapDesc, IID_PPV_ARGS(materialDescHeap.ReleaseAndGetAddressOf())
+	);
+
+	//シェーダーリソースビューディスクリプタの作成
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+	srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	//マテリアル用CBV、SRVの作成、マテリアルの数だけ作る。
+	D3D12_CONSTANT_BUFFER_VIEW_DESC matCBVDesc = {};
+	matCBVDesc.BufferLocation = materialBuff->GetGPUVirtualAddress();
+	matCBVDesc.SizeInBytes = materialBuffSize;
+
+	auto matDescHeapHead = materialDescHeap->GetCPUDescriptorHandleForHeapStart(); //先頭を記録
+	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	//以下実際にCBV、SRVを作る。
+	for (int i = 0; i < pmdData.materialNum; ++i)
+	{
+		_dev->CreateConstantBufferView(&matCBVDesc, matDescHeapHead);
+		matDescHeapHead.ptr += inc;
+		matCBVDesc.BufferLocation += materialBuffSize;
+
+		if (textureResource[i] != nullptr)		//テクスチャがあればそのテクスチャ、なければ白テクスチャを設定
+		{
+			srvDesc.Format = textureResource[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				textureResource[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+		}
+		else
+		{
+			srvDesc.Format = whiteTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				whiteTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+
+		}
+		matDescHeapHead.ptr += inc;
+
+		if (sphResources[i] != nullptr)		//SPHがあればそのSPH、なければ白テクスチャを設定
+		{
+			srvDesc.Format = sphResources[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				sphResources[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+		}
+		else
+		{
+			srvDesc.Format = whiteTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				whiteTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+
+		}
+		matDescHeapHead.ptr += inc;
+
+		if (spaResources[i] != nullptr)		//SPAがあればそのSPA、なければ黒テクスチャを設定
+		{
+			srvDesc.Format = spaResources[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				spaResources[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+		}
+		else
+		{
+			srvDesc.Format = blackTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				blackTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+
+		}
+
+		matDescHeapHead.ptr += inc;
+
+		if (toonResources[i] != nullptr)	//トゥーンリソースがあればトゥーン用、なければグラデーションテクスチャを設定
+		{
+			srvDesc.Format = toonResources[i]->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				toonResources[i].Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+		}
+		else
+		{
+			srvDesc.Format = gradTex->GetDesc().Format;
+			_dev->CreateShaderResourceView(
+				gradTex.Get(),
+				&srvDesc,
+				matDescHeapHead
+			);
+
+		}
+		matDescHeapHead.ptr += inc;
+
+	}
 
 	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
 	worldMat = XMMatrixRotationY(0);
@@ -507,152 +568,92 @@ void DX12Application::LoadAssets()
 		dsvHeaps->GetCPUDescriptorHandleForHeapStart()
 	);
 
-	//マテリアルバッファーの作成、バッファーサイズを256バイトでアライメントする
-	auto materialBuffSize = sizeof(MaterialForHlsl);
-	materialBuffSize = (materialBuffSize + 0xff) & ~0xff;
 
-	auto materialHeapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto materialResourceDescriptor = CD3DX12_RESOURCE_DESC::Buffer(materialBuffSize * pmdData.materialNum);
 
-	result = _dev->CreateCommittedResource(
-		&materialHeapProperty,
-		D3D12_HEAP_FLAG_NONE,
-		&materialResourceDescriptor,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+
+	//頂点シェーダーオブジェクトの生成
+	result = D3DCompileFromFile(
+		L"BasicVertexShader.hlsl",  //シェーダー名
 		nullptr,
-		IID_PPV_ARGS(materialBuff.ReleaseAndGetAddressOf())
-	);
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, //カレントディレクトリからインクルードする
+		"BasicVS", "vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, //オプションにデバッグと最適化をスキップ
+		0,
+		&_vsBlob, &errorBlob);
 
-	result = materialBuff->Map(0, nullptr, (void**)&mapMaterial);
-
-	//char*をmaterialForHlsl*型に変換
-	for (auto& m : pmdData.materialDatas) {
-		*reinterpret_cast<MaterialForHlsl*>(mapMaterial) = m.material;
-		mapMaterial += materialBuffSize;
-	}
-	materialBuff->Unmap(0, nullptr);
-
-	//マテリアルとテクスチャ用のディスクリプタヒープの作成。
-	D3D12_DESCRIPTOR_HEAP_DESC DescHeapDesc = {};
-	DescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	DescHeapDesc.NodeMask = 0;
-	DescHeapDesc.NumDescriptors = pmdData.materialNum * 5;
-	DescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	
-	result = _dev->CreateDescriptorHeap(
-		&DescHeapDesc, IID_PPV_ARGS(materialDescHeap.ReleaseAndGetAddressOf())
-	);
-
-	//シェーダーリソースビューディスクリプタの作成
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-	srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-
-	//マテリアル用CBV、SRVの作成、マテリアルの数だけ作る。
-	D3D12_CONSTANT_BUFFER_VIEW_DESC matCBVDesc = {};
-	matCBVDesc.BufferLocation = materialBuff->GetGPUVirtualAddress();
-	matCBVDesc.SizeInBytes = materialBuffSize;
-
-	auto matDescHeapHead = materialDescHeap->GetCPUDescriptorHandleForHeapStart(); //先頭を記録
-	auto inc = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	//以下実際にCBV、SRVを作る。
-	for (int i = 0; i < pmdData.materialNum; ++i)
-	{
-		_dev->CreateConstantBufferView(&matCBVDesc, matDescHeapHead);
-		matDescHeapHead.ptr += inc;
-		matCBVDesc.BufferLocation += materialBuffSize;
-
-		if (textureResource[i] != nullptr)		//テクスチャがあればそのテクスチャ、なければ白テクスチャを設定
-		{
-			srvDesc.Format = textureResource[i]->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				textureResource[i].Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
+	//エラー発生時の処理
+	if (FAILED(result)) {
+		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+			::OutputDebugStringA("ファイルが見当たりません");
 		}
-		else
-		{
-			srvDesc.Format = whiteTex->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				whiteTex.Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
-
+		else {
+			std::string errstr;
+			errstr.resize(errorBlob->GetBufferSize());
+			std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errstr.begin());
+			errstr += "\n";
+			::OutputDebugStringA(errstr.c_str());
 		}
-		matDescHeapHead.ptr += inc;
-	
-		if (sphResources[i] != nullptr)		//SPHがあればそのSPH、なければ白テクスチャを設定
-		{
-			srvDesc.Format = sphResources[i]->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				sphResources[i].Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
-		}
-		else
-		{
-			srvDesc.Format = whiteTex->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				whiteTex.Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
-
-		}
-		matDescHeapHead.ptr += inc;
-
-		if (spaResources[i] != nullptr)		//SPAがあればそのSPA、なければ黒テクスチャを設定
-		{
-			srvDesc.Format = spaResources[i]->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				spaResources[i].Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
-		}
-		else
-		{
-			srvDesc.Format = blackTex->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				blackTex.Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
-
-		}
-
-		matDescHeapHead.ptr += inc;
-
-		if (toonResources[i] != nullptr)	//トゥーンリソースがあればトゥーン用、なければグラデーションテクスチャを設定
-		{
-			srvDesc.Format = toonResources[i]->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				toonResources[i].Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
-		}
-		else
-		{
-			srvDesc.Format = gradTex->GetDesc().Format;
-			_dev->CreateShaderResourceView(
-				gradTex.Get(),
-				&srvDesc,
-				matDescHeapHead
-			);
-
-		}
-		matDescHeapHead.ptr += inc;
-	
+		exit(1);
 	}
 
+	//ピクセルシェーダーオブジェクトの生成
+	result = D3DCompileFromFile(
+		L"BasicPixelShader.hlsl",  //シェーダー名
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, //カレントディレクトリからインクルードする
+		"BasicPS", "ps_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&_psBlob, &errorBlob);
+
+	//エラー発生時の処理
+	if (FAILED(result)) {
+		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+			::OutputDebugStringA("ファイルが見当たりません");
+		}
+		else {
+			std::string errstr;
+			errstr.resize(errorBlob->GetBufferSize());
+			std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errstr.begin());
+			errstr += "\n";
+			OutputDebugStringA(errstr.c_str());
+		}
+		exit(1);
+	}
+
+	//頂点レイアウトの設定
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+		{//座標情報
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//法線ベクトル情報
+			"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//uv情報
+			"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,
+			0, D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//ボーン情報
+			"BONE_NO", 0, DXGI_FORMAT_R16G16_UINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//ボーンウェイト情報
+			"WEIGHT", 0, DXGI_FORMAT_R8_UINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{//輪郭線フラグ情報
+			"EDGE_FLG", 0, DXGI_FORMAT_R8_UINT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+	};
 
 
 	//パイプラインステートの作成、設定

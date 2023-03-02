@@ -59,6 +59,53 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 
 }
 
+//PMDモデルの位置変換行列のロード
+void PmdActor::CreateTransformView(DX12Application* app)
+{
+	//定数バッファーの作成
+	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
+
+	app->_dev->CreateCommittedResource(
+		&constHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&constHeapDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(transformBuff.ReleaseAndGetAddressOf())
+	);
+	SceneMatrix* mapMatrix;
+
+	//マップによる定数の転送
+	auto result = transformBuff->Map(0, nullptr, (void**)&mapMatrix);
+	mapMatrix->world = worldMatrix;
+
+	//定数バッファービューの作成のための設定
+	//行列用定数バッファービュー用のディスクリプタヒープの作成
+	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
+	//シェーダーから見えるように
+	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descHeapDesc.NodeMask = 0;
+	descHeapDesc.NumDescriptors = 1;
+	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	result = app->_dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(transformDescHeap.ReleaseAndGetAddressOf()));
+
+	auto matrixHeaphandle = transformDescHeap->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
+	constBufferViewDesc.BufferLocation = transformBuff->GetGPUVirtualAddress();
+	constBufferViewDesc.SizeInBytes = transformBuff->GetDesc().Width;
+
+	//定数バッファービューの作成
+	app->_dev->CreateConstantBufferView(
+		&constBufferViewDesc,
+		matrixHeaphandle
+	);
+
+}
+
+//PMDの情報からGPUへのマテリアルリソースのロード
 void PmdActor::GetMaterialResource(DX12Application* app)
 {
 	//マテリアルバッファーの作成、バッファーサイズを256バイトでアライメントする

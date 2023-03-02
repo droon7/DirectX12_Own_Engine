@@ -24,12 +24,14 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
 	//マテリアル、テクスチャ情報
-	ComPtr<ID3D12DescriptorHeap> materialDescHeap;
-	ComPtr<ID3D12Resource> materialBuff;
-	PmdTexture pmdTexture;
+	ComPtr<ID3D12DescriptorHeap> materialDescHeap; //バッファーの解釈する。実質ビュー
+	ComPtr<ID3D12Resource> materialBuff; //実際のデータ
+	PmdTexture pmdTexture; //データが置かれている
 
 	//ワールド座標情報
-	DirectX::XMMATRIX worldMatrix;
+	ComPtr<ID3D12DescriptorHeap> transformDescHeap; //バッファーの解釈する。実質ビュー
+	ComPtr<ID3D12Resource> transformBuff; //実際のデータ
+	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixRotationY(0);
 
 public:
 
@@ -38,14 +40,14 @@ public:
 	void LoadPmdData(std::string ModelName);
 	//vbViewとibViewに設定
 	void CreateVertexViewIndexView(DX12Application* app); 
+	//座標変換行列情報をセット
+	void CreateTransformView(DX12Application* app);
 	//PMDデータからマテリアルのリソースを読み込む
 	void GetMaterialResource(DX12Application* app);
 	//pmdDataからテクスチャのリソースを読み込む
 	void GetTextureResource(DX12Application* app);
 	//materialの情報をもとにCBV、SRVを作成する
 	void CreateMaterialAndTextureView(DX12Application* app);
-	//座標変換行列情報をセット
-	void CreateTransformView();
 
 	//pmdモデル描画命令
 	void PmdDraw(DX12Application* app);   

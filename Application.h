@@ -59,9 +59,9 @@ public:
 	ComPtr<ID3D12DescriptorHeap> matrixCsvHeaps = nullptr;
 
 	//è¡Ç∑ó\íË
-	//ComPtr<ID3D12Resource> vertBuff = nullptr;
+	ComPtr<ID3D12Resource> vertBuff = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vbView = {};
-	//ComPtr<ID3D12Resource> idxBuff = nullptr;
+	ComPtr<ID3D12Resource> idxBuff = nullptr;
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
 	ComPtr<ID3D12Resource> constBuff = nullptr;
