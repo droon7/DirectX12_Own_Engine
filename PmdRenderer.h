@@ -6,8 +6,15 @@
 
 class PmdRenderer
 {
+private:
+	ComPtr<ID3D12RootSignature> rootsignature = nullptr;
+	ComPtr<ID3D12PipelineState> pipelinestate = nullptr;
+
+
+	HRESULT CreateGraphicsPipelineForPmd(DX12Application* app);
+	HRESULT CreateRootSignature();
+
 public:
-	HRESULT CreateGraphicsPipelineForPmd();
 };
 
 
