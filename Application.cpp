@@ -318,13 +318,13 @@ void Application::LoadAssets()
 	
 	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
 	//テクスチャ名にセパレーターがあれば分離し、適切な名前を入れる
-	textureResource.resize(pmdData.materials.size());
-	sphResources.resize(pmdData.materials.size());
-	spaResources.resize(pmdData.materials.size());
+	textureResource.resize(pmdData.materialDatas.size());
+	sphResources.resize(pmdData.materialDatas.size());
+	spaResources.resize(pmdData.materialDatas.size());
 
-	for (int i = 0; i < pmdData.materials.size(); ++i)
+	for (int i = 0; i < pmdData.materialDatas.size(); ++i)
 	{
-		std::string texFileName = pmdData.materials[i].additional.texPath;
+		std::string texFileName = pmdData.materialDatas[i].additional.texPath;
 		std::string sphFileName = {};
 		std::string spaFileName = {};
 
@@ -370,9 +370,9 @@ void Application::LoadAssets()
 	}
 
 	//トゥーンシェーダーのためのカラールックアップテーブルのロード
-	toonResources.resize(pmdData.materials.size());
+	toonResources.resize(pmdData.materialDatas.size());
 
-	for (int i = 0; i < pmdData.materials.size(); ++i)
+	for (int i = 0; i < pmdData.materialDatas.size(); ++i)
 	{
 		std::string toonFilePath = "toon/";
 		char toonFileName[16];
@@ -381,7 +381,7 @@ void Application::LoadAssets()
 			toonFileName,
 			16,
 			"toon%02d.bmp",
-			pmdData.materials[i].additional.toonIdx + 1
+			pmdData.materialDatas[i].additional.toonIdx + 1
 		);
 
 		toonFilePath += toonFileName;
@@ -526,7 +526,7 @@ void Application::LoadAssets()
 	result = materialBuff->Map(0, nullptr, (void**)&mapMaterial);
 
 	//char*をmaterialForHlsl*型に変換
-	for (auto& m : pmdData.materials) {
+	for (auto& m : pmdData.materialDatas) {
 		*reinterpret_cast<MaterialForHlsl*>(mapMaterial) = m.material;
 		mapMaterial += materialBuffSize;
 	}
@@ -885,7 +885,7 @@ void Application::PopulateCommandList()
 	auto cbvSrvIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 5;
 
 	unsigned int idxOffset = 0;
-	for (auto& m : pmdData.materials)
+	for (auto& m : pmdData.materialDatas)
 	{
 		_cmdList->  SetGraphicsRootDescriptorTable(1, materialH);
 

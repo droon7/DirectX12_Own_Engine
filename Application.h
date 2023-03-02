@@ -38,6 +38,7 @@ private:
 	Application(const Application&) = delete;
 	void operator=(const Application&) = delete;
 
+public:
 	int frame = 0;
 
 	//Directxパイプラインオブジェクトの宣言
@@ -119,7 +120,7 @@ private:
 // PMDローダー
 	PmdData pmdData;
 
-public:
+
 
 	ComPtr<ID3D12Device> _dev;
 

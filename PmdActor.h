@@ -23,7 +23,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
 	//マテリアル、テクスチャ情報
-	Material material;
+	MaterialData material;
 
 	//ワールド座標情報
 	DirectX::XMMATRIX worldMatrix;

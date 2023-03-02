@@ -2,6 +2,7 @@
 #define MATERIAL_H
 
 #include"pch.h"
+#include"Application.h"
 using Microsoft::WRL::ComPtr;
 
 //マテリアル及び、テクスチャ、sph、spa、トゥーンテクスチャの情報を取り扱うクラス
@@ -16,7 +17,12 @@ public:
 	std::vector<ComPtr<ID3D12Resource>> toonResources;
 
 	//テクスチャをリソースにロードする
-	ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath);
+	ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath, Application* app);
+
+	//白、黒、グレーグラデーションテクスチャを作る
+	ComPtr<ID3D12Resource> CreateWhiteTexture(Application* app);
+	ComPtr<ID3D12Resource> CreateBlackTexture(Application* app);
+	ComPtr<ID3D12Resource> CreateGradationTexture(Application* app);
 
 
 };

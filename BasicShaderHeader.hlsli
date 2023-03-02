@@ -16,7 +16,7 @@ cbuffer cbuff0 : register(b0)
 };
 
 //マテリアル定数バッファー
-cbuffer Material : register(b1)
+cbuffer MaterialData : register(b1)
 {
 	float4 diffuse;
 	float4 specular;

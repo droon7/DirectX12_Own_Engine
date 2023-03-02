@@ -30,18 +30,18 @@ void PmdData::loadPmdData(std::string strModelPath)
 
 	fread(pmdMaterialForLoad.data(), pmdMaterialForLoad.size() * sizeof(PMDMaterialForLoad), 1, fp);
 
-	materials.resize(pmdMaterialForLoad.size());
+	materialDatas.resize(pmdMaterialForLoad.size());
 	for (int i = 0; i < pmdMaterialForLoad.size(); ++i)
 	{
-		materials[i].indicesNum = pmdMaterialForLoad[i].indicesNum;
-		materials[i].material.diffuse = pmdMaterialForLoad[i].diffuse;
-		materials[i].material.alpha = pmdMaterialForLoad[i].alpha;
-		materials[i].material.specular = pmdMaterialForLoad[i].specular;
-		materials[i].material.specularity = pmdMaterialForLoad[i].specularity;
-		materials[i].material.ambient = pmdMaterialForLoad[i].ambient;
-		materials[i].additional.toonIdx = pmdMaterialForLoad[i].toonIdx;
-		materials[i].additional.texPath = pmdMaterialForLoad[i].texFilePath;
-		materials[i].additional.edgeflag = pmdMaterialForLoad[i].edgeFlag;
+		materialDatas[i].indicesNum = pmdMaterialForLoad[i].indicesNum;
+		materialDatas[i].material.diffuse = pmdMaterialForLoad[i].diffuse;
+		materialDatas[i].material.alpha = pmdMaterialForLoad[i].alpha;
+		materialDatas[i].material.specular = pmdMaterialForLoad[i].specular;
+		materialDatas[i].material.specularity = pmdMaterialForLoad[i].specularity;
+		materialDatas[i].material.ambient = pmdMaterialForLoad[i].ambient;
+		materialDatas[i].additional.toonIdx = pmdMaterialForLoad[i].toonIdx;
+		materialDatas[i].additional.texPath = pmdMaterialForLoad[i].texFilePath;
+		materialDatas[i].additional.edgeflag = pmdMaterialForLoad[i].edgeFlag;
 	}
 
 	fclose(fp);

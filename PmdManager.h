@@ -50,7 +50,7 @@ struct AdditionalMaterial
 };
 
 //マテリアルデータをまとめる
-struct Material
+struct MaterialData
 {
 	unsigned int indicesNum;
 	MaterialForHlsl material;
@@ -73,7 +73,7 @@ public:
 	PMDHeader pmdHeader = {};
 	std::vector<unsigned char> vertices;
 	std::vector<unsigned short> indices;
-	std::vector<Material> materials;
+	std::vector<MaterialData> materialDatas;
 	static constexpr size_t pmdvertex_size = 38;
 
 
