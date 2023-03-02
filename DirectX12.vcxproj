@@ -183,6 +183,7 @@
     </ClCompile>
     <ClCompile Include="pmdActor.cpp" />
     <ClCompile Include="PmdManager.cpp" />
+    <ClCompile Include="PmdRenderer.cpp" />
     <ClCompile Include="PmdTexture.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Utility.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="PmdActor.h" />
     <ClInclude Include="PmdManager.h" />
+    <ClInclude Include="PmdRenderer.h" />
     <ClInclude Include="PmdTexture.h" />
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>

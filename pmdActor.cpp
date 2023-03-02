@@ -1,5 +1,16 @@
 #include"PmdActor.h"
 
+PmdActor::PmdActor(DX12Application* app, std::string ModelName)
+	:angle(0.0f)
+{
+	LoadPmdData(ModelName);
+	CreateVertexViewIndexView(app);
+	CreateTransformView(app);
+	GetMaterialResource(app);
+	GetTextureResource(app);
+	CreateMaterialAndTextureView(app);
+}
+
 void PmdActor::LoadPmdData(std::string ModelName)
 {
 	pmdData.loadPmdData(ModelName);
@@ -344,4 +355,15 @@ void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
 		matDescHeapHead.ptr += inc;
 
 	}
+}
+
+void DrawPmd(DX12Application* app)
+{
+
+}
+
+
+void UpdatePmd()
+{
+
 }

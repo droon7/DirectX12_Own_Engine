@@ -32,14 +32,12 @@ private:
 	ComPtr<ID3D12DescriptorHeap> transformDescHeap; //バッファーの解釈する。実質ビュー
 	ComPtr<ID3D12Resource> transformBuff; //実際のデータ
 	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixRotationY(0);
+	float angle;
 
-public:
-
-	//ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath);
 	//pmdモデルロード
 	void LoadPmdData(std::string ModelName);
 	//vbViewとibViewに設定
-	void CreateVertexViewIndexView(DX12Application* app); 
+	void CreateVertexViewIndexView(DX12Application* app);
 	//座標変換行列情報をセット
 	void CreateTransformView(DX12Application* app);
 	//PMDデータからマテリアルのリソースを読み込む
@@ -49,10 +47,14 @@ public:
 	//materialの情報をもとにCBV、SRVを作成する
 	void CreateMaterialAndTextureView(DX12Application* app);
 
-	//pmdモデル描画命令
-	void PmdDraw(DX12Application* app);   
+public:
 
-	void PmdUpdate(); //pmdモデルアップデート、現在は空
+	PmdActor(DX12Application* app, std::string ModelName);
+
+	//pmdモデル描画命令
+	void DrawPmd(DX12Application* app);   
+
+	void UpdatePmd(); //pmdモデルアップデート、現在は空
 
 };
 
