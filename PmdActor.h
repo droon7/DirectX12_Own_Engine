@@ -13,6 +13,7 @@ using Microsoft::WRL::ComPtr;
 class PmdActor
 {
 private:
+	//PMD基礎データ
 	std::string stringModelPath;
 	PmdData pmdData;
 
@@ -23,7 +24,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
 
 	//マテリアル、テクスチャ情報
-	MaterialData material;
+	PmdMaterial material;
 
 	//ワールド座標情報
 	DirectX::XMMATRIX worldMatrix;
@@ -34,10 +35,14 @@ public:
 	//pmdモデルロード
 	void LoadPmdData(std::string ModelName);
 	//vbViewとibViewに設定
-	void CreateVertexViewIndexView(Application* app); 
-	//textureResources等を設定
-	void CreateMaterialAndTextureVIEW(Application* app);
-	void PmdDraw(Application* app);   //pmdモデル描画命令
+	void CreateVertexViewIndexView(DX12Application* app); 
+	//materialにpmdDataの各情報を格納する。
+	void GetResourceMaterialAndTexture(DX12Application* app);
+	//materialの情報をもとにCBV、SRVを作成する
+	void CreateMaterialAndTextureView(DX12Application* app);
+
+	//pmdモデル描画命令
+	void PmdDraw(DX12Application* app);   
 
 	void PmdUpdate(); //pmdモデルアップデート、現在は空
 

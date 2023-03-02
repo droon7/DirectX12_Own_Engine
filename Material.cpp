@@ -1,16 +1,17 @@
 #include "Material.h"
 
-Material::Material()
+PmdMaterial::PmdMaterial()
 {
 }
 
 
-ComPtr<ID3D12Resource> Material::LoadTextureFromFile(std::string& textureName, Application* app)
+//テクスチャの名前を受け取りテクスチャデータをロードし返す
+ComPtr<ID3D12Resource> PmdMaterial::LoadTextureFromFile(std::string& textureName, DX12Application* app)
 {
 
 	//flyweightパターンの仕様により同じリソースを再ロードせず再利用する
-	auto iterator = app->_resourceTable.find(textureName);
-	if (iterator != app->_resourceTable.end())
+	auto iterator = _resourceTable.find(textureName);
+	if (iterator != _resourceTable.end())
 	{
 		return iterator->second;
 	}
@@ -175,12 +176,15 @@ ComPtr<ID3D12Resource> Material::LoadTextureFromFile(std::string& textureName, A
 		app->_cmdList->Reset(app->_cmdAllocator.Get(), nullptr);
 	}
 
+	//flyweightパターンのための追加
+	_resourceTable.insert(std::make_pair(textureName, texbuff));
+
 	return texbuff;
 }
 
 
 //白テクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
-ComPtr<ID3D12Resource> Material::CreateWhiteTexture(Application* app)
+ComPtr<ID3D12Resource> PmdMaterial::CreateWhiteTexture(DX12Application* app)
 {
 	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
 		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
@@ -217,7 +221,7 @@ ComPtr<ID3D12Resource> Material::CreateWhiteTexture(Application* app)
 }
 
 //黒テクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
-ComPtr<ID3D12Resource> Material::CreateBlackTexture(Application* app)
+ComPtr<ID3D12Resource> PmdMaterial::CreateBlackTexture(DX12Application* app)
 {
 	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
 		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
@@ -254,7 +258,7 @@ ComPtr<ID3D12Resource> Material::CreateBlackTexture(Application* app)
 }
 
 //トゥーンシェーダーしない場合のデフォルトグラデーションテクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
-ComPtr<ID3D12Resource> Material::CreateGradationTexture(Application* app)
+ComPtr<ID3D12Resource> PmdMaterial::CreateGradationTexture(DX12Application* app)
 {
 	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
 		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,

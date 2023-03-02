@@ -16,7 +16,7 @@ public:
 
 private:
 	static HWND m_hwnd;
-	Application* pdx12;
+	DX12Application* pdx12;
 	UINT mwidth;
 	UINT mheight;
 

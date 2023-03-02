@@ -3,10 +3,11 @@
 
 HWND Win32Application::m_hwnd = nullptr;
 
+//コンストラクタでDX12Applicationも初期化
 Win32Application::Win32Application(UINT width, UINT height)
 	: mwidth(width), mheight(height)
 {
-	pdx12 = Application::Instance(mwidth, mheight);
+	pdx12 = DX12Application::Instance(mwidth, mheight);
 }
 
 //デバッグ用関数

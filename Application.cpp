@@ -6,7 +6,7 @@
 using namespace::DirectX;
 
 //ウィンドウサイズの初期値を入れる。レンダーターゲット数を入れる。
-Application::Application(UINT width, UINT height) :
+DX12Application::DX12Application(UINT width, UINT height) :
 	window_width(width),
 	window_height(height),
 	_backBuffers(buffer_count)
@@ -15,14 +15,14 @@ Application::Application(UINT width, UINT height) :
 
 //初期化、パイプラインの初期化とアセット類のロードを分ける
 //シングルトンを実現する。
-Application* Application::Instance(UINT width, UINT height)
+DX12Application* DX12Application::Instance(UINT width, UINT height)
 {
 
-	static Application app{width, height};
+	static DX12Application app{width, height};
 	return &app;
 }
 
-void Application::OnInit()
+void DX12Application::OnInit()
 {
 	//DirectXTexライブラリのテクスチャロードのための準備
 	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -34,7 +34,7 @@ void Application::OnInit()
 
 //パイプラインに必要なオブジェクトの生成、初期化を行う
 //TODO: オブジェクトの初期化はThrowIfFailed()関数に入れる
-void Application::LoadPipeline()
+void DX12Application::LoadPipeline()
 {
 
 #ifdef _DEBUG
@@ -157,7 +157,7 @@ void Application::LoadPipeline()
 
 
 //アセットのロード、現状は頂点、頂点インデックス、シェーダー、PSO、ルートシグネチャ等
-void Application::LoadAssets()
+void DX12Application::LoadAssets()
 {
 	
 	//PMDデータのロード
@@ -318,9 +318,9 @@ void Application::LoadAssets()
 	
 	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
 	//テクスチャ名にセパレーターがあれば分離し、適切な名前を入れる
-	textureResource.resize(pmdData.materialDatas.size());
-	sphResources.resize(pmdData.materialDatas.size());
-	spaResources.resize(pmdData.materialDatas.size());
+	textureResource.resize(pmdData.materialNum);
+	sphResources.resize(pmdData.materialNum);
+	spaResources.resize(pmdData.materialNum);
 
 	for (int i = 0; i < pmdData.materialDatas.size(); ++i)
 	{
@@ -766,7 +766,7 @@ void Application::LoadAssets()
 }
 
 //フレームによって更新する値を入れる予定
-void Application::OnUpdate()
+void DX12Application::OnUpdate()
 {
 
 	//行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
@@ -777,7 +777,7 @@ void Application::OnUpdate()
 
 
 //レンダリングする。メインループの内部
-void Application::OnRender() 
+void DX12Application::OnRender() 
 {
 	//コマンドリストに実際に実行するレンダリングコマンドを集める
 	PopulateCommandList();
@@ -798,7 +798,7 @@ void Application::OnRender()
 }
 
 //DirectX12が終了するときコマンドが全て実行されている確認
-void Application::OnDestroy() 
+void DX12Application::OnDestroy() 
 {
 	WaitForPreviousFrame();
 
@@ -807,7 +807,7 @@ void Application::OnDestroy()
 
 
 //コマンドリストに実際に実行するコマンドを追加
-void Application::PopulateCommandList()
+void DX12Application::PopulateCommandList()
 {
 
 
@@ -908,7 +908,7 @@ void Application::PopulateCommandList()
 
 
 //GPUがコマンドを全て実行完了するまで待つ
-void Application::WaitForPreviousFrame()
+void DX12Application::WaitForPreviousFrame()
 {
 	//命令の完了を待ち、チェック
 	//TODO: このSignal()メソッドによる実装は単純なので他の方法を考える

@@ -5,7 +5,7 @@ void PmdActor::LoadPmdData(std::string ModelName)
 	pmdData.loadPmdData(ModelName);
 }
 
-void PmdActor::CreateVertexViewIndexView(Application* app)
+void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 {
 
 
@@ -59,7 +59,82 @@ void PmdActor::CreateVertexViewIndexView(Application* app)
 
 }
 
-void PmdActor::CreateMaterialAndTextureVIEW(Application* app)
+void PmdActor::GetResourceMaterialAndTexture(DX12Application* app)
 {
+	//マテリアルの数だけテクスチャをロードする。対応するテクスチャがなければnullptrを入れる。
+	//テクスチャ名にセパレーターがあれば分離し、適切な名前を入れる
+	material.textureResources.resize(pmdData.materialDatas.size());
+	material.sphResources.resize(pmdData.materialDatas.size());
+	material.spaResources.resize(pmdData.materialDatas.size());
+
+	for (int i = 0; i < pmdData.materialDatas.size(); ++i)
+	{
+		std::string texFileName = pmdData.materialDatas[i].additional.texPath;
+		std::string sphFileName = {};
+		std::string spaFileName = {};
+
+		if (texFileName.size() == 0)
+		{
+			material.textureResources[i] = nullptr;
+			continue;
+		}
+
+		{
+			auto namepair = SplitFileName(texFileName, '*');
+			if (GetExtension(namepair.second) == "sph")
+			{
+				sphFileName = namepair.second;
+				texFileName = namepair.first;
+			}
+			else if (GetExtension(namepair.second) == "spa")
+			{
+				spaFileName = namepair.second;
+				texFileName = namepair.first;
+			}
+			else
+			{
+				texFileName = namepair.second;
+			}
+		}
+
+		auto texFilePath = GetTexturePathFromModelAndTexPath(
+			stringModelPath,
+			texFileName.c_str());
+
+		auto sphFilePath = GetTexturePathFromModelAndTexPath(
+			stringModelPath,
+			sphFileName.c_str());
+		auto spaFilePath = GetTexturePathFromModelAndTexPath(
+			stringModelPath,
+			spaFileName.c_str());
+
+		material.textureResources[i] = material.LoadTextureFromFile(texFilePath,app);
+		material.sphResources[i] = material.LoadTextureFromFile(sphFilePath, app);
+		material.spaResources[i] = material.LoadTextureFromFile(spaFilePath, app);
+
+	}
+
+	//トゥーンシェーダーのためのカラールックアップテーブルのロード
+	material.toonResources.resize(pmdData.materialDatas.size());
+
+	for (int i = 0; i < pmdData.materialDatas.size(); ++i)
+	{
+		std::string toonFilePath = "toon/";
+		char toonFileName[16];
+
+		sprintf_s(
+			toonFileName,
+			16,
+			"toon%02d.bmp",
+			pmdData.materialDatas[i].additional.toonIdx + 1
+		);
+
+		toonFilePath += toonFileName;
+
+		material.toonResources[i] = material.LoadTextureFromFile(toonFilePath, app);
+	}
+
+
+
 
 }

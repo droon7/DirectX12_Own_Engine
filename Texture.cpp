@@ -5,7 +5,7 @@ using namespace DirectX;
 
 
 //WICテクスチャのロード、失敗すればnullptrを返す
-	ComPtr<ID3D12Resource> Application::LoadTextureFromFile(std::string& texPath)
+	ComPtr<ID3D12Resource> DX12Application::LoadTextureFromFile(std::string& texPath)
 {
 	//flyweightパターンの仕様により同じリソースを再ロードせず再利用する
 	auto iterator = _resourceTable.find(texPath);
@@ -176,7 +176,7 @@ using namespace DirectX;
 
 
 //白テクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
-ComPtr<ID3D12Resource> Application::CreateWhiteTexture()
+ComPtr<ID3D12Resource> DX12Application::CreateWhiteTexture()
 {
 	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
 		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
@@ -213,7 +213,7 @@ ComPtr<ID3D12Resource> Application::CreateWhiteTexture()
 }
 
 //黒テクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
-ComPtr<ID3D12Resource> Application::CreateBlackTexture()
+ComPtr<ID3D12Resource> DX12Application::CreateBlackTexture()
 {
 	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
 		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
@@ -250,7 +250,7 @@ ComPtr<ID3D12Resource> Application::CreateBlackTexture()
 }
 
 //トゥーンシェーダーしない場合のデフォルトグラデーションテクスチャを作り返す。注意！WriteToSubresourceメソッドを使用
-ComPtr<ID3D12Resource> Application::CreateGradationTexture()
+ComPtr<ID3D12Resource> DX12Application::CreateGradationTexture()
 {
 	D3D12_HEAP_PROPERTIES textureHeapProperty = CD3DX12_HEAP_PROPERTIES(
 		D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,

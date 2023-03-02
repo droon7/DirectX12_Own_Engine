@@ -22,12 +22,12 @@ struct SceneMatrix
 };
 
 
-class Application
+class DX12Application
 {
 private:
 
 	//シングルトンクラスにするためコンストラクタをprivate
-	Application(UINT window_width, UINT window_height);
+	DX12Application(UINT window_width, UINT window_height);
 
 	//~Application() {
 	//	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
@@ -35,8 +35,8 @@ private:
 	//};
 
 	//コピーコンストラクタと代入演算子を禁止
-	Application(const Application&) = delete;
-	void operator=(const Application&) = delete;
+	DX12Application(const DX12Application&) = delete;
+	void operator=(const DX12Application&) = delete;
 
 public:
 	int frame = 0;
@@ -124,7 +124,7 @@ public:
 
 	ComPtr<ID3D12Device> _dev;
 
-	static Application* Instance(UINT width, UINT height);
+	static DX12Application* Instance(UINT width, UINT height);
 	void OnInit();
 	void OnUpdate();
 	void OnRender();
