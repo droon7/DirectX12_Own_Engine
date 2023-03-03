@@ -152,9 +152,9 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 	//ルートパラメーターの設定
 	CD3DX12_ROOT_PARAMETER rootparam[3] = {};
 
-	rootparam[0].InitAsDescriptorTable(1, &descTblRange[0]);
-	rootparam[1].InitAsDescriptorTable(1, &descTblRange[1]);
-	rootparam[2].InitAsDescriptorTable(2, &descTblRange[2]);
+	rootparam[0].InitAsDescriptorTable(1, &descTblRange[0]);// view projection matrix;
+	rootparam[1].InitAsDescriptorTable(1, &descTblRange[1]);// worldTransformMatrix;
+	rootparam[2].InitAsDescriptorTable(2, &descTblRange[2]);// material;
 
 
 	//ルートシグネチャに設定するサンプラーの設定

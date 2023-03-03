@@ -717,57 +717,21 @@ void DX12Application::PopulateCommandList()
 {
 
 
-	D3D12_RESOURCE_BARRIER BarrierDesc = {};
+
 
 
 	//auto result = _cmdAllocator->Reset();  //コマンドアロケーターのリセット。
-	//レンダーターゲットをバックバッファーにセット
-	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
-	//リソースバリアの設定
-	//リソースバリアをバックバッファーリソースに指定する
-	//ヘルパー構造体を使用
-	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-		_backBuffers[bbIdx],
-		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET
-	);
-	_cmdList->ResourceBarrier(1, &BarrierDesc);
-	
-	
 
-	//レンダーターゲットをバックバッファにセット 
-	auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
-	rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-	auto dsvH = dsvHeaps->GetCPUDescriptorHandleForHeapStart();
-	_cmdList->OMSetRenderTargets(1, &rtvH, true, &dsvH);
-
-	//画面クリア
-	float r, g, b;
-	r = (float)(0xff & frame >> 4) / 255.0f;
-	g = (float)(0xff & frame >> 8) / 255.0f;
-	b = (float)(0xff & frame >> 0) / 255.0f;
-	float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };// 
-	_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
-	++frame;
-
-	//深度バッファークリア
-	_cmdList->ClearDepthStencilView(dsvH, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
+	BeginDraw();
 
 	//描画命令
 	//PSO、RootSignature,Primitive topologyのセット
 	_cmdList->SetPipelineState(_pipelinestate.Get());
 	_cmdList->SetGraphicsRootSignature(rootsignature.Get());
-	_cmdList->RSSetViewports(1, &viewport);
-	_cmdList->RSSetScissorRects(1, &scissorrect);
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//SRVのディスクリプタヒープの指定コマンドを追加
-	ID3D12DescriptorHeap* ppHeaps[] = { matrixCsvHeaps.Get() };
-	_cmdList->SetDescriptorHeaps(1, ppHeaps);
-	//ルートパラメタとsrvディスクリプタヒープのアドレスの関連付け
-	_cmdList->SetGraphicsRootDescriptorTable(0, matrixCsvHeaps->GetGPUDescriptorHandleForHeapStart());
+
+	SetScene();
 
 
 	//マテリアルディスクリプタヒープのセット
@@ -803,8 +767,12 @@ void DX12Application::PopulateCommandList()
 	}
 
 	//リソースバリアの状態の設定
-	BarrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	BarrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		_backBuffers[bbIdx],
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT
+	);
 	_cmdList->ResourceBarrier(1, &BarrierDesc);
 
 	
@@ -834,7 +802,7 @@ void DX12Application::WaitForPreviousFrame()
 }
 
 
-
+//深度ビュー作成メソッド
 HRESULT DX12Application::CreateDepthStencilView()
 {
 
@@ -892,6 +860,9 @@ HRESULT DX12Application::CreateDepthStencilView()
 	return result;
 }
 
+
+//シーンビュー作成メソッド
+//引数を与え、ビュー行列、プロジェクション行列の値を変化させるようにしても良い
 HRESULT DX12Application::CreateSceneView()
 {
 	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
@@ -954,4 +925,50 @@ HRESULT DX12Application::CreateSceneView()
 	);
 
 	return result;
+}
+
+//描画開始メソッド、レンダーターゲット、バリア、深度ビュー、ビューポートのコマンド追加
+void DX12Application::BeginDraw()
+{
+	//レンダーターゲットをバックバッファーにセット
+	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
+	//リソースバリアの設定
+	//リソースバリアをバックバッファーリソースに指定する
+	//ヘルパー構造体を使用
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		_backBuffers[bbIdx],
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
+	_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+
+
+	//レンダーターゲットをバックバッファにセット 
+	auto rtvH = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
+	rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	//画面カラーをクリア
+	float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
+
+
+	//深度を設定
+	auto dsvH = dsvHeaps->GetCPUDescriptorHandleForHeapStart();
+	_cmdList->OMSetRenderTargets(1, &rtvH, true, &dsvH);
+	//深度バッファークリア
+	_cmdList->ClearDepthStencilView(dsvH, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	//ビューポート、シザー矩形をセット
+	_cmdList->RSSetViewports(1, &viewport);
+	_cmdList->RSSetScissorRects(1, &scissorrect);
+}
+
+void DX12Application::SetScene()
+{
+	//シーン行列定数バッファーをセット
+	ID3D12DescriptorHeap* matrixHeaps[] = { matrixCsvHeaps.Get() };
+	_cmdList->SetDescriptorHeaps(1, matrixHeaps);
+	//ルートパラメタとシーン行列定数ヒープのアドレスの関連付け
+	_cmdList->SetGraphicsRootDescriptorTable(0, matrixCsvHeaps->GetGPUDescriptorHandleForHeapStart());
 }

@@ -145,6 +145,12 @@ public:
 	HRESULT CreateDepthStencilView();
 	//ビュー行列、投射行列から作るシーンのビューを作る
 	HRESULT CreateSceneView();
+	//
+	void BeginDraw();
+	// カメラをセットしシーンを確定
+	void SetScene();
+	//
+	void EndDraw();
 };
 
 
