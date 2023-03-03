@@ -7,10 +7,11 @@ void* Transform::operator new(size_t size)
 
 //コンストラクタでロードからビュー作成まで行う
 PmdActor::PmdActor(DX12Application* app, std::string ModelName)
-	:angle(0.0f)
+	:angle(0.0f), stringModelPath(ModelName)
 {
 	LoadPmdData(ModelName);
 	CreateVertexViewIndexView(app);
+	SetTransform();
 	CreateTransformView(app);
 	GetMaterialResource(app);
 	GetTextureResource(app);

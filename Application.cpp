@@ -893,7 +893,7 @@ HRESULT DX12Application::CreateSceneView()
 
 	//マップによってバッファーへ行列データを転送
 	auto result = sceneMatrixConstBuff->Map(0, nullptr, (void**)&mapMatrix);
-	mapMatrix->world = worldMat;
+	//mapMatrix->world = worldMat;
 	mapMatrix->view = viewMat;
 	mapMatrix->projection = projMat;
 	mapMatrix->eye = eye;

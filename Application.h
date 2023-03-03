@@ -15,7 +15,7 @@ using Microsoft::WRL::ComPtr;
 //シェーダーに渡すための基本的な行列データ
 struct SceneMatrix
 {
-	DirectX::XMMATRIX world;
+	//DirectX::XMMATRIX world;
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
 	DirectX::XMFLOAT3 eye;
