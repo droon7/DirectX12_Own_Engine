@@ -15,7 +15,6 @@ public:
 	static void DebugOutputFormatString(const char* format, ...); //ウィンドウデバッグ用関数
 	LRESULT static WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam); //ウィンドウ初期化関数
 	void RunDX12();
-	void RunOld();
 
 private:
 	static HWND m_hwnd;

@@ -52,54 +52,19 @@ public:
 	ComPtr<ID3D12DescriptorHeap> rtvHeaps = nullptr;
 	std::vector<ID3D12Resource*> _backBuffers;
 
-	ComPtr<ID3D12RootSignature> rootsignature = nullptr;
-	ComPtr<ID3D12PipelineState> _pipelinestate = nullptr;
-
-
 	//アセットの宣言
 	ComPtr<ID3D12DescriptorHeap> matrixCsvHeaps = nullptr;
-
-	//消す予定
-	ComPtr<ID3D12Resource> vertBuff = nullptr;
-	D3D12_VERTEX_BUFFER_VIEW vbView = {};
-	ComPtr<ID3D12Resource> idxBuff = nullptr;
-	D3D12_INDEX_BUFFER_VIEW ibView = {};
 	ComPtr<ID3D12Resource> sceneMatrixConstBuff = nullptr;
 
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
 
-	//テクスチャアセット
-	D3D12_TEXTURE_COPY_LOCATION src = {};
-	D3D12_TEXTURE_COPY_LOCATION dst = {};
-	std::vector<ComPtr<ID3D12Resource>> textureResource;
-	std::vector<ComPtr<ID3D12Resource>> sphResources;
-	std::vector<ComPtr<ID3D12Resource>> spaResources;
-	std::vector<ComPtr<ID3D12Resource>> toonResources;
-	DirectX::TexMetadata metadata;
-	DirectX::ScratchImage scratchImg;
-	std::map<std::string, ComPtr<ID3D12Resource>> _resourceTable;
-	ComPtr<ID3D12Resource> whiteTex;
-	ComPtr<ID3D12Resource> blackTex;
-	ComPtr<ID3D12Resource> gradTex;
-
 	//行列アセット
-	//DirectX::XMMATRIX matrix;
-	DirectX::XMMATRIX worldMat;
 	DirectX::XMMATRIX viewMat;
 	DirectX::XMMATRIX projMat;
 	SceneMatrix* mapMatrix = nullptr;
 	float angle = 0.0f;
 
-	//マテリアルデータ
-	ComPtr<ID3D12Resource> materialBuff = nullptr;
-	char* mapMaterial = nullptr;
-	ComPtr<ID3D12DescriptorHeap> materialDescHeap = nullptr;
-
-	//シェーダーオブジェクトの宣言
-	ID3DBlob* _vsBlob = nullptr;
-	ID3DBlob* _psBlob = nullptr;
-	ID3DBlob* errorBlob = nullptr;
 
 	//同期オブジェクトの宣言
 	ComPtr<ID3D12Fence> _fence = nullptr;
@@ -110,16 +75,7 @@ public:
 	ID3D12DebugDevice* debugDevice;
 
 
-//WICテクスチャのロード
-	ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath);
 
-//白テクスチャの作成
-	ComPtr<ID3D12Resource> CreateWhiteTexture();
-	ComPtr<ID3D12Resource> CreateBlackTexture();
-	ComPtr<ID3D12Resource> CreateGradationTexture();
-
-// PMDローダー
-	PmdData pmdData;
 
 
 
