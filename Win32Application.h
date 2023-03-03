@@ -20,7 +20,7 @@ private:
 	UINT mwidth;
 	UINT mheight;
 
-	DX12Application* pdx12;
+	DX12Application* pDX12;
 	std::shared_ptr<PmdRenderer> pmdRenderer;
 	std::vector<std::shared_ptr<PmdActor>> pmdActors;
 };

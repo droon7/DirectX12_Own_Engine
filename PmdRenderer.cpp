@@ -5,6 +5,25 @@ PmdRenderer::PmdRenderer(DX12Application* app)
 {
 	CreateGraphicsPipelineForPmd(app);
 	CreateRootSignature(app);
+
+}
+
+ComPtr<ID3D12RootSignature> PmdRenderer::GetRootsignature()
+{
+	return rootsignature;
+}
+
+ComPtr<ID3D12PipelineState> PmdRenderer::GetPipelinestate()
+{
+	return pipelinestate;
+}
+
+void PmdRenderer::SetRootsignatureAndPipelinestateAndPrimitive(DX12Application* app)
+{
+	app->_cmdList->SetComputeRootSignature(rootsignature.Get());
+	app->_cmdList->SetPipelineState(pipelinestate.Get());
+	app->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 }
 
 HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)

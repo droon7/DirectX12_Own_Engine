@@ -7,7 +7,7 @@ HWND Win32Application::m_hwnd = nullptr;
 Win32Application::Win32Application(UINT width, UINT height)
 	: mwidth(width), mheight(height)
 {
-	pdx12 = DX12Application::Instance(mwidth, mheight);
+	pDX12 = DX12Application::Instance(mwidth, mheight);
 }
 
 //デバッグ用関数
@@ -35,6 +35,7 @@ LRESULT Win32Application::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LP
 }
 
 
+//メインループが入っている。ウィンドウを動かす関数。
 int Win32Application::WindowRun()
 {
 
@@ -69,12 +70,12 @@ int Win32Application::WindowRun()
 
 
 	//DirectX12のパイプラインの初期化、リソースのロード
-	pdx12->OnInit();
+	pDX12->OnInit();
 
-	//pmdRenderer.reset(new PmdRenderer(pdx12));
-	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pdx12, "Model/初音ミクmetal.pmd");
+	//pmdRenderer.reset(new PmdRenderer(pDX12));
+	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd");
 	//pmdActors.push_back(sharedPmdActor);
-	//pmdActors[0]->DrawPmd(pdx12);
+	//pmdActors[0]->DrawPmd(pDX12);
 
 
 	//ウィンドウ表示
@@ -92,8 +93,8 @@ int Win32Application::WindowRun()
 		}
 
 		//DirectX12の処理
-		pdx12->OnUpdate();
-		pdx12->OnRender();
+		pDX12->OnUpdate();
+		pDX12->OnRender();
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
 		if (msg.message == WM_QUIT)
@@ -104,7 +105,7 @@ int Win32Application::WindowRun()
 	}
 
 	//DirectX12終了時の処理
-	pdx12->OnDestroy();
+	pDX12->OnDestroy();
 
 
 	//もうクラスはつかわないので登録解除する

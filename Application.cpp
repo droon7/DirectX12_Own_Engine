@@ -25,7 +25,7 @@ DX12Application* DX12Application::Instance(UINT width, UINT height)
 void DX12Application::OnInit()
 {
 	//DirectXTexライブラリのテクスチャロードのための準備
-	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
+
 
 	LoadPipeline();
 	LoadAssets();
@@ -36,12 +36,13 @@ void DX12Application::OnInit()
 //TODO: オブジェクトの初期化はThrowIfFailed()関数に入れる
 void DX12Application::LoadPipeline()
 {
+	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
 
 #ifdef _DEBUG
 	//デバッグレイヤーの有効化をする
 
 	ID3D12Debug* debugLayer ;
-	auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
+	 result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
 
 	debugLayer->EnableDebugLayer(); //デバッグレイヤーの有効化
 	debugLayer->Release(); //インターフェイスの解放
@@ -152,6 +153,19 @@ void DX12Application::LoadPipeline()
 	//フェンスの生成
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.ReleaseAndGetAddressOf()));
 
+	//ビューポートの設定、生成
+	viewport.Width = window_width;
+	viewport.Height = window_height;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MaxDepth = 1.0f;
+	viewport.MinDepth = 0.0f;
+
+	//シザー矩形の設定、生成
+	scissorrect.top = 0;
+	scissorrect.left = 0;
+	scissorrect.right = scissorrect.left + window_width;
+	scissorrect.bottom = scissorrect.top + window_height;
 
 }
 
@@ -654,19 +668,7 @@ void DX12Application::LoadAssets()
 	_pipelinestate = nullptr;
 	result = _dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(_pipelinestate.ReleaseAndGetAddressOf()));
 
-	//ビューポートの設定、生成
-	viewport.Width = window_width;
-	viewport.Height = window_height;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.MaxDepth = 1.0f;
-	viewport.MinDepth = 0.0f;
 
-	//シザー矩形の設定、生成
-	scissorrect.top = 0;
-	scissorrect.left = 0;
-	scissorrect.right = scissorrect.left + window_width;
-	scissorrect.bottom = scissorrect.top + window_height;
 
 
 }
@@ -689,7 +691,6 @@ void DX12Application::OnRender()
 	PopulateCommandList();
 
 	//コマンドリストの命令の実行
-
 	ID3D12CommandList* cmdlists[] = { _cmdList.Get()};
 	_cmdQueue->ExecuteCommandLists(1, cmdlists);
 
@@ -733,21 +734,17 @@ void DX12Application::PopulateCommandList()
 
 	SetScene();
 
-
-	//マテリアルディスクリプタヒープのセット
-	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
-	_cmdList->SetDescriptorHeaps(1, ppHeaps1);
-
-	//_cmdList->SetGraphicsRootDescriptorTable(1, materialDescHeap->GetGPUDescriptorHandleForHeapStart());
-	
-
-
 	//頂点バッファーのセット
 	_cmdList->IASetVertexBuffers(0, 1, &vbView);
 	//インデックスバッファーのセット
 	_cmdList->IASetIndexBuffer(&ibView);
 
 
+
+
+	//マテリアルディスクリプタヒープのセット
+	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
+	_cmdList->SetDescriptorHeaps(1, ppHeaps1);
 
 	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
 	//その上さらにテクスチャ、sph、spa、トゥーンテクスチャも描画していく。
@@ -781,7 +778,7 @@ void DX12Application::PopulateCommandList()
 }
 
 
-//GPUがコマンドを全て実行完了するまで待つ
+//GPUがコマンドを全て実行完了するまで待ち、CPUと同期する
 void DX12Application::WaitForPreviousFrame()
 {
 	//命令の完了を待ち、チェック
@@ -964,6 +961,7 @@ void DX12Application::BeginDraw()
 	_cmdList->RSSetScissorRects(1, &scissorrect);
 }
 
+//カメラをセットしシーンを設定
 void DX12Application::SetScene()
 {
 	//シーン行列定数バッファーをセット
@@ -971,4 +969,33 @@ void DX12Application::SetScene()
 	_cmdList->SetDescriptorHeaps(1, matrixHeaps);
 	//ルートパラメタとシーン行列定数ヒープのアドレスの関連付け
 	_cmdList->SetGraphicsRootDescriptorTable(0, matrixCsvHeaps->GetGPUDescriptorHandleForHeapStart());
+}
+
+//描画終了メソッド、バリア設定、コマンドリスト実行、フェンスによる同期、コマンドのリセット、画面のスワップによるディスプレイへの描画
+void DX12Application::EndDraw()
+{
+	//リソースバリアの状態の設定
+	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		_backBuffers[bbIdx],
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT
+	);
+	_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+	_cmdList->Close();
+
+
+	//コマンドリストの命令の実行
+	ID3D12CommandList* cmdlists[] = { _cmdList.Get() };
+	_cmdQueue->ExecuteCommandLists(1, cmdlists);
+
+	//GPUのコマンド実行の同期を待つ
+	WaitForPreviousFrame();
+
+	HRESULT result = _cmdAllocator->Reset(); //キューのリセット
+	result = _cmdList->Reset(_cmdAllocator.Get(), nullptr); //再びコマンドリストをためる準備
+
+	//画面をスワップし描画する
+	_swapchain->Present(1, 0);
 }
