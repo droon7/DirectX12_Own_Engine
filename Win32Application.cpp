@@ -35,6 +35,8 @@ LRESULT Win32Application::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LP
 }
 
 
+
+
 //メインループが入っている。ウィンドウを動かす関数。
 int Win32Application::WindowRun()
 {
@@ -69,6 +71,19 @@ int Win32Application::WindowRun()
 		nullptr);			//追加パラメーター
 
 
+	RunDX12();
+	//RunOld();
+
+
+	//もうクラスはつかわないので登録解除する
+	UnregisterClass(w.lpszClassName, w.hInstance);
+
+	return 0;
+
+}
+
+void Win32Application::RunDX12()
+{
 	//DirectX12のパイプラインの初期化、リソースのロード
 	//pDX12->OnInit();
 	pDX12->LoadPipeline();
@@ -99,14 +114,14 @@ int Win32Application::WindowRun()
 		//pDX12->OnRender();
 		pDX12->BeginDraw();
 		//pmdRenderer->SetRootsignatureAndPipelinestateAndPrimitive(pDX12);
-		
+
 		//		//PMD用の描画パイプラインに合わせる
 		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
 		////ルートシグネチャもPMD用に合わせる
 		pDX12->_cmdList->SetGraphicsRootSignature(pmdRenderer->GetRootsignature().Get());
 
 		pDX12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		
+
 		pmdActors[0]->DrawPmd(pDX12);
 		pDX12->EndDraw();
 
@@ -120,11 +135,46 @@ int Win32Application::WindowRun()
 
 	//DirectX12終了時の処理
 	pDX12->OnDestroy();
+}
+
+void Win32Application::RunOld()
+{
+	//DirectX12のパイプラインの初期化、リソースのロード
+    pDX12->OnInit();
 
 
-	//もうクラスはつかわないので登録解除する
-	UnregisterClass(w.lpszClassName, w.hInstance);
 
-	return 0;
 
+
+	//ウィンドウ表示
+	ShowWindow(m_hwnd, SW_SHOW);
+
+
+	//メッセージループの開始
+	MSG msg = {};
+	while (true)
+	{
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		//DirectX12の処理
+		pDX12->OnUpdate();
+		pDX12->OnRender();
+
+
+
+
+		//アプリケーションが終わるときmessageがWM_QUITになる
+		if (msg.message == WM_QUIT)
+		{
+			break;
+		}
+
+	}
+
+	//DirectX12終了時の処理
+	pDX12->OnDestroy();
 }

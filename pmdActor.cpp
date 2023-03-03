@@ -11,6 +11,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 {
 	LoadPmdData(ModelName);
 	CreateVertexViewIndexView(app);
+	SetTransform();
 	CreateTransformView(app);
 	GetMaterialResource(app);
 	GetTextureResource(app);
