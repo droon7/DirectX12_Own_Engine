@@ -84,7 +84,7 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 
 void PmdActor::SetTransform()
 {
-	transform.worldMatrix = DirectX::XMMatrixRotationY(0);
+	transform.worldMatrix = DirectX::XMMatrixIdentity();
 }
 
 //PMDモデルの位置変換行列のビューの作成
@@ -92,7 +92,7 @@ void PmdActor::CreateTransformView(DX12Application* app)
 {
 	//定数バッファーの作成
 	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
+	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(Transform) + 0xff) & ~0xff);
 
 	app->_dev->CreateCommittedResource(
 		&constHeapProp,
@@ -103,7 +103,7 @@ void PmdActor::CreateTransformView(DX12Application* app)
 		IID_PPV_ARGS(transformBuff.ReleaseAndGetAddressOf())
 	);
 	Transform mapMatrix;
-
+	
 	//マップによる定数の転送
 	auto result = transformBuff->Map(0, nullptr, (void**)&mapMatrix);
 	mapMatrix.worldMatrix = transform.worldMatrix;
@@ -275,9 +275,9 @@ void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
 	auto matDescHeapHead = materialDescHeap->GetCPUDescriptorHandleForHeapStart(); //先頭を記録
 	auto inc = app->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	ComPtr<ID3D12Resource> whiteTex = pmdTexture.CreateWhiteTexture(app);
-	ComPtr<ID3D12Resource> blackTex = pmdTexture.CreateBlackTexture(app);
-	ComPtr<ID3D12Resource> gradTex = pmdTexture.CreateGradationTexture(app);
+	whiteTex = pmdTexture.CreateWhiteTexture(app);
+	blackTex = pmdTexture.CreateBlackTexture(app);
+	gradTex = pmdTexture.CreateGradationTexture(app);
 
 	//以下実際にCBV、SRVを作る。
 	for (int i = 0; i < pmdData.materialNum; ++i)

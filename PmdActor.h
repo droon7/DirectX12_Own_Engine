@@ -35,6 +35,9 @@ private:
 	ComPtr<ID3D12DescriptorHeap> materialDescHeap; //バッファーの解釈する。実質ビュー
 	ComPtr<ID3D12Resource> materialBuff; //実際のデータ
 	PmdTexture pmdTexture; //データが置かれている
+	ComPtr<ID3D12Resource> whiteTex;
+	ComPtr<ID3D12Resource> blackTex;
+	ComPtr<ID3D12Resource> gradTex;
 
 	//ワールド座標情報
 	ComPtr<ID3D12DescriptorHeap> transformDescHeap; //バッファーの解釈する。実質ビュー

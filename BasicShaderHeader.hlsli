@@ -35,7 +35,7 @@ cbuffer cbuff0 : register(b0)
 cbuffer cbuff1 : register(b1)
 {
 	matrix world;
-}
+};
 
 //マテリアル定数バッファー
 cbuffer MaterialData : register(b2)
