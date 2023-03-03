@@ -2,6 +2,7 @@
 #define WIN32APPLICATION_H
 #include"Application.h"
 #include"PmdActor.h"
+#include"PmdRenderer.h"
 
 //ウィンドウアプリクラス
 class Win32Application
@@ -16,11 +17,12 @@ public:
 
 private:
 	static HWND m_hwnd;
-	DX12Application* pdx12;
 	UINT mwidth;
 	UINT mheight;
 
-	std::vector<PmdActor> pmdActors;
+	DX12Application* pdx12;
+	std::shared_ptr<PmdRenderer> pmdRenderer;
+	std::vector<std::shared_ptr<PmdActor>> pmdActors;
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include"PmdActor.h"
 
+//コンストラクタでロードからビュー作成まで行う
 PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	:angle(0.0f)
 {
@@ -85,11 +86,11 @@ void PmdActor::CreateTransformView(DX12Application* app)
 		nullptr,
 		IID_PPV_ARGS(transformBuff.ReleaseAndGetAddressOf())
 	);
-	SceneMatrix* mapMatrix;
+	DirectX::XMMATRIX mapMatrix;
 
 	//マップによる定数の転送
 	auto result = transformBuff->Map(0, nullptr, (void**)&mapMatrix);
-	mapMatrix->world = worldMatrix;
+	mapMatrix = worldMatrix;
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成
@@ -357,13 +358,37 @@ void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
 	}
 }
 
-void DrawPmd(DX12Application* app)
+void PmdActor::DrawPmd(DX12Application* app)
 {
+	//頂点バッファーのセット
+	app->_cmdList->IASetVertexBuffers(0, 1, &vbView);
+	//インデックスバッファーのセット
+	app->_cmdList->IASetIndexBuffer(&ibView);
 
+	//マテリアルディスクリプタヒープのセット
+	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
+	app->_cmdList->SetDescriptorHeaps(1, ppHeaps1);
+
+	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
+	//その上さらにテクスチャ、sph、spa、トゥーンテクスチャも描画していく。
+	auto materialH = materialDescHeap->GetGPUDescriptorHandleForHeapStart();
+	auto cbvSrvIncSize = app->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 5;
+
+	unsigned int idxOffset = 0;
+	for (auto& m : pmdData.materialDatas)
+	{
+		app->_cmdList->SetGraphicsRootDescriptorTable(2, materialH);
+
+		app->_cmdList->DrawIndexedInstanced(m.indicesNum, 1, idxOffset, 0, 0);
+
+		materialH.ptr += cbvSrvIncSize;
+
+		idxOffset += m.indicesNum;
+	}
 }
 
 
-void UpdatePmd()
+void PmdActor::UpdatePmd()
 {
 
 }

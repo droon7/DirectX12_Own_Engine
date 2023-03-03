@@ -50,9 +50,10 @@ public:
 	ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
 	ComPtr<ID3D12CommandQueue> _cmdQueue = nullptr;
 	ComPtr<ID3D12DescriptorHeap> rtvHeaps = nullptr;
+	std::vector<ID3D12Resource*> _backBuffers;
+
 	ComPtr<ID3D12RootSignature> rootsignature = nullptr;
 	ComPtr<ID3D12PipelineState> _pipelinestate = nullptr;
-	std::vector<ID3D12Resource*> _backBuffers;
 
 
 	//アセットの宣言
@@ -63,8 +64,8 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW vbView = {};
 	ComPtr<ID3D12Resource> idxBuff = nullptr;
 	D3D12_INDEX_BUFFER_VIEW ibView = {};
+	ComPtr<ID3D12Resource> sceneMatrixConstBuff = nullptr;
 
-	ComPtr<ID3D12Resource> constBuff = nullptr;
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
 
@@ -140,7 +141,10 @@ public:
 	//レンダーターゲットとなるバッファの数
 	static const int buffer_count = 2;
 
-
+	//深度バッファビューを作る
+	HRESULT CreateDepthStencilView();
+	//ビュー行列、投射行列から作るシーンのビューを作る
+	HRESULT CreateSceneView();
 };
 
 

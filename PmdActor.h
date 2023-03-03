@@ -49,7 +49,7 @@ private:
 
 public:
 
-	PmdActor(DX12Application* app, std::string ModelName);
+	explicit PmdActor(DX12Application* app, std::string ModelName);
 
 	//pmdƒ‚ƒfƒ‹•`‰æ–½—ß
 	void DrawPmd(DX12Application* app);   

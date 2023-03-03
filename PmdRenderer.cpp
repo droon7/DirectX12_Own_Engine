@@ -1,6 +1,12 @@
 #include "pch.h"
 #include "PmdRenderer.h"
 
+PmdRenderer::PmdRenderer(DX12Application* app)
+{
+	CreateGraphicsPipelineForPmd(app);
+	CreateRootSignature(app);
+}
+
 HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 {
 	ComPtr<ID3DBlob> vsBlob = nullptr;
@@ -137,14 +143,14 @@ HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 {
 	//ルートシグネチャに設定するルートパラメータ及びディスクリプタテーブル、ディスクリプタレンジの設定
-	CD3DX12_DESCRIPTOR_RANGE descTblRange[3] = {};
+	CD3DX12_DESCRIPTOR_RANGE descTblRange[4] = {};
 	descTblRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);//CBV b0 viewProjectMatrix
 	descTblRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);//CBV b1 worldTransformMatrix
 	descTblRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);//CBV b2 Material
 	descTblRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0);//SRV t0 - t3 Textures
 
 	//ルートパラメーターの設定
-	CD3DX12_ROOT_PARAMETER rootparam[2] = {};
+	CD3DX12_ROOT_PARAMETER rootparam[3] = {};
 
 	rootparam[0].InitAsDescriptorTable(1, &descTblRange[0]);
 	rootparam[1].InitAsDescriptorTable(1, &descTblRange[1]);
@@ -162,7 +168,7 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	//ディスクリプタテーブルの実体であるルートパラメーターを設定
+	//ルートパラメーターを設定
 	rootSignatureDesc.pParameters = rootparam;
 	rootSignatureDesc.NumParameters = 3;
 	//サンプラーを設定

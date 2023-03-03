@@ -10,11 +10,11 @@ private:
 	ComPtr<ID3D12RootSignature> rootsignature = nullptr;
 	ComPtr<ID3D12PipelineState> pipelinestate = nullptr;
 
-
-	HRESULT CreateGraphicsPipelineForPmd(DX12Application* app);
 	HRESULT CreateRootSignature(DX12Application* app);
+	HRESULT CreateGraphicsPipelineForPmd(DX12Application* app);
 
 public:
+	explicit PmdRenderer(DX12Application* app);
 };
 
 

@@ -473,103 +473,8 @@ void DX12Application::LoadAssets()
 	);
 
 
-	//定数バッファーの作成
-	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
-
-	_dev->CreateCommittedResource(
-		&constHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&constHeapDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(constBuff.ReleaseAndGetAddressOf())
-	);
-	
-	//マップによる定数の転送
-	result = constBuff->Map(0, nullptr, (void**)&mapMatrix);
-	mapMatrix->world = worldMat;
-	mapMatrix->view = viewMat ;
-	mapMatrix->projection = projMat;
-	mapMatrix->eye = eye;
-	
-	//定数バッファービューの作成のための設定
-	//行列用定数バッファービュー用のディスクリプタヒープの作成
-	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
-	//シェーダーから見えるように
-	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	descHeapDesc.NodeMask = 0;
-	descHeapDesc.NumDescriptors = 1;
-	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(matrixCsvHeaps.ReleaseAndGetAddressOf()));
-
-	auto matrixHeaphandle = matrixCsvHeaps->GetCPUDescriptorHandleForHeapStart();
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
-	constBufferViewDesc.BufferLocation = constBuff->GetGPUVirtualAddress();
-	constBufferViewDesc.SizeInBytes = constBuff->GetDesc().Width;
-
-	//定数バッファービューの作成
-	_dev->CreateConstantBufferView(
-		&constBufferViewDesc,
-		matrixHeaphandle
-	);
-
-
-	//深度バッファーの作成
-
-	//深度バッファーディスクリプタの設定
-	D3D12_RESOURCE_DESC depthResourceDescriptor = {};
-	depthResourceDescriptor.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthResourceDescriptor.Width = window_width;
-	depthResourceDescriptor.Height = window_height;
-	depthResourceDescriptor.DepthOrArraySize = 1;
-	depthResourceDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
-	depthResourceDescriptor.SampleDesc.Count = 1;
-	depthResourceDescriptor.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-	//深度バッファーヒープの設定
-	D3D12_HEAP_PROPERTIES depthHeapProperty = {};
-	depthHeapProperty.Type = D3D12_HEAP_TYPE_DEFAULT;
-	depthHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	depthHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-	//クリアバリューの設定
-	D3D12_CLEAR_VALUE depthClearValue = {};
-	depthClearValue.DepthStencil.Depth = 1.0f;  //　深さを最大値でクリア
-	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT; //32bit floatでクリア
-
-	//深度バッファーの作成
-	result = _dev->CreateCommittedResource(
-		&depthHeapProperty,
-		D3D12_HEAP_FLAG_NONE,
-		&depthResourceDescriptor,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthClearValue,
-		IID_PPV_ARGS(depthBuffer.ReleaseAndGetAddressOf())
-	);
-
-
-	//深度のためのディスクリプタヒープの作成
-	D3D12_DESCRIPTOR_HEAP_DESC depthStencilViewHeapDescriptor = {};
-	depthStencilViewHeapDescriptor.NumDescriptors = 1;
-	depthStencilViewHeapDescriptor.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	result = _dev->CreateDescriptorHeap(&depthStencilViewHeapDescriptor, IID_PPV_ARGS(dsvHeaps.ReleaseAndGetAddressOf()));
-
-	//深度ビューの作成
-	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDescriptor = {};
-	dsvDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
-	dsvDescriptor.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	dsvDescriptor.Flags = D3D12_DSV_FLAG_NONE;
-	_dev->CreateDepthStencilView(
-		depthBuffer.Get(),
-		&dsvDescriptor,
-		dsvHeaps->GetCPUDescriptorHandleForHeapStart()
-	);
-
-
-
+	CreateSceneView();
+	CreateDepthStencilView();
 
 	//頂点シェーダーオブジェクトの生成
 	result = D3DCompileFromFile(
@@ -771,9 +676,9 @@ void DX12Application::OnUpdate()
 {
 
 	//行列変換用行列をフレーム毎に更新し板ポリゴンがY軸で回転するようにする。
-	angle += 0.01f;
-	worldMat = XMMatrixRotationY(angle);
-	mapMatrix->world = worldMat;
+	//angle += 0.01f;
+	//worldMat = XMMatrixRotationY(angle);
+	//mapMatrix->world = worldMat;
 }
 
 
@@ -858,26 +763,26 @@ void DX12Application::PopulateCommandList()
 	_cmdList->RSSetScissorRects(1, &scissorrect);
 	_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//SRVのディスクリプタヒープの指定コマンドをセット
+	//SRVのディスクリプタヒープの指定コマンドを追加
 	ID3D12DescriptorHeap* ppHeaps[] = { matrixCsvHeaps.Get() };
 	_cmdList->SetDescriptorHeaps(1, ppHeaps);
 	//ルートパラメタとsrvディスクリプタヒープのアドレスの関連付け
-
 	_cmdList->SetGraphicsRootDescriptorTable(0, matrixCsvHeaps->GetGPUDescriptorHandleForHeapStart());
+
 
 	//マテリアルディスクリプタヒープのセット
 	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
-
 	_cmdList->SetDescriptorHeaps(1, ppHeaps1);
+
 	//_cmdList->SetGraphicsRootDescriptorTable(1, materialDescHeap->GetGPUDescriptorHandleForHeapStart());
 	
 
 
 	//頂点バッファーのセット
 	_cmdList->IASetVertexBuffers(0, 1, &vbView);
-
 	//インデックスバッファーのセット
 	_cmdList->IASetIndexBuffer(&ibView);
+
 
 
 	//マテリアルのディスクリプタテーブルのセットとそれに対応したインデッックスを更新しながら描画していく。
@@ -926,4 +831,127 @@ void DX12Application::WaitForPreviousFrame()
 
 		CloseHandle(event);
 	}
+}
+
+
+
+HRESULT DX12Application::CreateDepthStencilView()
+{
+
+	//深度バッファーの作成
+
+	//深度バッファーディスクリプタの設定
+	D3D12_RESOURCE_DESC depthResourceDescriptor = {};
+	depthResourceDescriptor.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthResourceDescriptor.Width = window_width;
+	depthResourceDescriptor.Height = window_height;
+	depthResourceDescriptor.DepthOrArraySize = 1;
+	depthResourceDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
+	depthResourceDescriptor.SampleDesc.Count = 1;
+	depthResourceDescriptor.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	//深度バッファーヒープの設定
+	D3D12_HEAP_PROPERTIES depthHeapProperty = {};
+	depthHeapProperty.Type = D3D12_HEAP_TYPE_DEFAULT;
+	depthHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	depthHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+	//クリアバリューの設定
+	D3D12_CLEAR_VALUE depthClearValue = {};
+	depthClearValue.DepthStencil.Depth = 1.0f;  //　深さを最大値でクリア
+	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT; //32bit floatでクリア
+
+	//深度バッファーの作成
+	auto result = _dev->CreateCommittedResource(
+		&depthHeapProperty,
+		D3D12_HEAP_FLAG_NONE,
+		&depthResourceDescriptor,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(depthBuffer.ReleaseAndGetAddressOf())
+	);
+
+
+	//深度のためのディスクリプタヒープの作成
+	D3D12_DESCRIPTOR_HEAP_DESC depthStencilViewHeapDescriptor = {};
+	depthStencilViewHeapDescriptor.NumDescriptors = 1;
+	depthStencilViewHeapDescriptor.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	result = _dev->CreateDescriptorHeap(&depthStencilViewHeapDescriptor, IID_PPV_ARGS(dsvHeaps.ReleaseAndGetAddressOf()));
+
+	//深度ビューの作成
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDescriptor = {};
+	dsvDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDescriptor.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDescriptor.Flags = D3D12_DSV_FLAG_NONE;
+	_dev->CreateDepthStencilView(
+		depthBuffer.Get(),
+		&dsvDescriptor,
+		dsvHeaps->GetCPUDescriptorHandleForHeapStart()
+	);
+
+	return result;
+}
+
+HRESULT DX12Application::CreateSceneView()
+{
+	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
+	worldMat = XMMatrixRotationY(0);
+
+	XMFLOAT3 eye(0, 15, -15);
+	XMFLOAT3 target(0, 15, 0); // eye座標とtarget座標から視線ベクトルを作る
+	XMFLOAT3 up(0, 1, 0);
+
+	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+
+	projMat = XMMatrixPerspectiveFovLH(
+		XM_PIDIV4,
+		static_cast<float>(window_width) / static_cast<float>(window_height),
+		1.0f,
+		100.0f
+	);
+
+	//定数バッファーの作成
+	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(SceneMatrix) + 0xff) & ~0xff);
+
+	_dev->CreateCommittedResource(
+		&constHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&constHeapDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(sceneMatrixConstBuff.ReleaseAndGetAddressOf())
+	);
+
+	//マップによってバッファーへ行列データを転送
+	auto result = sceneMatrixConstBuff->Map(0, nullptr, (void**)&mapMatrix);
+	mapMatrix->world = worldMat;
+	mapMatrix->view = viewMat;
+	mapMatrix->projection = projMat;
+	mapMatrix->eye = eye;
+
+	//定数バッファービューの作成のための設定
+	//行列用定数バッファービュー用のディスクリプタヒープの作成
+	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
+	//シェーダーから見えるように
+	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descHeapDesc.NodeMask = 0;
+	descHeapDesc.NumDescriptors = 1;
+	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	result = _dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(matrixCsvHeaps.ReleaseAndGetAddressOf()));
+
+	auto matrixHeaphandle = matrixCsvHeaps->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
+	constBufferViewDesc.BufferLocation = sceneMatrixConstBuff->GetGPUVirtualAddress();
+	constBufferViewDesc.SizeInBytes = sceneMatrixConstBuff->GetDesc().Width;
+
+	//定数バッファービューの作成
+	_dev->CreateConstantBufferView(
+		&constBufferViewDesc,
+		matrixHeaphandle
+	);
+
+	return result;
 }
