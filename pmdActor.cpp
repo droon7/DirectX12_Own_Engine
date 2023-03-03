@@ -72,7 +72,12 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 	std::copy(std::begin(pmdData.indices), std::end(pmdData.indices), mappedIdx);
 	idxBuff->Unmap(0, nullptr);
 
+	//インデックスバッファービューの作成
+	ibView = {};
 
+	ibView.BufferLocation = idxBuff->GetGPUVirtualAddress();
+	ibView.Format = DXGI_FORMAT_R16_UINT;
+	ibView.SizeInBytes = static_cast<UINT>(pmdData.indices.size() * sizeof(pmdData.indices[0]));
 
 }
 

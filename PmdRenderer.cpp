@@ -20,9 +20,9 @@ ComPtr<ID3D12PipelineState> PmdRenderer::GetPipelinestate()
 
 void PmdRenderer::SetRootsignatureAndPipelinestateAndPrimitive(DX12Application* app)
 {
-	app->_cmdList->SetComputeRootSignature(rootsignature.Get());
 	app->_cmdList->SetPipelineState(pipelinestate.Get());
-	//app->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	app->_cmdList->SetComputeRootSignature(rootsignature.Get());
+	app->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 }
 

@@ -100,9 +100,9 @@ int Win32Application::WindowRun()
 		pDX12->BeginDraw();
 		//pmdRenderer->SetRootsignatureAndPipelinestateAndPrimitive(pDX12);
 		
-				//PMD用の描画パイプラインに合わせる
+		//		//PMD用の描画パイプラインに合わせる
 		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
-		//ルートシグネチャもPMD用に合わせる
+		////ルートシグネチャもPMD用に合わせる
 		pDX12->_cmdList->SetGraphicsRootSignature(pmdRenderer->GetRootsignature().Get());
 
 		pDX12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

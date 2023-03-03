@@ -9,14 +9,18 @@ SamplerState smpToon : register(s1);
 //行列定数バッファー
 cbuffer cbuff0 : register(b0)
 {
-	matrix world;
 	matrix view;
 	matrix projection;
 	float3 eye;
 };
 
+cbuffer cbuff1 : register(b1)
+{
+	matrix world;
+}
+
 //マテリアル定数バッファー
-cbuffer MaterialData : register(b1)
+cbuffer MaterialData : register(b2)
 {
 	float4 diffuse;
 	float4 specular;
