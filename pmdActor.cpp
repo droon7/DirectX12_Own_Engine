@@ -1,5 +1,10 @@
 #include"PmdActor.h"
 
+void* Transform::operator new(size_t size)
+{
+	return _aligned_malloc(size, 16);
+}
+
 //コンストラクタでロードからビュー作成まで行う
 PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	:angle(0.0f)
@@ -71,7 +76,12 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 
 }
 
-//PMDモデルの位置変換行列のロード
+void PmdActor::SetTransform()
+{
+	transform.worldMatrix = DirectX::XMMatrixRotationY(0);
+}
+
+//PMDモデルの位置変換行列のビューの作成
 void PmdActor::CreateTransformView(DX12Application* app)
 {
 	//定数バッファーの作成
@@ -86,11 +96,11 @@ void PmdActor::CreateTransformView(DX12Application* app)
 		nullptr,
 		IID_PPV_ARGS(transformBuff.ReleaseAndGetAddressOf())
 	);
-	DirectX::XMMATRIX mapMatrix;
+	Transform mapMatrix;
 
 	//マップによる定数の転送
 	auto result = transformBuff->Map(0, nullptr, (void**)&mapMatrix);
-	mapMatrix = worldMatrix;
+	mapMatrix.worldMatrix = transform.worldMatrix;
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成
@@ -365,6 +375,11 @@ void PmdActor::DrawPmd(DX12Application* app)
 	//インデックスバッファーのセット
 	app->_cmdList->IASetIndexBuffer(&ibView);
 
+	//ワールド＋変換行列定数ヒープのセット
+	ID3D12DescriptorHeap* transheaps[] = { transformDescHeap.Get() };
+	app->_cmdList->SetDescriptorHeaps(1, transheaps);
+	app->_cmdList->SetGraphicsRootDescriptorTable(1, transformDescHeap->GetGPUDescriptorHandleForHeapStart());
+
 	//マテリアルディスクリプタヒープのセット
 	ID3D12DescriptorHeap* ppHeaps1[] = { materialDescHeap.Get() };
 	app->_cmdList->SetDescriptorHeaps(1, ppHeaps1);
@@ -392,3 +407,5 @@ void PmdActor::UpdatePmd()
 {
 
 }
+
+

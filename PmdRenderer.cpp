@@ -3,8 +3,8 @@
 
 PmdRenderer::PmdRenderer(DX12Application* app)
 {
-	CreateGraphicsPipelineForPmd(app);
 	CreateRootSignature(app);
+	CreateGraphicsPipelineForPmd(app);
 
 }
 
@@ -22,7 +22,7 @@ void PmdRenderer::SetRootsignatureAndPipelinestateAndPrimitive(DX12Application* 
 {
 	app->_cmdList->SetComputeRootSignature(rootsignature.Get());
 	app->_cmdList->SetPipelineState(pipelinestate.Get());
-	app->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//app->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 }
 
@@ -154,7 +154,7 @@ HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 	//PSO‚ÌÝ’è‚ÌI—¹
 
 	//PSO‚Ìì¬
-
+	gpipeline.pRootSignature = rootsignature.Get();
 	result = app->_dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(pipelinestate.ReleaseAndGetAddressOf()));
 	return result;
 }

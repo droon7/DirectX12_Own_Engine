@@ -70,12 +70,14 @@ int Win32Application::WindowRun()
 
 
 	//DirectX12のパイプラインの初期化、リソースのロード
-	pDX12->OnInit();
+	//pDX12->OnInit();
+	pDX12->LoadPipeline();
+	pDX12->CreateDepthStencilView();
+	pDX12->CreateSceneView();
 
-	//pmdRenderer.reset(new PmdRenderer(pDX12));
-	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd");
-	//pmdActors.push_back(sharedPmdActor);
-	//pmdActors[0]->DrawPmd(pDX12);
+	pmdRenderer.reset(new PmdRenderer(pDX12));
+	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd");
+	pmdActors.push_back(sharedPmdActor);
 
 
 	//ウィンドウ表示
@@ -93,8 +95,20 @@ int Win32Application::WindowRun()
 		}
 
 		//DirectX12の処理
-		pDX12->OnUpdate();
-		pDX12->OnRender();
+		//pDX12->OnUpdate();
+		//pDX12->OnRender();
+		pDX12->BeginDraw();
+		//pmdRenderer->SetRootsignatureAndPipelinestateAndPrimitive(pDX12);
+		
+				//PMD用の描画パイプラインに合わせる
+		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
+		//ルートシグネチャもPMD用に合わせる
+		pDX12->_cmdList->SetGraphicsRootSignature(pmdRenderer->GetRootsignature().Get());
+
+		pDX12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		
+		pmdActors[0]->DrawPmd(pDX12);
+		pDX12->EndDraw();
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
 		if (msg.message == WM_QUIT)

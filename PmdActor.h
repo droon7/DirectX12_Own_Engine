@@ -7,9 +7,17 @@
 #include"PmdTexture.h"
 using Microsoft::WRL::ComPtr;
 
+//16Byteアライメントのための構造体、ワールド座標、変換行列（予定）を入れる
+struct Transform
+{
+	//new演算子をオーバーライドし、struct構造体メンバは16バイトで確保するようにする。
+	void* operator new(size_t size);
+
+	DirectX::XMMATRIX worldMatrix;
+};
+
 //PMDモデル一キャラ分の情報を持つクラス
 // PMDモデルの頂点、テクスチャ、マテリアルをロード、更新する
-
 class PmdActor
 {
 private:
@@ -31,13 +39,15 @@ private:
 	//ワールド座標情報
 	ComPtr<ID3D12DescriptorHeap> transformDescHeap; //バッファーの解釈する。実質ビュー
 	ComPtr<ID3D12Resource> transformBuff; //実際のデータ
-	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixRotationY(0);
+	Transform transform;
 	float angle;
 
 	//pmdモデルロード
 	void LoadPmdData(std::string ModelName);
 	//vbViewとibViewに設定
 	void CreateVertexViewIndexView(DX12Application* app);
+	//ワールド座標、座標変換行列をセット
+	void SetTransform();
 	//座標変換行列情報をセット
 	void CreateTransformView(DX12Application* app);
 	//PMDデータからマテリアルのリソースを読み込む
