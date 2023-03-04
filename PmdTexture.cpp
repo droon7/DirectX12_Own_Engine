@@ -1,4 +1,5 @@
 #include "PmdTexture.h"
+#include "Utility.h"
 
 PmdTexture::PmdTexture()
 {

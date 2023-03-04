@@ -28,27 +28,27 @@ private:
 
 	//シングルトンクラスにするためコンストラクタをprivate
 	DX12Application(UINT window_width, UINT window_height);
-
+	//ReportLiveDeviceObjectsを呼ぶ
 	//~Application() {
 	//	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
 	//	debugDevice->Release();
 	//};
-
 	//コピーコンストラクタと代入演算子を禁止
 	DX12Application(const DX12Application&) = delete;
 	void operator=(const DX12Application&) = delete;
 
-public:
+	//フレーム数
 	int frame = 0;
+	//ウィンドウサイズ
+	UINT window_width;
+	UINT window_height;
+	//レンダーターゲットとなるバッファの数
+	static const int buffer_count = 2;
 
 	//Directxパイプラインオブジェクトの宣言
 	D3D12_RECT scissorrect = {};
 	D3D12_VIEWPORT viewport = {};
 	ComPtr<IDXGIFactory6> _dxgiFactory ;
-	ComPtr<IDXGISwapChain4> _swapchain ;
-	ComPtr<ID3D12CommandAllocator> _cmdAllocator ;
-	ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
-	ComPtr<ID3D12CommandQueue> _cmdQueue = nullptr;
 	ComPtr<ID3D12DescriptorHeap> rtvHeaps = nullptr;
 	std::vector<ID3D12Resource*> _backBuffers;
 
@@ -67,39 +67,40 @@ public:
 
 
 	//同期オブジェクトの宣言
-	ComPtr<ID3D12Fence> _fence = nullptr;
-	UINT64 _fenceVal = 0;
-	HANDLE _fenceevent;
+
 
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;
 
 
+	void PopulateCommandList();
+	HRESULT InitializeDXGIDevice();
+	HRESULT InitializeCommands();
+	HRESULT CreateSwapChain(const HWND& hwnd);
+	HRESULT CreateFinalRenderTargets();
+	//深度バッファビューを作る
+	HRESULT CreateDepthStencilView();
+	//ビュー行列、投射行列から作るシーンのビューを作る
+	HRESULT CreateSceneView();
 
-
-
-
+public:
 	ComPtr<ID3D12Device> _dev;
+	ComPtr<IDXGISwapChain4> _swapchain;
+	ComPtr<ID3D12GraphicsCommandList> _cmdList = nullptr;
+	ComPtr<ID3D12CommandAllocator> _cmdAllocator;
+	ComPtr<ID3D12CommandQueue> _cmdQueue = nullptr;
+	ComPtr<ID3D12Fence> _fence = nullptr;
+	UINT64 _fenceVal = 0;
+	HANDLE _fenceevent;
 
-	static DX12Application* Instance(UINT width, UINT height);
-	void OnInit();
+	void OnInit(const HWND& hwnd);
 	void OnUpdate();
 	void OnRender();
 	void OnDestroy();
 	void LoadPipeline();
 	void LoadAssets();
-	void PopulateCommandList();
-
-	//ウィンドウサイズ
-	UINT window_width;
-	UINT window_height;
-	//レンダーターゲットとなるバッファの数
-	static const int buffer_count = 2;
-
-	//深度バッファビューを作る
-	HRESULT CreateDepthStencilView();
-	//ビュー行列、投射行列から作るシーンのビューを作る
-	HRESULT CreateSceneView();
+	//シングルトンパターンのためstaticの生成メソッド
+	static DX12Application* Instance(UINT width, UINT height);
 	//描画開始メソッド、レンダーターゲット、バリア、深度ビュー、ビューポートのコマンド追加
 	void BeginDraw();
 	// カメラをセットしシーンを設定
@@ -115,26 +116,6 @@ public:
 
 
 
-//端数を切り捨てるメソッド
-inline size_t AlignmentedSize(size_t size, size_t alignment)
-{
-	return size + alignment - size % alignment;
-};
 
-//モデルパスからファイル名を取り除き、テクスチャパスと合成するメソッド
-inline std::string GetTexturePathFromModelAndTexPath(const std::string& modelPath, const char* texPath)
-{
-	auto folderPath = modelPath.substr(0, modelPath.rfind('/')+1);
-	return folderPath + texPath;
-}
-
-//文字列からワイド文字列を得るメソッド
-std::wstring GetWideStringFromString(const std::string& str);
-
-//ファイル名から拡張子を得るメソッド
-std::string GetExtension(const std::string& path);
-
-//テクスチャのパスをセパレーターで分離するメソッド
-std::pair<std::string, std::string> SplitFileName(const std::string& path, const char splitter);
 
 #endif

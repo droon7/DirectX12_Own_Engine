@@ -22,25 +22,58 @@ DX12Application* DX12Application::Instance(UINT width, UINT height)
 	return &app;
 }
 
-void DX12Application::OnInit()
+void DX12Application::OnInit(const HWND& hwnd)
 {
-	//DirectXTexライブラリのテクスチャロードのための準備
+	if (FAILED(InitializeDXGIDevice())) {
+		assert(0);
+		return;
+	}
+	if (FAILED(InitializeCommands())) {
+		assert(0);
+		return;
+	}
+	if (FAILED(CreateSwapChain(hwnd))) {
+		assert(0);
+		return;
+	}
+	if (FAILED(CreateFinalRenderTargets())) {
+		assert(0);
+		return;
+	}
 
-	LoadPipeline();
+	if (FAILED(CreateSceneView())) {
+		assert(0);
+		return;
+	}
+
+}
+
+//パイプラインに必要なオブジェクトの生成、初期化を行う
+void DX12Application::LoadPipeline()
+{
+	CreateDepthStencilView();
+	CreateSceneView();
+
+}
+
+//DirectX12が終了するときコマンドが全て実行されている確認
+void DX12Application::OnDestroy()
+{
+	WaitForPreviousFrame();
+
+	CloseHandle(_fenceevent);
 }
 
 
-//パイプラインに必要なオブジェクトの生成、初期化を行う
-//TODO: オブジェクトの初期化はThrowIfFailed()関数に入れる
-void DX12Application::LoadPipeline()
+HRESULT DX12Application::InitializeDXGIDevice()
 {
 	auto result = CoInitializeEx(0, COINIT_MULTITHREADED);
 
 #ifdef _DEBUG
 	//デバッグレイヤーの有効化をする
 
-	ID3D12Debug* debugLayer ;
-	 result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
+	ID3D12Debug* debugLayer;
+	result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
 
 	debugLayer->EnableDebugLayer(); //デバッグレイヤーの有効化
 	debugLayer->Release(); //インターフェイスの解放
@@ -68,7 +101,7 @@ void DX12Application::LoadPipeline()
 		}
 	}
 	if (_dev == nullptr) {
-		return;
+		return E_FAIL;
 	}
 
 	//DXGIFactory生成
@@ -83,8 +116,13 @@ void DX12Application::LoadPipeline()
 	result = _dev->QueryInterface(&debugDevice);
 #endif
 
+	return result;
+}
+
+HRESULT DX12Application::InitializeCommands()
+{
 	//コマンドアロケーターの生成
-	result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+	auto result = _dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
 		IID_PPV_ARGS(_cmdAllocator.ReleaseAndGetAddressOf()));
 
 	//コマンドリストの生成
@@ -99,6 +137,11 @@ void DX12Application::LoadPipeline()
 	cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; //コマンドリストと同じタイプ
 	result = _dev->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(_cmdQueue.ReleaseAndGetAddressOf()));
 
+	return result;
+}
+
+HRESULT DX12Application::CreateSwapChain(const HWND& hwnd)
+{
 	//スワップチェーンの設定および生成
 	DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 	swapchainDesc.Width = window_width;
@@ -115,14 +158,20 @@ void DX12Application::LoadPipeline()
 	swapchainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	ComPtr<IDXGISwapChain1> swapChain;
-	result = _dxgiFactory->CreateSwapChainForHwnd(
+	auto result = _dxgiFactory->CreateSwapChainForHwnd(
 		_cmdQueue.Get(),
-		Win32Application::GetHwnd(),
+		hwnd,
 		&swapchainDesc,
 		nullptr,
 		nullptr,
 		swapChain.ReleaseAndGetAddressOf());
 	swapChain.As(&_swapchain);
+
+	return result;
+}
+
+HRESULT DX12Application::CreateFinalRenderTargets()
+{
 
 	//RTVのディスクリプタヒープの設定
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -130,9 +179,9 @@ void DX12Application::LoadPipeline()
 	heapDesc.NodeMask = 0;
 	heapDesc.NumDescriptors = buffer_count;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeaps.ReleaseAndGetAddressOf()));
+	auto result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeaps.ReleaseAndGetAddressOf()));
 
-	//　SRGBレンダーターゲットビュー
+	//レンダーターゲットビュー
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
@@ -165,19 +214,12 @@ void DX12Application::LoadPipeline()
 	scissorrect.right = scissorrect.left + window_width;
 	scissorrect.bottom = scissorrect.top + window_height;
 
+	return result;
 }
 
 
 
 
-
-//DirectX12が終了するときコマンドが全て実行されている確認
-void DX12Application::OnDestroy() 
-{
-	WaitForPreviousFrame();
-
-	CloseHandle(_fenceevent);
-}
 
 
 
@@ -200,6 +242,7 @@ void DX12Application::WaitForPreviousFrame()
 		CloseHandle(event);
 	}
 }
+
 
 
 //深度ビュー作成メソッド

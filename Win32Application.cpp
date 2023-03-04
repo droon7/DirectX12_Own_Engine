@@ -84,10 +84,9 @@ int Win32Application::WindowRun()
 void Win32Application::RunDX12()
 {
 	//DirectX12のパイプラインの初期化、リソースのロード
-	pDX12->OnInit();
+	pDX12->OnInit(m_hwnd);
 
-	pDX12->CreateDepthStencilView();
-	pDX12->CreateSceneView();
+	pDX12->LoadPipeline();
 
 
 	pmdRenderer.reset(new PmdRenderer(pDX12));
