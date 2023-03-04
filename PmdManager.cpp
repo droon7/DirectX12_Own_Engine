@@ -44,6 +44,11 @@ void PmdData::loadPmdData(std::string strModelPath)
 		materialDatas[i].additional.edgeflag = pmdMaterialForLoad[i].edgeFlag;
 	}
 
+	//ボーンデータ読み込み
+	fread(&boneNum, sizeof(boneNum), 1, fp);
+	pmdBones.resize(boneNum);
+	fread(pmdBones.data(), sizeof(pmdBones), boneNum, fp);
+
 	fclose(fp);
 
 }

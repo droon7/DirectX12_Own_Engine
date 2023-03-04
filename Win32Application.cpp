@@ -35,8 +35,6 @@ LRESULT Win32Application::WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LP
 }
 
 
-
-
 //メインループが入っている。ウィンドウを動かす関数。
 int Win32Application::WindowRun()
 {
@@ -90,7 +88,9 @@ void Win32Application::RunDX12()
 
 
 	pmdRenderer.reset(new PmdRenderer(pDX12));
-	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd");
+	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd");
+	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd");
+
 	pmdActors.push_back(sharedPmdActor);
 
 
@@ -125,7 +125,7 @@ void Win32Application::RunDX12()
 		//DirectXコマンド実行
 		pDX12->EndDraw();
 
-		pmdActors[0]->UpdatePmd();
+		//pmdActors[0]->UpdatePmd();
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
 		if (msg.message == WM_QUIT)

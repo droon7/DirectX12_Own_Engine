@@ -57,6 +57,19 @@ struct MaterialData
 	AdditionalMaterial additional;
 };
 
+//PMDBoneデータ構造体
+//パディングをpack(1)で詰める
+#pragma pack(1)
+struct PMDBone
+{
+	char boneName[20];		//ボーン名
+	unsigned short parentNo;//親ナンバー
+	unsigned short nextNo;  //先端のボーンナンバー
+	unsigned char  Type;	//ボーン種別
+	unsigned short ikBoneNo;//IKボーンナンバー
+	DirectX::XMFLOAT3 pos;			//ボーン基準座標
+};
+#pragma pack()
 
 //PMDモデルのデータをまとめたクラス
 class PmdData
@@ -76,6 +89,9 @@ public:
 	std::vector<MaterialData> materialDatas;
 	static constexpr size_t pmdvertex_size = 38;
 
+	//ボーンデータ
+	unsigned short boneNum = 0;
+	std::vector<PMDBone> pmdBones;
 
 	//ファイルパスからPMDモデルデータをロードする。
 	void loadPmdData(std::string srcModelPath);
