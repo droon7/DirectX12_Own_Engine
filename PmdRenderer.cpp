@@ -18,13 +18,6 @@ ComPtr<ID3D12PipelineState> PmdRenderer::GetPipelinestate()
 	return pipelinestate;
 }
 
-void PmdRenderer::SetRootsignatureAndPipelinestateAndPrimitive(DX12Application* app)
-{
-	app->_cmdList->SetPipelineState(pipelinestate.Get());
-	app->_cmdList->SetComputeRootSignature(rootsignature.Get());
-	app->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-}
 
 HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 {
@@ -188,7 +181,7 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//ルートパラメーターを設定
-	rootSignatureDesc.pParameters = rootparam;
+	rootSignatureDesc.pParameters = &rootparam[0];
 	rootSignatureDesc.NumParameters = 3;
 	//サンプラーを設定
 	rootSignatureDesc.pStaticSamplers = samplerDesc;

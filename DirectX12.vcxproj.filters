@@ -24,9 +24,6 @@
     <ClCompile Include="Utility.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="PmdManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>

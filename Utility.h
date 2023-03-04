@@ -1,6 +1,7 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 #include"pch.h"
+//
 
 //端数を切り捨てるメソッド
 inline size_t AlignmentedSize(size_t size, size_t alignment)

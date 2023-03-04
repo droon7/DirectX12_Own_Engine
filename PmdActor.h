@@ -43,6 +43,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> transformDescHeap; //バッファーの解釈する。実質ビュー
 	ComPtr<ID3D12Resource> transformBuff; //実際のデータ
 	Transform transform;
+	Transform* mapTransformMatrix; //コピー用バッファ
 	float angle;
 
 	//pmdモデルロード

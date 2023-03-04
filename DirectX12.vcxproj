@@ -185,7 +185,6 @@
     <ClCompile Include="PmdManager.cpp" />
     <ClCompile Include="PmdRenderer.cpp" />
     <ClCompile Include="PmdTexture.cpp" />
-    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>

@@ -15,19 +15,19 @@ using Microsoft::WRL::ComPtr;
 //シェーダーに渡すための基本的な行列データ
 struct SceneMatrix
 {
-	//DirectX::XMMATRIX world;
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
 	DirectX::XMFLOAT3 eye;
 };
 
-
+//DirectX12の全体の設定をするクラス。
 class DX12Application
 {
 private:
 
 	//シングルトンクラスにするためコンストラクタをprivate
 	DX12Application(UINT window_width, UINT window_height);
+
 	//ReportLiveDeviceObjectsを呼ぶ
 	//~Application() {
 	//	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
@@ -62,16 +62,11 @@ private:
 	//行列アセット
 	DirectX::XMMATRIX viewMat;
 	DirectX::XMMATRIX projMat;
-	SceneMatrix* mapMatrix = nullptr;
+	SceneMatrix* mapTransformMatrix = nullptr;
 	float angle = 0.0f;
-
-
-	//同期オブジェクトの宣言
-
 
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;
-
 
 	void PopulateCommandList();
 	HRESULT InitializeDXGIDevice();
@@ -94,11 +89,12 @@ public:
 	HANDLE _fenceevent;
 
 	void OnInit(const HWND& hwnd);
-	void OnUpdate();
-	void OnRender();
+	//void OnUpdate();
+	//void OnRender();
 	void OnDestroy();
 	void LoadPipeline();
-	void LoadAssets();
+	//void LoadAssets();
+	// 
 	//シングルトンパターンのためstaticの生成メソッド
 	static DX12Application* Instance(UINT width, UINT height);
 	//描画開始メソッド、レンダーターゲット、バリア、深度ビュー、ビューポートのコマンド追加

@@ -103,11 +103,10 @@ void PmdActor::CreateTransformView(DX12Application* app)
 		nullptr,
 		IID_PPV_ARGS(transformBuff.ReleaseAndGetAddressOf())
 	);
-	Transform mapMatrix;
 	
 	//マップによる定数の転送
-	auto result = transformBuff->Map(0, nullptr, (void**)&mapMatrix);
-	mapMatrix.worldMatrix = transform.worldMatrix;
+	auto result = transformBuff->Map(0, nullptr, (void**)&mapTransformMatrix);
+	mapTransformMatrix->worldMatrix = transform.worldMatrix;
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成
@@ -412,7 +411,8 @@ void PmdActor::DrawPmd(DX12Application* app)
 
 void PmdActor::UpdatePmd()
 {
-
+	angle += 0.01f;
+	mapTransformMatrix->worldMatrix = DirectX::XMMatrixRotationY(angle);
 }
 
 

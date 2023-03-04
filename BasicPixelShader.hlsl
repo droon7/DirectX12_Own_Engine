@@ -29,8 +29,6 @@ float4 BasicPS(Output input) : SV_TARGET
 		* sph.Sample(smp, sphereMapUV)
 		+ saturate(spa.Sample(smp, sphereMapUV))
 		+ float4(specularB * specular.rgb, 1)
-		//, float4(texColor * ambient, 1));
-		,0);
+		, float4(texColor * ambient/2, 1));
 
-	//return float4(specularB * specular.rgb, 1);
 }

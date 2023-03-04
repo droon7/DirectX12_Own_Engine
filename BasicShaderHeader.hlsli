@@ -5,34 +5,15 @@ Texture2D<float4> toon : register(t3);
 SamplerState smp : register(s0);
 SamplerState smpToon : register(s1);
 
-
-////行列定数バッファー
-//cbuffer cbuff0 : register(b0)
-//{
-//	matrix world;
-//	matrix view;
-//	matrix projection;
-//	float3 eye;
-//};
-//
-//
-////マテリアル定数バッファー
-//cbuffer MaterialData : register(b1)
-//{
-//	float4 diffuse;
-//	float4 specular;
-//	float3 ambient;
-//};
-
 //行列定数バッファー
-cbuffer cbuff0 : register(b0)
+cbuffer SceneData : register(b0)
 {
 	matrix view;
 	matrix projection;
 	float3 eye;
 };
 
-cbuffer cbuff1 : register(b1)
+cbuffer WorldMatrix : register(b1)
 {
 	matrix world;
 };

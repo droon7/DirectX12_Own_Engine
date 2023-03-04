@@ -70,7 +70,7 @@ int Win32Application::WindowRun()
 		w.hInstance,			//呼び出しアプリケーションハンドル
 		nullptr);			//追加パラメーター
 
-
+	//DirectX12を動かす。メッセージループはこの関数の中にある。
 	RunDX12();
 
 
@@ -109,20 +109,23 @@ void Win32Application::RunDX12()
 		}
 
 		//DirectX12の処理
-		//pDX12->OnUpdate();
 		pDX12->BeginDraw();
-		//pmdRenderer->SetRootsignatureAndPipelinestateAndPrimitive(pDX12);
 
 		//PMD用の描画パイプラインに合わせる
 		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
 		////ルートシグネチャもPMD用に合わせる
 		pDX12->_cmdList->SetGraphicsRootSignature(pmdRenderer->GetRootsignature().Get());
-
 		pDX12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		//シーン行列設定
 		pDX12->SetScene();
+		//PMDモデル描画
 		pmdActors[0]->DrawPmd(pDX12);
+
+		//DirectXコマンド実行
 		pDX12->EndDraw();
+
+		pmdActors[0]->UpdatePmd();
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
 		if (msg.message == WM_QUIT)

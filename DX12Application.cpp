@@ -17,7 +17,6 @@ DX12Application::DX12Application(UINT width, UINT height) :
 //シングルトンを実現する。
 DX12Application* DX12Application::Instance(UINT width, UINT height)
 {
-
 	static DX12Application app{width, height};
 	return &app;
 }
@@ -218,11 +217,6 @@ HRESULT DX12Application::CreateFinalRenderTargets()
 }
 
 
-
-
-
-
-
 //GPUがコマンドを全て実行完了するまで待ち、CPUと同期する
 void DX12Application::WaitForPreviousFrame()
 {
@@ -242,7 +236,6 @@ void DX12Application::WaitForPreviousFrame()
 		CloseHandle(event);
 	}
 }
-
 
 
 //深度ビュー作成メソッド
@@ -337,11 +330,11 @@ HRESULT DX12Application::CreateSceneView()
 	);
 
 	//マップによってバッファーへ行列データを転送
-	auto result = sceneMatrixConstBuff->Map(0, nullptr, (void**)&mapMatrix);
+	auto result = sceneMatrixConstBuff->Map(0, nullptr, (void**)&mapTransformMatrix);
 	//mapMatrix->world = worldMat;
-	mapMatrix->view = viewMat;
-	mapMatrix->projection = projMat;
-	mapMatrix->eye = eye;
+	mapTransformMatrix->view = viewMat;
+	mapTransformMatrix->projection = projMat;
+	mapTransformMatrix->eye = eye;
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成

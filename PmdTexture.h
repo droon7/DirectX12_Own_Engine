@@ -5,7 +5,7 @@
 #include"DX12Application.h"
 using Microsoft::WRL::ComPtr;
 
-//マテリアル及び、テクスチャ、sph、spa、トゥーンテクスチャの情報を取り扱うクラス
+//PMDモデルのマテリアル及び、テクスチャ、sph、spa、トゥーンテクスチャの情報を取り扱うクラス
 class PmdTexture
 {
 public:
@@ -18,7 +18,6 @@ public:
 
 	//flyweightパターンのためのキャッシュ
 	std::map<std::string, ComPtr<ID3D12Resource>> _resourceTable;
-
 
 	//テクスチャをリソースにロードする
 	ComPtr<ID3D12Resource> LoadTextureFromFile(std::string& texPath, DX12Application* app);

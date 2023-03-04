@@ -4,6 +4,7 @@
 #include"DX12Application.h"
 #include"PmdActor.h"
 
+//PMDƒ‚ƒfƒ‹‚ğ•`‰æ‚·‚éÛ‚Ì‘S‘Ìİ’è‚ğ‚·‚é
 class PmdRenderer
 {
 private:
@@ -17,7 +18,6 @@ public:
 	explicit PmdRenderer(DX12Application* app);
 	ComPtr<ID3D12RootSignature> GetRootsignature();
 	ComPtr<ID3D12PipelineState> GetPipelinestate();
-	void SetRootsignatureAndPipelinestateAndPrimitive(DX12Application* app);
 };
 
 
