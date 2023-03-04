@@ -85,10 +85,10 @@ ComPtr<ID3D12Resource> PmdTexture::LoadTextureFromFile(std::string& textureName,
 
 	//テクスチャのリソースの設定
 	textureBuffDesc.Format = metadata.format;
-	textureBuffDesc.Width = metadata.width;
-	textureBuffDesc.Height = metadata.height;
-	textureBuffDesc.DepthOrArraySize = metadata.arraySize;
-	textureBuffDesc.MipLevels = metadata.mipLevels;
+	textureBuffDesc.Width = static_cast<UINT16>(metadata.width);
+	textureBuffDesc.Height = static_cast<UINT>(metadata.height);
+	textureBuffDesc.DepthOrArraySize = static_cast<UINT16>(metadata.arraySize);
+	textureBuffDesc.MipLevels = static_cast<UINT>(metadata.mipLevels);
 	textureBuffDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
 	textureBuffDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
@@ -133,10 +133,10 @@ ComPtr<ID3D12Resource> PmdTexture::LoadTextureFromFile(std::string& textureName,
 	src.pResource = uploadbuff.Get();
 	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	src.PlacedFootprint.Offset = 0;
-	src.PlacedFootprint.Footprint.Width = metadata.width;
-	src.PlacedFootprint.Footprint.Height = metadata.height;
-	src.PlacedFootprint.Footprint.Depth = metadata.depth;
-	src.PlacedFootprint.Footprint.RowPitch = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+	src.PlacedFootprint.Footprint.Width = static_cast<UINT>(metadata.width);
+	src.PlacedFootprint.Footprint.Height = static_cast<UINT>(metadata.height);
+	src.PlacedFootprint.Footprint.Depth = static_cast<UINT>(metadata.depth);
+	src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));
 	src.PlacedFootprint.Footprint.Format = img->format;
 
 	//コピー先の設定
@@ -215,7 +215,7 @@ ComPtr<ID3D12Resource> PmdTexture::CreateWhiteTexture(DX12Application* app)
 		nullptr,
 		data.data(),
 		4 * 4,
-		data.size()
+		static_cast<UINT>(data.size())
 	);
 
 	return whiteBuff;
@@ -252,7 +252,7 @@ ComPtr<ID3D12Resource> PmdTexture::CreateBlackTexture(DX12Application* app)
 		nullptr,
 		data.data(),
 		4 * 4,
-		data.size()
+		static_cast<UINT>(data.size())
 	);
 
 	return blackBuff;
@@ -299,7 +299,7 @@ ComPtr<ID3D12Resource> PmdTexture::CreateGradationTexture(DX12Application* app)
 		nullptr,
 		data.data(),
 		4 * sizeof(unsigned int),
-		sizeof(unsigned int) * data.size()
+		static_cast <UINT>(sizeof(unsigned int) * data.size())
 	);
 
 	return gradBuff;

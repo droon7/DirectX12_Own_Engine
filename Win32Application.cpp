@@ -52,7 +52,7 @@ int Win32Application::WindowRun()
 	RegisterClassEx(&w); //application class
 
 
-	RECT wrc = { 0, 0, mwidth, mheight};//ウィンドウサイズの決定
+	RECT wrc = { 0, 0, static_cast<LONG>(mwidth), static_cast<LONG>(mheight)};//ウィンドウサイズの決定
 
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false); //ウィンドウサイズ補正
 

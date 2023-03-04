@@ -190,7 +190,7 @@ HRESULT DX12Application::CreateFinalRenderTargets()
 	result = _swapchain->GetDesc(&swcDesc);
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
 
-	for (int idx = 0; idx < swcDesc.BufferCount; ++idx) {
+	for (int idx = 0; idx < static_cast<int>(swcDesc.BufferCount); ++idx) {
 		result = _swapchain->GetBuffer(idx, IID_PPV_ARGS(&_backBuffers[idx]));  //_backBufferにスワップチェーン上のバックバッファのメモリを入れる
 		_dev->CreateRenderTargetView(_backBuffers[idx], &rtvDesc, handle);       //バッファの数生成する
 		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);  //ポインタをレンダービューの大きさ分ずらす
@@ -200,8 +200,8 @@ HRESULT DX12Application::CreateFinalRenderTargets()
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.ReleaseAndGetAddressOf()));
 
 	//ビューポートの設定、生成
-	viewport.Width = window_width;
-	viewport.Height = window_height;
+	viewport.Width = static_cast<float>(window_width);
+	viewport.Height = static_cast<float>(window_height);
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MaxDepth = 1.0f;
@@ -351,7 +351,7 @@ HRESULT DX12Application::CreateSceneView()
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
 	constBufferViewDesc.BufferLocation = sceneMatrixConstBuff->GetGPUVirtualAddress();
-	constBufferViewDesc.SizeInBytes = sceneMatrixConstBuff->GetDesc().Width;
+	constBufferViewDesc.SizeInBytes = static_cast<UINT>(sceneMatrixConstBuff->GetDesc().Width);
 
 	//定数バッファービューの作成
 	_dev->CreateConstantBufferView(

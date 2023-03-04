@@ -51,7 +51,7 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 	//頂点バッファービューの生成
 	vbView = {};
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
-	vbView.SizeInBytes = pmdData.vertices.size();
+	vbView.SizeInBytes = static_cast<UINT>(pmdData.vertices.size());
 	vbView.StrideInBytes = pmdData.pmdvertex_size;
 
 	//インデックスバッファーの生成
@@ -123,7 +123,7 @@ void PmdActor::CreateTransformView(DX12Application* app)
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferViewDesc = {};
 	constBufferViewDesc.BufferLocation = transformBuff->GetGPUVirtualAddress();
-	constBufferViewDesc.SizeInBytes = transformBuff->GetDesc().Width;
+	constBufferViewDesc.SizeInBytes = static_cast<UINT>(transformBuff->GetDesc().Width);
 
 	//定数バッファービューの作成
 	app->_dev->CreateConstantBufferView(
@@ -172,7 +172,7 @@ void PmdActor::GetTextureResource(DX12Application* app)
 	pmdTexture.sphResources.resize(pmdData.materialNum);
 	pmdTexture.spaResources.resize(pmdData.materialNum);
 
-	for (int i = 0; i < pmdData.materialNum; ++i)
+	for (int i = 0; i < static_cast<signed int>(pmdData.materialNum); ++i)
 	{
 		std::string texFileName = pmdData.materialDatas[i].additional.texPath;
 		std::string sphFileName = {};
@@ -270,7 +270,7 @@ void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
 	materialBuffSize = (materialBuffSize + 0xff) & ~0xff;
 	D3D12_CONSTANT_BUFFER_VIEW_DESC matCBVDesc = {};
 	matCBVDesc.BufferLocation = materialBuff->GetGPUVirtualAddress();
-	matCBVDesc.SizeInBytes = materialBuffSize;
+	matCBVDesc.SizeInBytes = static_cast<UINT>(materialBuffSize);
 
 	auto matDescHeapHead = materialDescHeap->GetCPUDescriptorHandleForHeapStart(); //先頭を記録
 	auto inc = app->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -280,7 +280,7 @@ void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
 	gradTex = pmdTexture.CreateGradationTexture(app);
 
 	//以下実際にCBV、SRVを作る。
-	for (int i = 0; i < pmdData.materialNum; ++i)
+	for (int i = 0; i < static_cast<signed int>(pmdData.materialNum); ++i)
 	{
 		app->_dev->CreateConstantBufferView(&matCBVDesc, matDescHeapHead);
 		matDescHeapHead.ptr += inc;

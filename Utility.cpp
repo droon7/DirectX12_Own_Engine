@@ -32,14 +32,14 @@ std::wstring GetWideStringFromString(const std::string& str)
 //ファイル名から拡張子を取り出すメソッド
 std::string GetExtension(const std::string& path)
 {
-	int idx = path.rfind('.');
+	int idx = static_cast<int>(path.rfind('.'));
 	return path.substr(idx + 1, path.length() - idx -1);
 }
 
 //セパレータでファイル名を分割してペアを返す
 std::pair<std::string, std::string> SplitFileName(const std::string& path, const char splitter = '*')
 {
-	int idx = path.find(splitter);
+	int idx = static_cast<int>(path.find(splitter));
 	std::pair<std::string, std::string> returnPair;
 	if (idx == -1) {
 		returnPair.first = {};
