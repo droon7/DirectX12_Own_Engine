@@ -1,4 +1,5 @@
 #include"PmdActor.h"
+#include"Utility.h"
 
 void* Transform::operator new(size_t size)
 {

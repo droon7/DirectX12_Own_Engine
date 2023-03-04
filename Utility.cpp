@@ -1,6 +1,4 @@
 #include"pch.h"
-#include"Application.h"
-
 
 
 //文字列からワイド文字列を取得するメソッド
