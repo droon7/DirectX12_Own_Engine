@@ -88,14 +88,16 @@ void PmdActor::SetTransform()
 	transform.worldMatrix = DirectX::XMMatrixIdentity();
 }
 
-//PMDモデルの位置変換行列のビューの作成
-void PmdActor::CreateTransformView(DX12Application* app)
+//PMDモデルの位置変換行列のビューの作成、ワールド行列とボーン変換行列
+HRESULT PmdActor::CreateTransformView(DX12Application* app)
 {
 	//定数バッファーの作成
+	//auto buffSize = sizeof(Transform) * (1 + pmdBone);
+	auto buffSize = (sizeof(Transform) + 0xff) & ~0xff;
 	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(Transform) + 0xff) & ~0xff);
+	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer(buffSize);
 
-	app->_dev->CreateCommittedResource(
+	auto result = app->_dev->CreateCommittedResource(
 		&constHeapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&constHeapDesc,
@@ -103,9 +105,21 @@ void PmdActor::CreateTransformView(DX12Application* app)
 		nullptr,
 		IID_PPV_ARGS(transformBuff.ReleaseAndGetAddressOf())
 	);
+
+	if (FAILED(result))
+	{
+		assert(SUCCEEDED(result));
+		return result;
+	}
 	
 	//マップによる定数の転送
-	auto result = transformBuff->Map(0, nullptr, (void**)&mapTransformMatrix);
+	result = transformBuff->Map(0, nullptr, (void**)&mapTransformMatrix);
+	if (FAILED(result))
+	{
+		assert(SUCCEEDED(result));
+		return result;
+	}
+
 	mapTransformMatrix->worldMatrix = transform.worldMatrix;
 
 	//定数バッファービューの作成のための設定
@@ -118,6 +132,11 @@ void PmdActor::CreateTransformView(DX12Application* app)
 	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
 	result = app->_dev->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(transformDescHeap.ReleaseAndGetAddressOf()));
+	if (FAILED(result))
+	{
+		assert(SUCCEEDED(result));
+		return result;
+	}
 
 	auto matrixHeaphandle = transformDescHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -131,6 +150,7 @@ void PmdActor::CreateTransformView(DX12Application* app)
 		matrixHeaphandle
 	);
 
+	return S_OK;
 }
 
 //PMDの情報からGPUへのマテリアルリソースのロード

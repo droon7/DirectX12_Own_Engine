@@ -18,7 +18,7 @@ struct Transform
 };
 
 //PMDモデル一キャラ分の情報を持つクラス
-// PMDモデルの頂点、テクスチャ、マテリアルをロード、更新する
+// PMDモデルの頂点、テクスチャ、マテリアルをロード、描画し、更新する。
 class PmdActor
 {
 private:
@@ -57,7 +57,7 @@ private:
 	//ワールド座標、座標変換行列をセット
 	void SetTransform();
 	//座標変換行列情報をセット
-	void CreateTransformView(DX12Application* app);
+	HRESULT CreateTransformView(DX12Application* app);
 	//PMDデータからマテリアルのリソースを読み込む
 	void GetMaterialResource(DX12Application* app);
 	//pmdDataからテクスチャのリソースを読み込む

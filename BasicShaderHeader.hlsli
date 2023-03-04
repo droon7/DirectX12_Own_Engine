@@ -16,6 +16,7 @@ cbuffer SceneData : register(b0)
 cbuffer WorldMatrix : register(b1)
 {
 	matrix world;
+	matrix bones[256];
 };
 
 //マテリアル定数バッファー

@@ -9,6 +9,7 @@ Output BasicVS(
 ){
 	Output output;
 	output.svpos = mul(mul(projection, mul(view, world)), pos);
+
 	normal.w = 0; // •½sˆÚ“®¬•ª‚ğ–³Œø‚É‚·‚é
 
 	float3 worldPos = mul(world, pos);

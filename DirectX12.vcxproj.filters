@@ -13,6 +13,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="PMD">
+      <UniqueIdentifier>{310e5d60-534c-4f2c-b557-5f1e339b1d0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -24,23 +27,26 @@
     <ClCompile Include="Utility.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="PmdManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="pmdActor.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PmdRenderer.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="PmdTexture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="DX12Application.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="PMD\pmdActor.cpp">
+      <Filter>PMD</Filter>
+    </ClCompile>
+    <ClCompile Include="PMD\PmdBone.cpp">
+      <Filter>PMD</Filter>
+    </ClCompile>
+    <ClCompile Include="PMD\PmdManager.cpp">
+      <Filter>PMD</Filter>
+    </ClCompile>
+    <ClCompile Include="PMD\PmdRenderer.cpp">
+      <Filter>PMD</Filter>
+    </ClCompile>
+    <ClCompile Include="PMD\PmdTexture.cpp">
+      <Filter>PMD</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -52,22 +58,10 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PmdManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Win32Application.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PmdActor.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PmdRenderer.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="PmdTexture.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Utility.h">
@@ -75,6 +69,21 @@
     </ClInclude>
     <ClInclude Include="DX12Application.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="PMD\PmdActor.h">
+      <Filter>PMD</Filter>
+    </ClInclude>
+    <ClInclude Include="PMD\PmdBone.h">
+      <Filter>PMD</Filter>
+    </ClInclude>
+    <ClInclude Include="PMD\PmdManager.h">
+      <Filter>PMD</Filter>
+    </ClInclude>
+    <ClInclude Include="PMD\PmdRenderer.h">
+      <Filter>PMD</Filter>
+    </ClInclude>
+    <ClInclude Include="PMD\PmdTexture.h">
+      <Filter>PMD</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
