@@ -3,7 +3,7 @@
 
 #include"pch.h"
 #include"PmdManager.h"
-#include"Application.h"
+#include"DX12Application.h"
 #include"PmdTexture.h"
 using Microsoft::WRL::ComPtr;
 

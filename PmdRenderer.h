@@ -1,7 +1,7 @@
 #ifndef PMDRENDERER_H
 #define PMDRENDERER_H
 #include"pch.h"
-#include"Application.h"
+#include"DX12Application.h"
 #include"PmdActor.h"
 
 class PmdRenderer

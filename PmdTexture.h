@@ -2,7 +2,7 @@
 #define MATERIAL_H
 
 #include"pch.h"
-#include"Application.h"
+#include"DX12Application.h"
 using Microsoft::WRL::ComPtr;
 
 //マテリアル及び、テクスチャ、sph、spa、トゥーンテクスチャの情報を取り扱うクラス

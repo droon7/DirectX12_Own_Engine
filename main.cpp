@@ -1,5 +1,5 @@
 #include"pch.h"
-#include "Application.h"
+#include"DX12Application.h"
 #include"Win32Application.h"
 
 //main関数　メッセージループが入っている

@@ -1,6 +1,6 @@
 #ifndef WIN32APPLICATION_H
 #define WIN32APPLICATION_H
-#include"Application.h"
+#include"DX12Application.h"
 #include"PmdActor.h"
 #include"PmdRenderer.h"
 
