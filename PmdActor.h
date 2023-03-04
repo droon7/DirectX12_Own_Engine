@@ -5,6 +5,7 @@
 #include"PmdManager.h"
 #include"DX12Application.h"
 #include"PmdTexture.h"
+#include"PmdBone.h"
 using Microsoft::WRL::ComPtr;
 
 //16Byteアライメントのための構造体、ワールド座標、変換行列（予定）を入れる
@@ -45,6 +46,9 @@ private:
 	Transform transform;
 	Transform* mapTransformMatrix; //コピー用バッファ
 	float angle;
+
+	//ボーン情報
+	PmdBone pmdBone;
 
 	//pmdモデルロード
 	void LoadPmdData(std::string ModelName);

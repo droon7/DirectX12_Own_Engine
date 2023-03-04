@@ -182,6 +182,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="pmdActor.cpp" />
+    <ClCompile Include="PmdBone.cpp" />
     <ClCompile Include="PmdManager.cpp" />
     <ClCompile Include="PmdRenderer.cpp" />
     <ClCompile Include="PmdTexture.cpp" />
@@ -226,6 +227,7 @@
     <ClInclude Include="DX12Application.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PmdActor.h" />
+    <ClInclude Include="PmdBone.h" />
     <ClInclude Include="PmdManager.h" />
     <ClInclude Include="PmdRenderer.h" />
     <ClInclude Include="PmdTexture.h" />

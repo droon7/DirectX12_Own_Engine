@@ -60,7 +60,7 @@ struct MaterialData
 //PMDBoneデータ構造体
 //パディングをpack(1)で詰める
 #pragma pack(1)
-struct PMDBone
+struct PmdBoneData
 {
 	char boneName[20];		//ボーン名
 	unsigned short parentNo;//親ナンバー
@@ -91,7 +91,7 @@ public:
 
 	//ボーンデータ
 	unsigned short boneNum = 0;
-	std::vector<PMDBone> pmdBones;
+	std::vector<PmdBoneData> pmdBoneDatas;
 
 	//ファイルパスからPMDモデルデータをロードする。
 	void loadPmdData(std::string srcModelPath);
