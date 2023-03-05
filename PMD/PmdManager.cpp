@@ -2,7 +2,7 @@
 #include"PmdManager.h"
 
 //ファイルパスからPMDモデルのデータを読み込むメソッド
-void PmdData::loadPmdData(std::string strModelPath)
+void PmdData::LoadPmdData(std::string strModelPath)
 {
 	FILE* fp;
 	auto err = fopen_s(&fp, strModelPath.c_str(), "rb");

@@ -94,7 +94,7 @@ public:
 	std::vector<PmdBoneData> pmdBoneDatas;
 
 	//ファイルパスからPMDモデルデータをロードする。
-	void loadPmdData(std::string srcModelPath);
+	void LoadPmdData(std::string srcModelPath);
 };
 
 

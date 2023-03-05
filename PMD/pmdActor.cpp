@@ -29,7 +29,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 //‚±‚±‚©‚çƒ[ƒh‚ÆDirectX12‚Ì‚½‚ß‚Ìˆ—
 void PmdActor::LoadPmdData(std::string ModelName)
 {
-	pmdData.loadPmdData(ModelName);
+	pmdData.LoadPmdData(ModelName);
 }
 
 void PmdActor::CreateVertexViewIndexView(DX12Application* app)
