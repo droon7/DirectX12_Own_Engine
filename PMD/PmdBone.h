@@ -29,7 +29,7 @@ public:
 	
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 
-	void SetBoneMatrices(VMDData vmdData);
+	void SetBoneMatrices(VMDData vmdData, unsigned int frameNo);
 
 	//親ノードから子ノードまで再帰的に変換行列をかける。
 	void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);

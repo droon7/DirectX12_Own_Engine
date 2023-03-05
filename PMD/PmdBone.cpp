@@ -53,34 +53,40 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 
 }
 
-void PmdBone::SetBoneMatrices(VMDData vmdData)
+void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 {
-	//auto node = boneNodeTable["左腕"];
-	//auto pos = node.startPos;
-	//auto matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
-	//	* DirectX::XMMatrixRotationZ(DirectX::XM_PIDIV2)
-	//	* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
-	//boneMatrices[node.boneIdx] = matrix;
-
-	//node = boneNodeTable["左ひじ"];
-	//pos = node.startPos;
-	//matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
-	//	* DirectX::XMMatrixRotationZ(DirectX::XM_PIDIV2*-1)
-	//	* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
-	//boneMatrices[node.boneIdx] = matrix;
+	std::fill(boneMatrices.begin(), boneMatrices.end(), DirectX::XMMatrixIdentity());
 
 	for (auto& bonemotion : vmdData.motionDatas)
 	{
 		auto node = boneNodeTable[bonemotion.first];
+
+		auto motions = bonemotion.second;
+		//与えられたフレーム番号とモーションのフレーム番号が一致するか判定する関数オブジェクト
+		auto predicate = [frameNo](const Motion& motion) {
+			return motion.frameNo <= frameNo;
+		};
+
+		//一致するイテレーターを得る
+		auto it = std::find_if(
+			motions.rbegin(), motions.rend(), predicate
+		);
+
+		if (it == motions.rend())
+		{
+			continue;
+		}
+
 		auto& pos = node.startPos;
 		auto matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
-			* DirectX::XMMatrixRotationQuaternion(bonemotion.second[0].quaternion)
+			* DirectX::XMMatrixRotationQuaternion(it->quaternion)
 			* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 		boneMatrices[node.boneIdx] = matrix;
 	}
 
 	RecursiveMatrixMultiply(&boneNodeTable["センター"], DirectX::XMMatrixIdentity());
 }
+
 
 void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat)
 {

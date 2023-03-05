@@ -72,7 +72,7 @@ private:
 	//materialの情報をもとにCBV、SRVを作成する
 	void CreateMaterialAndTextureView(DX12Application* app);
 	//ボーン情報アップデート
-	void SetPmdBone();
+	void SetPmdBone(unsigned int frameNo);
 	//アニメーション起動
 public:
 

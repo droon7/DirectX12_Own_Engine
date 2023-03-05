@@ -22,7 +22,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	CreateMaterialAndTextureView(app);
 
 	//ÉÇÉfÉãÇÃèâä˙íl
-	SetPmdBone();
+	SetPmdBone(0);
 	PlayAnimation();
 }
 
@@ -441,7 +441,8 @@ void PmdActor::DrawPmd(DX12Application* app)
 void PmdActor::UpdatePmd()
 {
 	DWORD elapsedTime = timeGetTime() - startTime;
-	unsigned int frameNo = 30 * (elapsedTime / 1000.0f);
+	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f));
+	SetPmdBone(frameNo);
 	//angle += 0.01f;
 	//mapTransform[0] = DirectX::XMMatrixRotationY(angle);
 
@@ -449,9 +450,9 @@ void PmdActor::UpdatePmd()
 }
 
 
-void PmdActor::SetPmdBone()
+void PmdActor::SetPmdBone(unsigned int frameNo)
 {
-	pmdBone.SetBoneMatrices(vmdData);
+	pmdBone.SetBoneMatrices(vmdData, frameNo);
 	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform + 1);
 }
 
