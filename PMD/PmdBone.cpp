@@ -53,6 +53,7 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 
 }
 
+//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。
 void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 {
 	std::fill(boneMatrices.begin(), boneMatrices.end(), DirectX::XMMatrixIdentity());
@@ -62,24 +63,42 @@ void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 		auto node = boneNodeTable[bonemotion.first];
 
 		auto motions = bonemotion.second;
-		//与えられたフレーム番号とモーションのフレーム番号が一致するか判定する関数オブジェクト
+		//与えられたフレーム番号とモーションのフレーム番号が超えているか判定する関数オブジェクト
 		auto predicate = [frameNo](const Motion& motion) {
 			return motion.frameNo <= frameNo;
 		};
 
-		//一致するイテレーターを得る
-		auto it = std::find_if(
+		//近い値のイテレーターを得る、昇順に並んでいるデータを探索するのでリバースイテレーターを使う
+		auto rit = std::find_if(
 			motions.rbegin(), motions.rend(), predicate
 		);
 
-		if (it == motions.rend())
+		//一致しないならcontinue
+		if (rit == motions.rend())
 		{
 			continue;
 		}
 
+		//前キーフレームと次キーフレームで補間を行う
+		DirectX::XMMATRIX rotation;
+		auto it = rit.base();
+
+		if (it == motions.end())
+		{
+			rotation = DirectX::XMMatrixRotationQuaternion(rit->quaternion);
+		}
+		else 
+		{
+			auto t = static_cast<float>(frameNo - rit->frameNo)
+				/ static_cast<float>(it->frameNo - rit->frameNo);
+
+			rotation = DirectX::XMMatrixRotationQuaternion(rit->quaternion) * (1 - t)
+				+ DirectX::XMMatrixRotationQuaternion(it->quaternion) * t;
+		}
+
 		auto& pos = node.startPos;
 		auto matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
-			* DirectX::XMMatrixRotationQuaternion(it->quaternion)
+			* rotation
 			* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 		boneMatrices[node.boneIdx] = matrix;
 	}

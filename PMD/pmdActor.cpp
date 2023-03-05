@@ -441,7 +441,7 @@ void PmdActor::DrawPmd(DX12Application* app)
 void PmdActor::UpdatePmd()
 {
 	DWORD elapsedTime = timeGetTime() - startTime;
-	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f));
+	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f)) ;
 	SetPmdBone(frameNo);
 	//angle += 0.01f;
 	//mapTransform[0] = DirectX::XMMatrixRotationY(angle);
