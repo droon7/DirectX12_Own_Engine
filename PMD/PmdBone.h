@@ -27,12 +27,18 @@ public:
 	//親子関係含めたボーンノードテーブルを作る
 	void CreateBoneNodeTable(std::vector<PmdBoneData> pmdBoneDatas);
 	
+	//行列初期化
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 
+	//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。
 	void SetBoneMatrices(VMDData vmdData, unsigned int frameNo);
 
 	//親ノードから子ノードまで再帰的に変換行列をかける。
 	void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
+
+	//ベジェ曲線を簡単な近似計算で求める
+	float GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1, const DirectX::XMFLOAT2& controlPoint2, uint8_t max_steps);
+
 };
 
 

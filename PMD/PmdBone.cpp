@@ -54,6 +54,7 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 }
 
 //フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。
+//TODO: この関数は分割したい。
 void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 {
 	std::fill(boneMatrices.begin(), boneMatrices.end(), DirectX::XMMatrixIdentity());
@@ -80,7 +81,7 @@ void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 			motions.rbegin(), motions.rend(), predicate
 		);
 
-		//一致しないならcontinue
+		//モーションデータがないならcontinue
 		if (rit == motions.rend())
 		{
 			continue;
@@ -122,4 +123,38 @@ void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& m
 	{
 		RecursiveMatrixMultiply(childNode, boneMatrices[node->boneIdx]);
 	}
+}
+
+float PmdBone::GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1, const DirectX::XMFLOAT2& controlPoint2, uint8_t max_steps)
+{
+	if (controlPoint1.x == controlPoint1.y && controlPoint2.x == controlPoint2.y)
+	{
+		return x;
+	}
+
+	float t = x;
+	//係数
+	const float k0 = 1 + 3 * controlPoint1.x - 3 * controlPoint2.x;
+	const float k1 = 3 * controlPoint2.x - 6 * controlPoint1.x;
+	const float k2 = 3 * controlPoint1.x;
+
+	//判定値
+	constexpr float epsilon = 0.0005f;
+
+	//近似値まで計算を回す
+	for (int i = 0; i < max_steps; ++i)
+	{
+		auto ft = k0 * t * t * t + k1 * t * t + k0 * t - x;
+
+		if (ft <= epsilon && ft >= -epsilon)
+		{
+			break;
+		}
+		t -= ft / 2;
+	}
+
+	auto r = 1 - t;
+	auto ret = t * t * t + 3 * t * t * r * controlPoint2.y + 3 * t * r * r * controlPoint1.y;
+	
+	return ret;
 }

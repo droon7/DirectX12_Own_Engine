@@ -452,8 +452,8 @@ void PmdActor::UpdatePmd()
 	}
 
 	SetPmdBone(frameNo);
-	angle += 0.01f;
-	mapTransform[0] = DirectX::XMMatrixRotationY(angle);
+	//angle += 0.01f;
+	//mapTransform[0] = DirectX::XMMatrixRotationY(angle);
 
 	//SetPmdBone();
 }
