@@ -27,6 +27,7 @@ class VMDData
 {
 public:
 	unsigned int motionDataNum;
+	unsigned int duration;
 	std::vector<VMDMotionData> vmdMotionDatas;
 
 	//®Œ`‚µ‚½ƒ‚[ƒVƒ‡ƒ“î•ñ

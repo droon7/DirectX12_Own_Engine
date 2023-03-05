@@ -60,6 +60,13 @@ void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 
 	for (auto& bonemotion : vmdData.motionDatas)
 	{
+		//頂点のボーンデータとモーションのボーンデータが一致することを確認、なければcontinue
+		auto itBoneNode = boneNodeTable.find(bonemotion.first);
+		if (itBoneNode == boneNodeTable.end())
+		{
+			continue;
+		}
+
 		auto node = boneNodeTable[bonemotion.first];
 
 		auto motions = bonemotion.second;

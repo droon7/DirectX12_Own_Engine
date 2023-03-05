@@ -442,10 +442,18 @@ void PmdActor::DrawPmd(DX12Application* app)
 void PmdActor::UpdatePmd()
 {
 	DWORD elapsedTime = timeGetTime() - startTime;
-	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f)) ;
+	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f));//% vmdData.duration;
+
+	//ループアニメーションのための時間変数とフレームの初期化
+	if (frameNo > vmdData.duration+10)
+	{
+		startTime = timeGetTime();
+		frameNo = 0;
+	}
+
 	SetPmdBone(frameNo);
-	//angle += 0.01f;
-	//mapTransform[0] = DirectX::XMMatrixRotationY(angle);
+	angle += 0.01f;
+	mapTransform[0] = DirectX::XMMatrixRotationY(angle);
 
 	//SetPmdBone();
 }

@@ -2,6 +2,7 @@
 #include "VMDData.h"
 
 VMDData::VMDData(std::string strVMDPath)
+	:duration(0)
 {
 	LoadVMDData(strVMDPath);
 	SetMotionDatas();
@@ -28,6 +29,7 @@ void VMDData::LoadVMDData(std::string strVMDPath)
 			+ sizeof(motion.bezier),
 			1,
 			fp);
+
 	}
 
 
@@ -44,6 +46,7 @@ void VMDData::SetMotionDatas()
 			Motion(vmdMotion.frameNo, q)
 		);
 
+		duration = std::max<unsigned int>(duration, vmdMotion.frameNo);
 	}
 
 	//フレーム番号でソートする
