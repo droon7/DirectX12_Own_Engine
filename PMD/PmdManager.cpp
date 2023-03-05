@@ -47,7 +47,7 @@ void PmdData::loadPmdData(std::string strModelPath)
 	//ボーンデータ読み込み
 	fread(&boneNum, sizeof(boneNum), 1, fp);
 	pmdBoneDatas.resize(boneNum);
-	fread(pmdBoneDatas.data(), sizeof(pmdBoneDatas), boneNum, fp);
+	fread(pmdBoneDatas.data(), sizeof(PmdBoneData), boneNum, fp);
 
 	fclose(fp);
 

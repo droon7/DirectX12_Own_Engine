@@ -89,11 +89,12 @@ void Win32Application::RunDX12()
 
 	pmdRenderer.reset(new PmdRenderer(pDX12));
 	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd","motion/swing.vmd",0);
-	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd", "motion/swing.vmd",-7);
+	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd", "motion/swing.vmd",-12);
 	pmdActors.push_back(sharedPmdActor);
-	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd", "motion/swing2.vmd",7);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/亞北ネル.pmd", "motion/swing2.vmd",12);
 	pmdActors.push_back(sharedPmdActor);
-
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクVer2.pmd", "motion/motion.vmd", 0);
+	pmdActors.push_back(sharedPmdActor);
 
 	//ウィンドウ表示
 	ShowWindow(m_hwnd, SW_SHOW);

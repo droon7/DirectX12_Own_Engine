@@ -91,6 +91,7 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 
 }
 
+//初期位置セット
 void PmdActor::SetTransform(int x, int y, int z)
 {
 	transform.worldMatrix = DirectX::XMMatrixIdentity();
@@ -448,7 +449,7 @@ void PmdActor::UpdatePmd()
 	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f));//% vmdData.duration;
 
 	//ループアニメーションのための時間変数とフレームの初期化
-	if (frameNo > vmdData.duration)
+	if (frameNo > vmdData.duration+5)
 	{
 		startTime = timeGetTime();
 		frameNo = 0;
