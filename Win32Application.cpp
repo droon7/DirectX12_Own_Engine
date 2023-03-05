@@ -125,7 +125,7 @@ void Win32Application::RunDX12()
 		//DirectXコマンド実行
 		pDX12->EndDraw();
 
-		//pmdActors[0]->UpdatePmd();
+		pmdActors[0]->UpdatePmd();
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
 		if (msg.message == WM_QUIT)

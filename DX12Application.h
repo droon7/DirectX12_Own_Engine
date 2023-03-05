@@ -62,7 +62,7 @@ private:
 	//行列アセット
 	DirectX::XMMATRIX viewMat;
 	DirectX::XMMATRIX projMat;
-	SceneMatrix* mapTransformMatrix = nullptr;
+	SceneMatrix* mapTransform = nullptr;
 	float angle = 0.0f;
 
 	//デバッグオブジェクトの宣言

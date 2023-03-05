@@ -330,11 +330,11 @@ HRESULT DX12Application::CreateSceneView()
 	);
 
 	//マップによってバッファーへ行列データを転送
-	auto result = sceneMatrixConstBuff->Map(0, nullptr, (void**)&mapTransformMatrix);
+	auto result = sceneMatrixConstBuff->Map(0, nullptr, (void**)&mapTransform);
 	//mapMatrix->world = worldMat;
-	mapTransformMatrix->view = viewMat;
-	mapTransformMatrix->projection = projMat;
-	mapTransformMatrix->eye = eye;
+	mapTransform->view = viewMat;
+	mapTransform->projection = projMat;
+	mapTransform->eye = eye;
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成

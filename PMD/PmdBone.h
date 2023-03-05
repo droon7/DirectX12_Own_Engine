@@ -13,11 +13,13 @@ struct BoneNode
 class PmdBone
 {
 private:
-	std::vector<DirectX::XMMATRIX> boneMatrices;
 	std::vector<std::string> boneNames;
 	std::map<std::string, BoneNode> boneNodeTable;
 
 public:
+	PmdBone();
+	PmdBone(std::vector<PmdBoneData> pmdBoneDatas);
+	std::vector<DirectX::XMMATRIX> boneMatrices;
 
 	//PmdActorからボーンデータをもらう
 	//親子関係含めたボーンノードテーブルを作る
@@ -25,6 +27,10 @@ public:
 	
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 
+	void SetBoneMatrices();
+
+	//親ノードから子ノードまで再帰的に変換行列をかける。
+	void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
 };
 
 

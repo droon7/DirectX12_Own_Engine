@@ -1,6 +1,16 @@
 #include "pch.h"
 #include "PmdBone.h"
 
+PmdBone::PmdBone()
+{
+}
+
+PmdBone::PmdBone(std::vector<PmdBoneData> pmdBoneDatas)
+{
+	CreateBoneNodeTable(pmdBoneDatas);
+	InitBoneMatrices(pmdBoneDatas);
+}
+
 //親子関係のあるボーンノードテーブルを作る
 void PmdBone::CreateBoneNodeTable(std::vector<PmdBoneData> pmdBoneDatas)
 {
@@ -39,4 +49,29 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 	boneMatrices.resize(pmdBoneDatas.size());
 
 	std::fill(boneMatrices.begin(), boneMatrices.end(), DirectX::XMMatrixIdentity());
+
+
+}
+
+void PmdBone::SetBoneMatrices()
+{
+	auto node = boneNodeTable["左腕"];
+	auto pos = node.startPos;
+
+	auto matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
+		* DirectX::XMMatrixRotationZ(DirectX::XM_PIDIV2)
+		* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+
+	RecursiveMatrixMultiply(&node, matrix);
+}
+
+void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat)
+{
+	//格納されている単位行列に得た変換行列を掛け、データを保存
+	boneMatrices[node->boneIdx] *= mat;
+
+	for (auto& childNode : node->children)
+	{
+		RecursiveMatrixMultiply(childNode, boneMatrices[node->boneIdx]);
+	}
 }

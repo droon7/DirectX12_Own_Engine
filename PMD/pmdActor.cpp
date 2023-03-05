@@ -6,17 +6,23 @@ void* Transform::operator new(size_t size)
 	return _aligned_malloc(size, 16);
 }
 
-//コンストラクタでロードからビュー作成まで行う
+//コンストラクタでロードからビュー作成
+//モデルの初期値設定
 PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	:angle(0.0f), stringModelPath(ModelName)
 {
+	//ロードからビュー作成
 	LoadPmdData(ModelName);
+	pmdBone = PmdBone(pmdData.pmdBoneDatas);
 	CreateVertexViewIndexView(app);
 	SetTransform();
 	CreateTransformView(app);
 	GetMaterialResource(app);
 	GetTextureResource(app);
 	CreateMaterialAndTextureView(app);
+
+	//モデル初期値
+	SetPmdBone();
 }
 
 void PmdActor::LoadPmdData(std::string ModelName)
@@ -92,8 +98,9 @@ void PmdActor::SetTransform()
 HRESULT PmdActor::CreateTransformView(DX12Application* app)
 {
 	//定数バッファーの作成
-	//auto buffSize = sizeof(Transform) * (1 + pmdBone);
-	auto buffSize = (sizeof(Transform) + 0xff) & ~0xff;
+	auto buffSize = sizeof(DirectX::XMMATRIX) * (1 + pmdBone.boneMatrices.size());
+	buffSize = (buffSize + 0xff) & ~0xff;
+
 	auto constHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto constHeapDesc = CD3DX12_RESOURCE_DESC::Buffer(buffSize);
 
@@ -113,14 +120,15 @@ HRESULT PmdActor::CreateTransformView(DX12Application* app)
 	}
 	
 	//マップによる定数の転送
-	result = transformBuff->Map(0, nullptr, (void**)&mapTransformMatrix);
+	result = transformBuff->Map(0, nullptr, (void**)&mapTransform);
 	if (FAILED(result))
 	{
 		assert(SUCCEEDED(result));
 		return result;
 	}
 
-	mapTransformMatrix->worldMatrix = transform.worldMatrix;
+	mapTransform[0] = transform.worldMatrix;
+	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform + 1);
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成
@@ -431,8 +439,16 @@ void PmdActor::DrawPmd(DX12Application* app)
 
 void PmdActor::UpdatePmd()
 {
-	angle += 0.01f;
-	mapTransformMatrix->worldMatrix = DirectX::XMMatrixRotationY(angle);
+	//angle += 0.01f;
+	//mapTransform[0] = DirectX::XMMatrixRotationY(angle);
+
+	//SetPmdBone();
+}
+
+void PmdActor::SetPmdBone()
+{
+	pmdBone.SetBoneMatrices();
+	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform + 1);
 }
 
 

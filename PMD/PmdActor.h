@@ -8,13 +8,14 @@
 #include"PmdBone.h"
 using Microsoft::WRL::ComPtr;
 
-//16Byteアライメントのための構造体、ワールド座標、変換行列（予定）を入れる
+//16Byteアライメントのための構造体、ワールド座標、変換行列を入れる
 struct Transform
 {
 	//new演算子をオーバーライドし、struct構造体メンバは16バイトで確保するようにする。
 	void* operator new(size_t size);
 
 	DirectX::XMMATRIX worldMatrix;
+	std::vector<DirectX::XMMATRIX> boneMatrices;
 };
 
 //PMDモデル一キャラ分の情報を持つクラス
@@ -44,11 +45,11 @@ private:
 	ComPtr<ID3D12DescriptorHeap> transformDescHeap; //バッファーの解釈する。実質ビュー
 	ComPtr<ID3D12Resource> transformBuff; //実際のデータ
 	Transform transform;
-	Transform* mapTransformMatrix; //コピー用バッファ
+	DirectX::XMMATRIX* mapTransform = nullptr; //コピー用バッファ
 	float angle;
 
 	//ボーン情報
-	PmdBone pmdBone;
+	PmdBone pmdBone ;
 
 	//pmdモデルロード
 	void LoadPmdData(std::string ModelName);
@@ -64,7 +65,8 @@ private:
 	void GetTextureResource(DX12Application* app);
 	//materialの情報をもとにCBV、SRVを作成する
 	void CreateMaterialAndTextureView(DX12Application* app);
-
+	//ボーン情報アップデート
+	void SetPmdBone();
 public:
 
 	explicit PmdActor(DX12Application* app, std::string ModelName);
@@ -72,7 +74,8 @@ public:
 	//pmdモデル描画命令
 	void DrawPmd(DX12Application* app);   
 
-	void UpdatePmd(); //pmdモデルアップデート、現在は空
+	void UpdatePmd(); //pmdモデルアップデート
+
 
 };
 
