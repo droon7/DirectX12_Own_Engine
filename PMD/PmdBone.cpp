@@ -124,7 +124,7 @@ void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& m
 
 	for (auto& childNode : node->children)
 	{
-		RecursiveMatrixMultiply(childNode, boneMatrices[node->boneIdx]);
+		RecursiveMatrixMultiply(childNode, boneMatrices[node->boneIdx] );
 	}
 }
 

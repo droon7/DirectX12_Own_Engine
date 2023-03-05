@@ -50,6 +50,7 @@ void VMDData::SetMotionDatas()
 		auto cp2 = DirectX::XMFLOAT2(static_cast<float>(vmdMotion.bezier[11]) / 127.0f,
 			static_cast<float>(vmdMotion.bezier[15]) / 127.0f);
 
+		//モーションテーブルにモーション構造体に格納
 		motionDatas[vmdMotion.boneName].emplace_back(
 			Motion(vmdMotion.frameNo, q, cp1, cp2)
 		);

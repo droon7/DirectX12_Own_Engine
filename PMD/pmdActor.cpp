@@ -91,6 +91,7 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 
 }
 
+//初期位置セット
 void PmdActor::SetTransform(int x, int y, int z)
 {
 	transform.worldMatrix = DirectX::XMMatrixIdentity();

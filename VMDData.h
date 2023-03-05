@@ -31,7 +31,7 @@ public:
 	unsigned int duration;
 	std::vector<VMDMotionData> vmdMotionDatas;
 
-	//整形したモーション情報、ボーン名に複数のモーション構造体が対応する。
+	//モーションテーブル、ボーン名に複数のモーション構造体が対応する。
 	std::unordered_map<std::string, std::vector<Motion>> motionDatas;
 	
 	VMDData() :motionDataNum(0), duration(0){}
