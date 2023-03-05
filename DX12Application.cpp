@@ -303,8 +303,8 @@ HRESULT DX12Application::CreateSceneView()
 {
 	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
 
-	XMFLOAT3 eye(0, 15, -15);
-	XMFLOAT3 target(0, 15, 0); // eye座標とtarget座標から視線ベクトルを作る
+	XMFLOAT3 eye(0, 13, -25);
+	XMFLOAT3 target(0, 13, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
 	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
