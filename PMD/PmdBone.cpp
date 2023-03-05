@@ -92,8 +92,7 @@ void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 			auto t = static_cast<float>(frameNo - rit->frameNo)
 				/ static_cast<float>(it->frameNo - rit->frameNo);
 
-			rotation = DirectX::XMMatrixRotationQuaternion(rit->quaternion) * (1 - t)
-				+ DirectX::XMMatrixRotationQuaternion(it->quaternion) * t;
+			rotation = DirectX::XMMatrixRotationQuaternion(DirectX::XMQuaternionSlerp(rit->quaternion, it->quaternion, t));
 		}
 
 		auto& pos = node.startPos;
