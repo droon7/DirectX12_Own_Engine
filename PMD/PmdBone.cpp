@@ -69,8 +69,8 @@ void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 		}
 
 		auto node = boneNodeTable[bonemotion.first];
-
 		auto motions = bonemotion.second;
+
 		//与えられたフレーム番号とモーションのフレーム番号が超えているか判定する関数オブジェクト
 		auto predicate = [frameNo](const Motion& motion) {
 			return motion.frameNo <= frameNo;
@@ -97,12 +97,15 @@ void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
 		}
 		else 
 		{
+			//ベジェ曲線補間
 			auto t = static_cast<float>(frameNo - rit->frameNo)
 				/ static_cast<float>(it->frameNo - rit->frameNo);
-
+			t = GetYFromXOnBezier(t, it->controlPoint1, it->controlPoint2, 12);
 			rotation = DirectX::XMMatrixRotationQuaternion(DirectX::XMQuaternionSlerp(rit->quaternion, it->quaternion, t));
+			//rotation = DirectX::XMMatrixRotationQuaternion(rit->quaternion);
 		}
 
+		//得た回転行列を格納。センターから再帰で伝搬させる。
 		auto& pos = node.startPos;
 		auto matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
 			* rotation

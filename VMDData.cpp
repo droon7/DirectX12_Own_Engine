@@ -41,9 +41,15 @@ void VMDData::SetMotionDatas()
 
 	for (auto& vmdMotion : vmdMotionDatas)
 	{
+		//クォータニオン、コントロールポイントを一次変数に格納
 		auto q = DirectX::XMLoadFloat4(&vmdMotion.quaternion);
+		auto cp1 = DirectX::XMFLOAT2(static_cast<float>(vmdMotion.bezier[3]) / 127.0f,
+			static_cast<float>(vmdMotion.bezier[7]) / 127.0f );
+		auto cp2 = DirectX::XMFLOAT2(static_cast<float>(vmdMotion.bezier[11]) / 127.0f,
+			static_cast<float>(vmdMotion.bezier[15]) / 127.0f);
+
 		motionDatas[vmdMotion.boneName].emplace_back(
-			Motion(vmdMotion.frameNo, q)
+			Motion(vmdMotion.frameNo, q, cp1, cp2)
 		);
 
 		duration = std::max<unsigned int>(duration, vmdMotion.frameNo);

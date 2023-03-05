@@ -22,11 +22,11 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	CreateMaterialAndTextureView(app);
 
 	//モデルの初期値
-	vmdData = VMDData("motion/motion.vmd");
+	vmdData = VMDData("motion/swing2.vmd");
 	SetPmdBone(0);
 	PlayAnimation();
 }
-
+//ここからロードとDirectX12のための処理
 void PmdActor::LoadPmdData(std::string ModelName)
 {
 	pmdData.loadPmdData(ModelName);
@@ -162,7 +162,6 @@ HRESULT PmdActor::CreateTransformView(DX12Application* app)
 
 	return S_OK;
 }
-
 //PMDの情報からGPUへのマテリアルリソースのロード
 void PmdActor::GetMaterialResource(DX12Application* app)
 {
@@ -403,6 +402,9 @@ void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
 
 	}
 }
+
+//ここまでDirectX12の内部処理
+
 
 void PmdActor::DrawPmd(DX12Application* app)
 {

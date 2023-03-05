@@ -30,7 +30,7 @@ public:
 	//行列初期化
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 
-	//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。
+	//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。毎フレーム呼び出す
 	void SetBoneMatrices(VMDData vmdData, unsigned int frameNo);
 
 	//親ノードから子ノードまで再帰的に変換行列をかける。
