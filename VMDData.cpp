@@ -14,6 +14,8 @@ void VMDData::LoadVMDData(std::string strVMDPath)
 	FILE* fp;
 	auto err = fopen_s(&fp, strVMDPath.c_str(), "rb");
 
+
+
 	fseek(fp, 50, SEEK_SET);
 
 	motionDataNum = 0;

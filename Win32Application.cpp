@@ -88,9 +88,10 @@ void Win32Application::RunDX12()
 
 
 	pmdRenderer.reset(new PmdRenderer(pDX12));
-	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd");
-	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd", "motion/swing2.vmd");
-
+	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd","motion/swing.vmd",0);
+	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd", "motion/swing.vmd",-7);
+	pmdActors.push_back(sharedPmdActor);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd", "motion/swing2.vmd",7);
 	pmdActors.push_back(sharedPmdActor);
 
 
@@ -120,12 +121,21 @@ void Win32Application::RunDX12()
 		//シーン行列設定
 		pDX12->SetScene();
 		//PMDモデル描画
-		pmdActors[0]->DrawPmd(pDX12);
+
+		for (auto& pmd : pmdActors)
+		{
+			pmd->DrawPmd(pDX12);
+		}
 
 		//DirectXコマンド実行
 		pDX12->EndDraw();
 
-		pmdActors[0]->UpdatePmd();
+
+		for (auto& pmd : pmdActors)
+		{
+			pmd->UpdatePmd();
+		}
+
 
 		//アプリケーションが終わるときmessageがWM_QUITになる
 		if (msg.message == WM_QUIT)

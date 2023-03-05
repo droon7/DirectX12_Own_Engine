@@ -62,7 +62,7 @@ private:
 	//vbViewとibViewに設定
 	void CreateVertexViewIndexView(DX12Application* app);
 	//ワールド座標、座標変換行列をセット
-	void SetTransform();
+	void SetTransform(int x, int y, int z);
 	//座標変換行列情報をセット
 	HRESULT CreateTransformView(DX12Application* app);
 	//PMDデータからマテリアルのリソースを読み込む
@@ -76,7 +76,7 @@ private:
 	//アニメーション起動
 public:
 
-	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath);
+	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath, int x);
 
 	//pmdモデル描画命令
 	void DrawPmd(DX12Application* app);   
