@@ -137,7 +137,7 @@ float PmdBone::GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1
 
 	float t = x;
 	//åWêî
-	const float k0 = 1 + 3 * controlPoint1.x - 3 * controlPoint2.x;
+	const float k0 = 1 + 3* controlPoint1.x - 3*controlPoint2.x;
 	const float k1 = 3 * controlPoint2.x - 6 * controlPoint1.x;
 	const float k2 = 3 * controlPoint1.x;
 
@@ -147,7 +147,8 @@ float PmdBone::GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1
 	//ãﬂéóílÇ‹Ç≈åvéZÇâÒÇ∑
 	for (int i = 0; i < max_steps; ++i)
 	{
-		auto ft = k0 * t * t * t + k1 * t * t + k0 * t - x;
+
+		auto ft = k0*t*t*t + k1*t*t + k2*t - x;
 
 		if (ft <= epsilon && ft >= -epsilon)
 		{
@@ -157,7 +158,7 @@ float PmdBone::GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1
 	}
 
 	auto r = 1 - t;
-	auto ret = t * t * t + 3 * t * t * r * controlPoint2.y + 3 * t * r * r * controlPoint1.y;
+	auto ret = t*t*t + 3*t*t*r*controlPoint2.y + 3*t*r*r* controlPoint1.y;
 	
 	return ret;
 }

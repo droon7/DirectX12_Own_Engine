@@ -8,7 +8,7 @@ void* Transform::operator new(size_t size)
 
 //コンストラクタでロードからビュー作成
 //モデルの初期値設定
-PmdActor::PmdActor(DX12Application* app, std::string ModelName)
+PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string motionPath)
 	:angle(0.0f), stringModelPath(ModelName)
 {
 	//ロードからビュー作成
@@ -22,7 +22,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	CreateMaterialAndTextureView(app);
 
 	//モデルの初期値
-	vmdData = VMDData("motion/swing2.vmd");
+	vmdData = VMDData(motionPath);
 	SetPmdBone(0);
 	PlayAnimation();
 }
@@ -447,7 +447,7 @@ void PmdActor::UpdatePmd()
 	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f));//% vmdData.duration;
 
 	//ループアニメーションのための時間変数とフレームの初期化
-	if (frameNo > vmdData.duration+10)
+	if (frameNo > vmdData.duration)
 	{
 		startTime = timeGetTime();
 		frameNo = 0;

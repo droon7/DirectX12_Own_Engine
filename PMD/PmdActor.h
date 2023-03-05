@@ -76,7 +76,7 @@ private:
 	//アニメーション起動
 public:
 
-	explicit PmdActor(DX12Application* app, std::string ModelName);
+	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath);
 
 	//pmdモデル描画命令
 	void DrawPmd(DX12Application* app);   
