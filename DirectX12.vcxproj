@@ -187,6 +187,7 @@
     <ClCompile Include="PMD\PmdRenderer.cpp" />
     <ClCompile Include="PMD\PmdTexture.cpp" />
     <ClCompile Include="Utility.cpp" />
+    <ClCompile Include="VMDData.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -232,13 +233,15 @@
     <ClInclude Include="PMD\PmdRenderer.h" />
     <ClInclude Include="PMD\PmdTexture.h" />
     <ClInclude Include="Utility.h" />
+    <ClInclude Include="VMDData.h" />
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicShaderHeader.hlsli" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="img\Family_Computer.png" />
+    <None Include="motion\motion.vmd" />
+    <None Include="motion\pose.vmd" />
+    <None Include="motion\swing.vmd" />
+    <None Include="motion\swing2.vmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

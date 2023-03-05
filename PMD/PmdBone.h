@@ -1,6 +1,8 @@
 #ifndef PMDBONE_H
 #define PMDBONE_H
 #include"PmdManager.h"
+#include"VMDData.h"
+//ボーン情報、行列を管理、設定
 
 struct BoneNode
 {
@@ -27,7 +29,7 @@ public:
 	
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 
-	void SetBoneMatrices();
+	void SetBoneMatrices(VMDData vmdData);
 
 	//親ノードから子ノードまで再帰的に変換行列をかける。
 	void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);

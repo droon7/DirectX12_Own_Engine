@@ -21,8 +21,9 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	GetTextureResource(app);
 	CreateMaterialAndTextureView(app);
 
-	//モデル初期値
+	//モデルの初期値
 	SetPmdBone();
+	PlayAnimation();
 }
 
 void PmdActor::LoadPmdData(std::string ModelName)
@@ -439,16 +440,23 @@ void PmdActor::DrawPmd(DX12Application* app)
 
 void PmdActor::UpdatePmd()
 {
+	DWORD elapsedTime = timeGetTime() - startTime;
+	unsigned int frameNo = 30 * (elapsedTime / 1000.0f);
 	//angle += 0.01f;
 	//mapTransform[0] = DirectX::XMMatrixRotationY(angle);
 
 	//SetPmdBone();
 }
 
+
 void PmdActor::SetPmdBone()
 {
-	pmdBone.SetBoneMatrices();
+	pmdBone.SetBoneMatrices(vmdData);
 	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform + 1);
 }
 
 
+void PmdActor::PlayAnimation()
+{
+	startTime = timeGetTime();
+}

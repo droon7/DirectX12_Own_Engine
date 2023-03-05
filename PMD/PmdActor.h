@@ -6,6 +6,7 @@
 #include"DX12Application.h"
 #include"PmdTexture.h"
 #include"PmdBone.h"
+#include"VMDData.h"
 using Microsoft::WRL::ComPtr;
 
 //16Byteアライメントのための構造体、ワールド座標、変換行列を入れる
@@ -50,6 +51,11 @@ private:
 
 	//ボーン情報
 	PmdBone pmdBone ;
+	//モーション情報
+	VMDData vmdData;
+	//アニメーション情報
+	DWORD startTime;
+
 
 	//pmdモデルロード
 	void LoadPmdData(std::string ModelName);
@@ -67,6 +73,7 @@ private:
 	void CreateMaterialAndTextureView(DX12Application* app);
 	//ボーン情報アップデート
 	void SetPmdBone();
+	//アニメーション起動
 public:
 
 	explicit PmdActor(DX12Application* app, std::string ModelName);
@@ -76,6 +83,7 @@ public:
 
 	void UpdatePmd(); //pmdモデルアップデート
 
+	void PlayAnimation();
 
 };
 

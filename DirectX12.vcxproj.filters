@@ -48,6 +48,9 @@
     <ClCompile Include="PMD\PmdTexture.cpp">
       <Filter>PMD</Filter>
     </ClCompile>
+    <ClCompile Include="VMDData.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BasicVertexShader.hlsl">
@@ -85,15 +88,25 @@
     <ClInclude Include="PMD\PmdTexture.h">
       <Filter>PMD</Filter>
     </ClInclude>
+    <ClInclude Include="VMDData.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicShaderHeader.hlsli">
       <Filter>リソース ファイル</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="img\Family_Computer.png">
+    <None Include="motion\motion.vmd">
       <Filter>リソース ファイル</Filter>
-    </Image>
+    </None>
+    <None Include="motion\pose.vmd">
+      <Filter>リソース ファイル</Filter>
+    </None>
+    <None Include="motion\swing.vmd">
+      <Filter>リソース ファイル</Filter>
+    </None>
+    <None Include="motion\swing2.vmd">
+      <Filter>リソース ファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>

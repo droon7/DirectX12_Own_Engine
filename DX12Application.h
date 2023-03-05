@@ -8,6 +8,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "DirectXTex.lib")
+#pragma comment(lib, "Winmm.lib")
 
 
 using Microsoft::WRL::ComPtr;

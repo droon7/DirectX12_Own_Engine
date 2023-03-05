@@ -2,6 +2,7 @@
 #define PCH_H
 
 #include <Windows.h>
+#include <timeapi.h>
 #include <tchar.h>
 #include<vector>
 #include<string>
