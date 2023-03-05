@@ -57,12 +57,19 @@ void PmdBone::SetBoneMatrices()
 {
 	auto node = boneNodeTable["ç∂òr"];
 	auto pos = node.startPos;
-
 	auto matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
 		* DirectX::XMMatrixRotationZ(DirectX::XM_PIDIV2)
 		* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+	boneMatrices[node.boneIdx] = matrix;
 
-	RecursiveMatrixMultiply(&node, matrix);
+	node = boneNodeTable["ç∂Ç–Ç∂"];
+	pos = node.startPos;
+	matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
+		* DirectX::XMMatrixRotationZ(DirectX::XM_PIDIV2*-1)
+		* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+	boneMatrices[node.boneIdx] = matrix;
+
+	RecursiveMatrixMultiply(&boneNodeTable["ÉZÉìÉ^Å["], DirectX::XMMatrixIdentity());
 }
 
 void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat)
