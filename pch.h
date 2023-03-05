@@ -2,11 +2,11 @@
 #define PCH_H
 
 #include <Windows.h>
-#include <timeapi.h>
 #include <tchar.h>
 #include<vector>
 #include<string>
 #include<map>
+#include<algorithm>
 #include<wrl.h>
 #ifdef _DEBUG
 #include <iostream>

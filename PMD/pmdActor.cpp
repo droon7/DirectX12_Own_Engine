@@ -22,6 +22,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName)
 	CreateMaterialAndTextureView(app);
 
 	//ƒ‚ƒfƒ‹‚Ì‰Šú’l
+	vmdData = VMDData("motion/motion.vmd");
 	SetPmdBone(0);
 	PlayAnimation();
 }

@@ -1,16 +1,17 @@
 #include "pch.h"
 #include "VMDData.h"
 
-VMDData::VMDData()
+VMDData::VMDData(std::string strVMDPath)
 {
-	LoadVMDData("motion/swing.vmd");
+	LoadVMDData(strVMDPath);
 	SetMotionDatas();
 }
 
+//VMDデータ読み込み
 void VMDData::LoadVMDData(std::string strVMDPath)
 {
 	FILE* fp;
-	auto err = fopen_s(&fp, strVMDPath.c_str(), "r");
+	auto err = fopen_s(&fp, strVMDPath.c_str(), "rb");
 
 	fseek(fp, 50, SEEK_SET);
 
@@ -43,6 +44,16 @@ void VMDData::SetMotionDatas()
 			Motion(vmdMotion.frameNo, q)
 		);
 
+	}
+
+	//フレーム番号でソートする
+	auto isLessThanFrameNo = [](const Motion& leftval, const Motion& rightval)
+	{
+		return leftval.frameNo <= rightval.frameNo;
+	};
+	for (auto& motion : motionDatas)
+	{
+		std::sort(motion.second.begin(), motion.second.end(), isLessThanFrameNo);
 	}
 
 }

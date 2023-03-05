@@ -32,8 +32,8 @@ public:
 	//®Œ`‚µ‚½ƒ‚[ƒVƒ‡ƒ“î•ñ
 	std::unordered_map<std::string, std::vector<Motion>> motionDatas;
 	
-
-	VMDData();
+	VMDData() {}
+	VMDData(std::string strVMDPath);
 
 	void LoadVMDData(std::string strVMDPath);
 
