@@ -107,7 +107,7 @@ HRESULT DX12Application::InitializeDXGIDevice()
 #ifdef _DEBUG
 	result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(_dxgiFactory.ReleaseAndGetAddressOf()));
 #else
-	auto result = CreateDXGIFactory1(IID_PPV_ARGS(_dxgiFactory.ReleaseAndGetAddressOf()));
+	result = CreateDXGIFactory1(IID_PPV_ARGS(_dxgiFactory.ReleaseAndGetAddressOf()));
 #endif
 
 	//DebugDevice生成

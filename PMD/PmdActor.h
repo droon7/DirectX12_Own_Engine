@@ -75,7 +75,7 @@ private:
 	void SetPmdBone(unsigned int frameNo);
 
 	//デバッグ用関数 pmdBone::boneNodeTableをpublicにしないと動かない
-	//void ShowIkBoneDebug();
+	void ShowIkBoneDebug();
 public:
 
 	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath, int x);

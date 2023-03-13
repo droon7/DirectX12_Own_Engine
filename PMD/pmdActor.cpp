@@ -26,8 +26,10 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 	SetPmdBone(0);
 	PlayAnimation();
 
+#ifdef _DEBUG
 	//デバッグ用
-	//ShowIkBoneDebug();
+	ShowIkBoneDebug();
+#endif 
 }
 //ここからロードとDirectX12のための処理
 void PmdActor::LoadPmdData(std::string ModelName)
@@ -478,45 +480,48 @@ void PmdActor::PlayAnimation()
 	startTime = timeGetTime();
 }
 
+
+#ifdef _DEBUG
 //デバッグ用関数
 
-//void PmdActor::ShowIkBoneDebug()
-//{
-//	auto getNameFromIdx = [&](uint16_t idx) -> std::string
-//	{
-//		auto it = find_if(pmdBone.boneNodeTable.begin(),
-//			pmdBone.boneNodeTable.end(),
-//			[&](const std::pair<std::string, BoneNode>& obj)
-//			{
-//				return obj.second.boneIdx == idx;
-//			}
-//		);
-//
-//		if (it != pmdBone.boneNodeTable.end())
-//		{
-//			return it->first;
-//		}
-//		else
-//		{
-//			return "";
-//		}
-//	};
-//
-//
-//	for (auto& ik : pmdData.pmdIkDatas)
-//	{
-//		std::ostringstream oss;
-//		oss << "IKボーン番号=" << ik.boneIdx
-//			<< ":" << getNameFromIdx(ik.boneIdx) << std::endl;
-//
-//		for (auto& node : ik.nodeIdx)
-//		{
-//			oss << "\tノードボーン=" << node
-//				<< ":" << getNameFromIdx(node) << std::endl;
-//		}
-//		OutputDebugStringA(oss.str().c_str());
-//	}
-//
-//}
+void PmdActor::ShowIkBoneDebug()
+{
+	auto getNameFromIdx = [&](uint16_t idx) -> std::string
+	{
+		auto it = find_if(pmdBone.boneNodeTable.begin(),
+			pmdBone.boneNodeTable.end(),
+			[&](const std::pair<std::string, BoneNode>& obj)
+			{
+				return obj.second.boneIdx == idx;
+			}
+		);
 
+		if (it != pmdBone.boneNodeTable.end())
+		{
+			return it->first;
+		}
+		else
+		{
+			return "";
+		}
+	};
+
+
+	for (auto& ik : pmdData.pmdIkDatas)
+	{
+		std::ostringstream oss;
+		oss << "IKボーン番号=" << ik.boneIdx
+			<< ":" << getNameFromIdx(ik.boneIdx) << std::endl;
+
+		for (auto& node : ik.nodeIdx)
+		{
+			oss << "\tノードボーン=" << node
+				<< ":" << getNameFromIdx(node) << std::endl;
+		}
+		OutputDebugStringA(oss.str().c_str());
+	}
+
+}
+
+#endif
 

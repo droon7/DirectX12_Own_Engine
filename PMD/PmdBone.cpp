@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "PmdBone.h"
 
+using namespace::DirectX;
+
 PmdBone::PmdBone()
 {
 }
@@ -68,7 +70,7 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 {
 	boneMatrices.resize(pmdBoneDatas.size());
 
-	std::fill(boneMatrices.begin(), boneMatrices.end(), DirectX::XMMatrixIdentity());
+	std::fill(boneMatrices.begin(), boneMatrices.end(), XMMatrixIdentity());
 
 
 }
@@ -77,7 +79,7 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 //TODO: この関数は分割したい。
 void PmdBone::SetBoneMatrices(unsigned int frameNo)
 {
-	std::fill(boneMatrices.begin(), boneMatrices.end(), DirectX::XMMatrixIdentity());
+	std::fill(boneMatrices.begin(), boneMatrices.end(), XMMatrixIdentity());
 
 	for (auto& bonemotion : vmdData.motionDatas)
 	{
@@ -108,12 +110,12 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 		}
 
 		//前キーフレームと次キーフレームで補間を行う
-		DirectX::XMMATRIX rotation;
+		XMMATRIX rotation;
 		auto it = rit.base();
 
 		if (it == motions.end())
 		{
-			rotation = DirectX::XMMatrixRotationQuaternion(rit->quaternion);
+			rotation = XMMatrixRotationQuaternion(rit->quaternion);
 		}
 		else 
 		{
@@ -121,23 +123,23 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 			auto t = static_cast<float>(frameNo - rit->frameNo)
 				/ static_cast<float>(it->frameNo - rit->frameNo);
 			t = GetYFromXOnBezier(t, it->controlPoint1, it->controlPoint2, 12);
-			rotation = DirectX::XMMatrixRotationQuaternion(DirectX::XMQuaternionSlerp(rit->quaternion, it->quaternion, t));
-			//rotation = DirectX::XMMatrixRotationQuaternion(rit->quaternion);
+			rotation = XMMatrixRotationQuaternion(XMQuaternionSlerp(rit->quaternion, it->quaternion, t));
+			//rotation = XMMatrixRotationQuaternion(rit->quaternion);
 		}
 
 		//得た回転行列を格納。センターから再帰で伝搬させる。
 		auto& pos = node.startPos;
-		auto matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
+		auto matrix = XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
 			* rotation
-			* DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+			* XMMatrixTranslation(pos.x, pos.y, pos.z);
 		boneMatrices[node.boneIdx] = matrix;
 	}
 
-	RecursiveMatrixMultiply(&boneNodeTable["センター"], DirectX::XMMatrixIdentity());
+	RecursiveMatrixMultiply(&boneNodeTable["センター"], XMMatrixIdentity());
 }
 
 
-void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat)
+void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const XMMATRIX& mat)
 {
 	//格納されている単位行列に得た変換行列を掛け、データを保存
 	boneMatrices[node->boneIdx] *= mat;
@@ -148,7 +150,7 @@ void PmdBone::RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& m
 	}
 }
 
-float PmdBone::GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1, const DirectX::XMFLOAT2& controlPoint2, uint8_t max_steps)
+float PmdBone::GetYFromXOnBezier(float x, const XMFLOAT2& controlPoint1, const XMFLOAT2& controlPoint2, uint8_t max_steps)
 {
 	if (controlPoint1.x == controlPoint1.y && controlPoint2.x == controlPoint2.y)
 	{
@@ -217,31 +219,50 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 
 void PmdBone::SolveLookAt(const PMDIK& ik)
 {
+	auto rootNode = boneNodeAddressArray[ik.nodeIdx[0]];
+	auto targetNode = boneNodeAddressArray[ik.boneIdx];
+
+	auto rootPos1 = XMLoadFloat3(&rootNode->startPos);
+	auto targetPos1 = XMLoadFloat3(&targetNode->startPos);
+
+	auto rootPos2 = XMVector3TransformCoord(rootPos1, boneMatrices[ik.nodeIdx[0]]);
+	auto targetPos2 = XMVector3TransformCoord(targetPos1, boneMatrices[ik.boneIdx]);
+
+	auto originVec = XMVectorSubtract(targetPos1, rootPos1);
+	auto targetVec = XMVectorSubtract(targetPos2, rootPos2);
+
+	originVec = XMVector3Normalize(originVec);
+	targetVec = XMVector3Normalize(targetVec);
+	XMFLOAT3 up = XMFLOAT3(0, 1, 0);
+	XMFLOAT3 right = XMFLOAT3(1, 0, 0);
+
+	boneMatrices[ik.nodeIdx[0]] = LookAtMatrix(originVec, targetVec, up, right);
+
 }
 
 //二回外積を計算し、座標軸を得てLookAt行列を返す
-DirectX::XMMATRIX PmdBone::LookAtMatrix(const DirectX::XMVECTOR& lookat, DirectX::XMFLOAT3& up, DirectX::XMFLOAT3& right)
+XMMATRIX PmdBone::LookAtMatrix(const XMVECTOR& lookat, XMFLOAT3& up, XMFLOAT3& right)
 {
 	//向かせたい方向
-	DirectX::XMVECTOR vz = lookat;
+	XMVECTOR vz = lookat;
 
 	//仮のy軸ベクトル
-	DirectX::XMVECTOR vy = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&up));
+	XMVECTOR vy = XMVector3Normalize(XMLoadFloat3(&up));
 
 	//x軸ベクトル
-	DirectX::XMVECTOR vx = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vy, vz));
+	XMVECTOR vx = XMVector3Normalize(XMVector3Cross(vy, vz));
 	//y軸ベクトル
-	vy = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vz, vx));
+	vy = XMVector3Normalize(XMVector3Cross(vz, vx));
 
 	//lookatとupの方向が同じ場合rightを使い作成する
-	if (std::abs(DirectX::XMVector3Dot(vy, vz).m128_f32[0]) == 1.0f)
+	if (std::abs(XMVector3Dot(vy, vz).m128_f32[0]) == 1.0f)
 	{
-		vx = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&right));
-		vy = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vz, vx));
-		vx = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vy, vz));
+		vx = XMVector3Normalize(XMLoadFloat3(&right));
+		vy = XMVector3Normalize(XMVector3Cross(vz, vx));
+		vx = XMVector3Normalize(XMVector3Cross(vy, vz));
 	}
 
-	DirectX::XMMATRIX ret = DirectX::XMMatrixIdentity();
+	XMMATRIX ret = XMMatrixIdentity();
 	ret.r[0] = vx;
 	ret.r[1] = vy;
 	ret.r[2] = vz;
@@ -251,8 +272,8 @@ DirectX::XMMATRIX PmdBone::LookAtMatrix(const DirectX::XMVECTOR& lookat, DirectX
 
 //z軸を任意のベクトル(origin)に向ける行列を計算しその逆行列を計算する
 //得た逆行列とz軸を特定の方向(lookat)に向ける行列を計算し、乗算すると結果を得られる
-DirectX::XMMATRIX PmdBone::LookAtMatrix(const DirectX::XMVECTOR& origin, const DirectX::XMVECTOR& lookat, DirectX::XMFLOAT3& up, DirectX::XMFLOAT3& right)
+XMMATRIX PmdBone::LookAtMatrix(const XMVECTOR& origin, const XMVECTOR& lookat, XMFLOAT3& up, XMFLOAT3& right)
 {
-	return DirectX::XMMatrixTranspose(LookAtMatrix(origin, up, right))
+	return XMMatrixTranspose(LookAtMatrix(origin, up, right))
 			* LookAtMatrix(lookat, up, right);
 }
