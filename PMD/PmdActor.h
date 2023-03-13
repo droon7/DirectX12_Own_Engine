@@ -52,7 +52,7 @@ private:
 	//ボーン情報
 	PmdBone pmdBone ;
 	//モーション情報
-	VMDData vmdData;
+	//VMDData vmdData;
 	//アニメーション情報
 	DWORD startTime;
 

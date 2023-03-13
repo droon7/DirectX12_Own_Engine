@@ -32,8 +32,8 @@ struct Motion
 class VMDData
 {
 public:
-	unsigned int motionDataNum;
-	unsigned int duration;
+	unsigned int motionDataNum;					//モーションの数
+	unsigned int duration;						//モーションの長さ
 	std::vector<VMDMotionData> vmdMotionDatas;
 
 	//モーションテーブル、ボーン名に複数のモーション構造体が対応する。

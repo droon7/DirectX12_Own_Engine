@@ -5,10 +5,11 @@ PmdBone::PmdBone()
 {
 }
 
-PmdBone::PmdBone(std::vector<PmdBoneData> pmdBoneDatas)
+PmdBone::PmdBone(std::vector<PmdBoneData> pmdBoneDatas, std::string motionPath)
 {
 	CreateBoneNodeTable(pmdBoneDatas);
 	InitBoneMatrices(pmdBoneDatas);
+	vmdData = VMDData(motionPath);
 }
 
 //親子関係のあるボーンノードテーブルを作る
@@ -61,7 +62,7 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 
 //フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。
 //TODO: この関数は分割したい。
-void PmdBone::SetBoneMatrices(VMDData vmdData, unsigned int frameNo)
+void PmdBone::SetBoneMatrices(unsigned int frameNo)
 {
 	std::fill(boneMatrices.begin(), boneMatrices.end(), DirectX::XMMatrixIdentity());
 

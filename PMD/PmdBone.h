@@ -37,9 +37,11 @@ private:
 	std::vector<BoneNode*> boneNodeAddressArray;  //ボーンIDに対応したボーンノードを格納したデータ
 	std::map<std::string, BoneNode> boneNodeTable;//ボーン名をキーにしてボーンノードを格納した連想配列テーブル
 
+	VMDData vmdData;	//メンバにVMDDataクラスを持つ
+
 public:
 	PmdBone();
-	PmdBone(std::vector<PmdBoneData> pmdBoneDatas);
+	PmdBone(std::vector<PmdBoneData> pmdBoneDatas, std::string motionPath);
 	std::vector<DirectX::XMMATRIX> boneMatrices;	//実際の回転行列を格納したデータ
 
 	//PmdActorからボーンデータをもらう
@@ -50,7 +52,7 @@ public:
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 
 	//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。毎フレーム呼び出す
-	void SetBoneMatrices(VMDData vmdData, unsigned int frameNo);
+	void SetBoneMatrices(unsigned int frameNo);
 
 	//親ノードから子ノードまで再帰的に変換行列をかける。
 	void RecursiveMatrixMultiply(BoneNode* node, const DirectX::XMMATRIX& mat);
@@ -58,6 +60,10 @@ public:
 	//ベジェ曲線を簡単な近似計算で求める
 	float GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1, const DirectX::XMFLOAT2& controlPoint2, uint8_t max_steps);
 
+	inline unsigned int GetMotionDataDuration()
+	{
+		return vmdData.duration;
+	}
 };
 
 

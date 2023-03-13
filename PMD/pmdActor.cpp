@@ -13,7 +13,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 {
 	//ロードからビュー作成
 	LoadPmdData(ModelName);
-	pmdBone = PmdBone(pmdData.pmdBoneDatas);
+	pmdBone = PmdBone(pmdData.pmdBoneDatas, motionPath);
 	CreateVertexViewIndexView(app);
 	SetTransform(x,0,0);
 	CreateTransformView(app);
@@ -22,7 +22,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 	CreateMaterialAndTextureView(app);
 
 	//モデルの初期値
-	vmdData = VMDData(motionPath);
+	
 	SetPmdBone(0);
 	PlayAnimation();
 
@@ -449,10 +449,11 @@ void PmdActor::DrawPmd(DX12Application* app)
 void PmdActor::UpdatePmd()
 {
 	DWORD elapsedTime = timeGetTime() - startTime;
+	unsigned int motionDuration = pmdBone.GetMotionDataDuration();
 	unsigned int frameNo = static_cast<unsigned int>(30 * (elapsedTime / 1000.0f));//% vmdData.duration;
 
 	//ループアニメーションのための時間変数とフレームの初期化
-	if (frameNo > vmdData.duration+5)
+	if (frameNo > motionDuration+5)
 	{
 		startTime = timeGetTime();
 		frameNo = 0;
@@ -467,7 +468,7 @@ void PmdActor::UpdatePmd()
 
 void PmdActor::SetPmdBone(unsigned int frameNo)
 {
-	pmdBone.SetBoneMatrices(vmdData, frameNo);
+	pmdBone.SetBoneMatrices(frameNo);
 	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform + 1);
 }
 
