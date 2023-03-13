@@ -5,6 +5,7 @@ PmdBone::PmdBone()
 {
 }
 
+//ボーンテーブル、回転行列、IK情報、モーション情報を初期化する
 PmdBone::PmdBone(std::vector<PmdBoneData> pmdBoneDatas, std::vector<PMDIK> pmdIks, std::string motionPath)
 {
 	CreateBoneNodeTable(pmdBoneDatas);
@@ -180,4 +181,78 @@ float PmdBone::GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1
 	auto ret = t*t*t + 3*t*t*r*controlPoint2.y + 3*t*r*r* controlPoint1.y;
 	
 	return ret;
+}
+
+void PmdBone::IKSolve()
+{
+	for (auto& ik : motionIKs)
+	{
+		auto childrenNodesCount = ik.nodeIdx.size();
+
+		//CCD-IKは重いので間点が少なければ簡単なIKで解く
+		switch (childrenNodesCount)
+		{
+		case 0: //エラー
+			assert(0);
+			continue;
+		case 1:
+			SolveLookAt(ik);
+			break;
+		case 2:
+			SolveCosineIK(ik);
+			break;
+		default:
+			SolveCCDIK(ik);
+		}
+	}
+}
+
+void PmdBone::SolveCCDIK(const PMDIK& ik)
+{
+}
+
+void PmdBone::SolveCosineIK(const PMDIK& ik)
+{
+}
+
+void PmdBone::SolveLookAt(const PMDIK& ik)
+{
+}
+
+//二回外積を計算し、座標軸を得てLookAt行列を返す
+DirectX::XMMATRIX PmdBone::LookAtMatrix(const DirectX::XMVECTOR& lookat, DirectX::XMFLOAT3& up, DirectX::XMFLOAT3& right)
+{
+	//向かせたい方向
+	DirectX::XMVECTOR vz = lookat;
+
+	//仮のy軸ベクトル
+	DirectX::XMVECTOR vy = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&up));
+
+	//x軸ベクトル
+	DirectX::XMVECTOR vx = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vy, vz));
+	//y軸ベクトル
+	vy = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vz, vx));
+
+	//lookatとupの方向が同じ場合rightを使い作成する
+	if (std::abs(DirectX::XMVector3Dot(vy, vz).m128_f32[0]) == 1.0f)
+	{
+		vx = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&right));
+		vy = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vz, vx));
+		vx = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(vy, vz));
+	}
+
+	DirectX::XMMATRIX ret = DirectX::XMMatrixIdentity();
+	ret.r[0] = vx;
+	ret.r[1] = vy;
+	ret.r[2] = vz;
+
+	return ret;
+}
+
+//z軸を任意のベクトル(origin)に向ける行列を計算しその逆行列を計算する
+//得た逆行列とz軸を特定の方向(lookat)に向ける行列を計算し、乗算すると結果を得られる
+DirectX::XMMATRIX PmdBone::LookAtMatrix(const DirectX::XMVECTOR& origin, const DirectX::XMVECTOR& lookat, DirectX::XMFLOAT3& up, DirectX::XMFLOAT3& right)
+{
+	return DirectX::XMMatrixTranspose(LookAtMatrix(origin, up, right))
+			* LookAtMatrix(lookat, up, right);
 }

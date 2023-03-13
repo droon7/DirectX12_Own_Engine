@@ -42,6 +42,7 @@ private:
 
 public:
 	PmdBone();
+	//ボーンテーブル、回転行列、IK情報、モーション情報を初期化する
 	PmdBone(std::vector<PmdBoneData> pmdBoneDatas,std::vector<PMDIK> pmdIks, std::string motionPath);
 	std::vector<DirectX::XMMATRIX> boneMatrices;	//実際の回転行列を格納したデータ
 
@@ -49,6 +50,7 @@ public:
 	//親子関係含めたボーンノードテーブルを作る
 	void CreateBoneNodeTable(std::vector<PmdBoneData> pmdBoneDatas);
 	
+	//IK情報をこのクラスに格納する。
 	void LoadPmdIks(std::vector<PMDIK> pmdIk);
 
 	//行列初期化
@@ -63,10 +65,29 @@ public:
 	//ベジェ曲線を簡単な近似計算で求める
 	float GetYFromXOnBezier(float x, const DirectX::XMFLOAT2& controlPoint1, const DirectX::XMFLOAT2& controlPoint2, uint8_t max_steps);
 
+	//ループアニメーションのためモーションの長さを得る
 	inline unsigned int GetMotionDataDuration()
 	{
 		return vmdData.duration;
 	}
+
+	//IKソルバー
+	void IKSolve();
+
+	//CCD-IKによりボーン方向を解決
+	void SolveCCDIK(const PMDIK& ik);
+
+	//余弦定理IKによりボーン方向を解決
+	void SolveCosineIK(const PMDIK& ik);
+
+	//LookAt行列によりボーン方向を解決
+	void SolveLookAt(const PMDIK& ik);
+
+	//Z軸を特定の方向に向ける行列を返す。upとrightは補助ベクトルとしての上ベクトルと右ベクトル
+	DirectX::XMMATRIX LookAtMatrix(const DirectX::XMVECTOR& lookat, DirectX::XMFLOAT3& up, DirectX::XMFLOAT3& right);
+
+	//特定のベクトルを特定の方向に向けるための行列を返す
+	DirectX::XMMATRIX LookAtMatrix(const DirectX::XMVECTOR& origin, const DirectX::XMVECTOR& lookat, DirectX::XMFLOAT3& up, DirectX::XMFLOAT3& right);
 };
 
 
