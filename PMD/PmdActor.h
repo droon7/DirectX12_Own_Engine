@@ -73,7 +73,9 @@ private:
 	void CreateMaterialAndTextureView(DX12Application* app);
 	//ボーン情報アップデート
 	void SetPmdBone(unsigned int frameNo);
-	//アニメーション起動
+
+	//デバッグ用関数 pmdBone::boneNodeTableをpublicにしないと動かない
+	//void ShowIkBoneDebug();
 public:
 
 	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath, int x);
@@ -83,6 +85,7 @@ public:
 
 	void UpdatePmd(); //pmdモデルアップデート
 
+	//アニメーション起動
 	void PlayAnimation();
 
 };

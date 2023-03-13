@@ -11,6 +11,7 @@
 #include<wrl.h>
 #ifdef _DEBUG
 #include <iostream>
+#include<sstream>
 #endif
 
 #include<d3d12.h>
