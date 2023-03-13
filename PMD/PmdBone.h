@@ -38,16 +38,19 @@ private:
 	std::map<std::string, BoneNode> boneNodeTable;//ボーン名をキーにしてボーンノードを格納した連想配列テーブル
 
 	VMDData vmdData;	//メンバにVMDDataクラスを持つ
+	std::vector<PMDIK> motionIKs;
 
 public:
 	PmdBone();
-	PmdBone(std::vector<PmdBoneData> pmdBoneDatas, std::string motionPath);
+	PmdBone(std::vector<PmdBoneData> pmdBoneDatas,std::vector<PMDIK> pmdIks, std::string motionPath);
 	std::vector<DirectX::XMMATRIX> boneMatrices;	//実際の回転行列を格納したデータ
 
 	//PmdActorからボーンデータをもらう
 	//親子関係含めたボーンノードテーブルを作る
 	void CreateBoneNodeTable(std::vector<PmdBoneData> pmdBoneDatas);
 	
+	void LoadPmdIks(std::vector<PMDIK> pmdIk);
+
 	//行列初期化
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 

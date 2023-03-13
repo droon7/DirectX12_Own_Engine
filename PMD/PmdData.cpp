@@ -54,8 +54,8 @@ void PmdData::LoadPmdData(std::string strModelPath)
 
 	//IKÉfÅ[É^ì«Ç›çûÇ›
 	fread(&ikNum, sizeof(ikNum), 1, fp);
-	pmdIkData.resize(ikNum);
-	for (auto& ik : pmdIkData)
+	pmdIkDatas.resize(ikNum);
+	for (auto& ik : pmdIkDatas)
 	{
 		fread(&ik.boneIdx, sizeof(ik.boneIdx), 1, fp);
 		fread(&ik.targetIdx, sizeof(ik.targetIdx), 1, fp);

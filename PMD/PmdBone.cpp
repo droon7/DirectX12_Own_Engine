@@ -5,10 +5,12 @@ PmdBone::PmdBone()
 {
 }
 
-PmdBone::PmdBone(std::vector<PmdBoneData> pmdBoneDatas, std::string motionPath)
+PmdBone::PmdBone(std::vector<PmdBoneData> pmdBoneDatas, std::vector<PMDIK> pmdIks, std::string motionPath)
 {
 	CreateBoneNodeTable(pmdBoneDatas);
 	InitBoneMatrices(pmdBoneDatas);
+
+	LoadPmdIks(pmdIks);
 	vmdData = VMDData(motionPath);
 }
 
@@ -48,6 +50,16 @@ void PmdBone::CreateBoneNodeTable(std::vector<PmdBoneData> pmdBoneDatas)
 		boneNodeTable[parentName].children.emplace_back(&boneNodeTable[pmdbonedata.boneName]);
 	}
 
+}
+
+void PmdBone::LoadPmdIks(std::vector<PMDIK> pmdIk)
+{
+	motionIKs.resize(pmdIk.size());
+
+	for (int i = 0; i < pmdIk.size(); ++i)
+	{
+		motionIKs[i] = pmdIk[i];
+	}
 }
 
 //ƒ{[ƒ“•ÏŠ·s—ñ‰Šú‰»

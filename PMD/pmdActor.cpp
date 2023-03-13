@@ -13,7 +13,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 {
 	//ロードからビュー作成
 	LoadPmdData(ModelName);
-	pmdBone = PmdBone(pmdData.pmdBoneDatas, motionPath);
+	pmdBone = PmdBone(pmdData.pmdBoneDatas,pmdData.pmdIkDatas, motionPath);
 	CreateVertexViewIndexView(app);
 	SetTransform(x,0,0);
 	CreateTransformView(app);
@@ -503,7 +503,7 @@ void PmdActor::PlayAnimation()
 //	};
 //
 //
-//	for (auto& ik : pmdData.pmdIkData)
+//	for (auto& ik : pmdData.pmdIkDatas)
 //	{
 //		std::ostringstream oss;
 //		oss << "IKボーン番号=" << ik.boneIdx

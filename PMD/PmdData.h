@@ -105,7 +105,7 @@ public:
 
 	//IKデータ
 	uint16_t ikNum = 0;
-	std::vector<PMDIK> pmdIkData;
+	std::vector<PMDIK> pmdIkDatas;
 
 	//ファイルパスからPMDモデルデータをロードする。
 	void LoadPmdData(std::string srcModelPath);
