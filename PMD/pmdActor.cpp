@@ -471,6 +471,7 @@ void PmdActor::UpdatePmd()
 void PmdActor::SetPmdBone(unsigned int frameNo)
 {
 	pmdBone.SetBoneMatrices(frameNo);
+	pmdBone.IKSolve();
 	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform + 1);
 }
 

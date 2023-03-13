@@ -28,6 +28,10 @@ void PmdBone::CreateBoneNodeTable(std::vector<PmdBoneData> pmdBoneDatas)
 	{
 		auto& pmdbonedata = pmdBoneDatas[idx];
 		boneNames[idx] = pmdbonedata.boneName;
+		if (boneNames[idx].find("ひざ") != std::string::npos)
+		{
+			kneeIdxes.emplace_back(idx);
+		}
 
 		auto& node = boneNodeTable[pmdbonedata.boneName];
 		node.boneIdx = idx;
@@ -215,6 +219,72 @@ void PmdBone::SolveCCDIK(const PMDIK& ik)
 
 void PmdBone::SolveCosineIK(const PMDIK& ik)
 {
+	std::vector<XMVECTOR> positions;
+
+	std::array<float, 2> edgeLens;
+
+	//ターゲット
+	auto& targetNode = boneNodeAddressArray[ik.boneIdx];
+	auto targetPos = XMVector3Transform(XMLoadFloat3(&targetNode->startPos), boneMatrices[ik.boneIdx]);
+
+	//末端ボーン
+	auto endNode = boneNodeAddressArray[ik.targetIdx];
+	positions.emplace_back(XMLoadFloat3(&endNode->startPos));
+
+	//中間及びルートボーン
+	for (auto& chainBoneIdx : ik.nodeIdx)
+	{
+		auto boneNode = boneNodeAddressArray[chainBoneIdx];
+		positions.emplace_back(XMLoadFloat3(&boneNode->startPos));
+	}
+
+	//わかりやすさのため逆順に
+	reverse(positions.begin(), positions.end());
+
+	edgeLens[0] = XMVector3Length(XMVectorSubtract(positions[1], positions[0])).m128_f32[0];
+	edgeLens[1] = XMVector3Length(XMVectorSubtract(positions[2], positions[1])).m128_f32[0];
+
+	//ルートボーンの座標変換
+	positions[0] = XMVector3Transform(positions[0], boneMatrices[ik.nodeIdx[1]]);
+	//先端ボーンの座標変換
+	positions[2] = XMVector3Transform(positions[2], boneMatrices[ik.boneIdx]);
+
+	auto linearVec = XMVectorSubtract(positions[2], positions[0]);
+	float A = XMVector3Length(linearVec).m128_f32[0];
+	float B = edgeLens[0];
+	float C = edgeLens[1];
+
+	linearVec = XMVector3Normalize(linearVec);
+	
+	//ルートから真ん中への角度計算
+	float theta1 = acosf((A * A + B * B - C * C) / (2 * A * B));
+	float theta2 = acosf((B * B + C * C - A * A) / (2 * B * C));
+
+	//回転軸の生成、真ん中のノードが膝ノードならx軸を回転軸とする
+	XMVECTOR axis;
+	if (std::find(kneeIdxes.begin(), kneeIdxes.end(), ik.nodeIdx[0]) == kneeIdxes.end())
+	{
+		auto vm = XMVector3Normalize(XMVectorSubtract(positions[2], positions[0]));
+		auto vt = XMVector3Normalize(XMVectorSubtract(targetPos, positions[0]));
+		axis = XMVector3Cross(vt, vm);
+	}
+	else
+	{
+		auto right = XMFLOAT3(1, 0, 0);
+		axis = XMLoadFloat3(&right);
+	}
+
+	auto mat1 = XMMatrixTranslationFromVector(-positions[0]);
+	mat1 *= XMMatrixRotationAxis(axis, theta1);
+	mat1 *= XMMatrixTranslationFromVector(positions[0]);
+
+	auto mat2 = XMMatrixTranslationFromVector(-positions[1]);
+	mat2 *= XMMatrixRotationAxis(axis, theta2-XM_PI);
+	mat2 *= XMMatrixTranslationFromVector(positions[1]);
+
+	boneMatrices[ik.nodeIdx[1]] *= mat1;
+	boneMatrices[ik.nodeIdx[0]] = mat2 * boneMatrices[ik.nodeIdx[1]];
+	boneMatrices[ik.targetIdx] = boneMatrices[ik.nodeIdx[0]];
 }
 
 void PmdBone::SolveLookAt(const PMDIK& ik)

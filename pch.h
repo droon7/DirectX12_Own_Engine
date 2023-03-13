@@ -5,6 +5,7 @@
 #include <tchar.h>
 #include<vector>
 #include<string>
+#include<array>
 #include<map>
 #include<cmath>
 #include<algorithm>

@@ -35,18 +35,21 @@ class PmdBone
 private:
 	std::vector<std::string> boneNames;			  //ボーンIDに対応したボーン名を格納したデータ
 	std::vector<BoneNode*> boneNodeAddressArray;  //ボーンIDに対応したボーンノードを格納したデータ
+
 #ifndef  _DEBUG
 	std::map<std::string, BoneNode> boneNodeTable;//ボーン名をキーにしてボーンノードを格納した連想配列テーブル
 #endif // ! _DEBUG
 
-
 	VMDData vmdData;	//メンバにVMDDataクラスを持つ
 	std::vector<PMDIK> motionIKs;
+	std::vector<uint32_t> kneeIdxes;
 
 public:
+
 #ifdef _DEBUG
 	std::map<std::string, BoneNode> boneNodeTable;//ボーン名をキーにしてボーンノードを格納した連想配列テーブル
 #endif
+
 	PmdBone();
 	//ボーンテーブル、回転行列、IK情報、モーション情報を初期化する
 	PmdBone(std::vector<PmdBoneData> pmdBoneDatas,std::vector<PMDIK> pmdIks, std::string motionPath);
