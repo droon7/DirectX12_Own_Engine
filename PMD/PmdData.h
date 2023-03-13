@@ -71,6 +71,16 @@ struct PmdBoneData
 };
 #pragma pack()
 
+struct PMDIK
+{
+	uint16_t boneIdx;              //IK対象のボーン番号
+	uint16_t targetIdx;			   //ターゲットに近づけるためのボーン番号
+	uint8_t chainLen;			   //間のノードがどれだけあるか
+	uint16_t iterations;           //試行回数
+	float limit;                   // 一回あたりの回転制限
+	std::vector<uint16_t> nodeIdx; //間のノード番号
+};
+
 //PMDモデルのデータをまとめたクラス
 class PmdData
 {
@@ -92,6 +102,10 @@ public:
 	//ボーンデータ
 	unsigned short boneNum = 0;
 	std::vector<PmdBoneData> pmdBoneDatas;
+
+	//IKデータ
+	uint16_t ikNum = 0;
+	std::vector<PMDIK> pmdIkData;
 
 	//ファイルパスからPMDモデルデータをロードする。
 	void LoadPmdData(std::string srcModelPath);

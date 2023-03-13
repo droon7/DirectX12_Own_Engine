@@ -31,6 +31,7 @@ void PmdData::LoadPmdData(std::string strModelPath)
 	fread(pmdMaterialForLoad.data(), pmdMaterialForLoad.size() * sizeof(PMDMaterialForLoad), 1, fp);
 
 	materialDatas.resize(pmdMaterialForLoad.size());
+	//マテリアルデータを整形
 	for (int i = 0; i < pmdMaterialForLoad.size(); ++i)
 	{
 		materialDatas[i].indicesNum = pmdMaterialForLoad[i].indicesNum;
@@ -44,10 +45,34 @@ void PmdData::LoadPmdData(std::string strModelPath)
 		materialDatas[i].additional.edgeflag = pmdMaterialForLoad[i].edgeFlag;
 	}
 
+
 	//ボーンデータ読み込み
 	fread(&boneNum, sizeof(boneNum), 1, fp);
 	pmdBoneDatas.resize(boneNum);
 	fread(pmdBoneDatas.data(), sizeof(PmdBoneData), boneNum, fp);
+
+
+	//IKデータ読み込み
+	fread(&ikNum, sizeof(ikNum), 1, fp);
+	pmdIkData.resize(ikNum);
+	for (auto& ik : pmdIkData)
+	{
+		fread(&ik.boneIdx, sizeof(ik.boneIdx), 1, fp);
+		fread(&ik.targetIdx, sizeof(ik.targetIdx), 1, fp);
+
+		ik.chainLen = 0; //間のノード数読み込み
+		fread(&ik.chainLen, sizeof(ik.chainLen), 1, fp);
+		ik.nodeIdx.resize(ik.chainLen);
+		fread(&ik.iterations, sizeof(ik.iterations), 1, fp);
+		fread(&ik.limit, sizeof(ik.limit), 1, fp);
+
+		if (ik.chainLen == 0)
+		{
+			continue;
+		}
+		fread(ik.nodeIdx.data(), sizeof(ik.nodeIdx[0]), ik.chainLen, fp);
+
+	}
 
 	fclose(fp);
 
