@@ -13,12 +13,17 @@ struct VMDMotionData
 
 struct Motion
 {
-	unsigned int frameNo;
-	DirectX::XMVECTOR quaternion;
-	DirectX::XMFLOAT2 controlPoint1, controlPoint2;
+	unsigned int frameNo;			//キーフレーム番号
+	DirectX::XMVECTOR quaternion;   //クォータニオン
+	DirectX::XMFLOAT3 offset;		//IKの初期座標からのオフセット情報
+	DirectX::XMFLOAT2 controlPoint1, controlPoint2; //ベジェ曲線の中間コントロールポイント
 
-	Motion(unsigned int frameno, DirectX::XMVECTOR& q, const DirectX::XMFLOAT2& cp1, const DirectX::XMFLOAT2& cp2)
-		: frameNo(frameno), quaternion(q), controlPoint1(cp1), controlPoint2(cp2)
+	Motion(unsigned int frameno, 
+			DirectX::XMVECTOR& q, 
+			DirectX::XMFLOAT3& offs,
+			const DirectX::XMFLOAT2& cp1,
+			const DirectX::XMFLOAT2& cp2)
+		: frameNo(frameno), quaternion(q),offset(offs), controlPoint1(cp1), controlPoint2(cp2)
 	{
 	}
 };

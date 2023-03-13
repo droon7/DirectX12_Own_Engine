@@ -27,7 +27,7 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 	PlayAnimation();
 
 	//デバッグ用
-	ShowIkBone();
+	//ShowIkBoneDebug();
 }
 //ここからロードとDirectX12のための処理
 void PmdActor::LoadPmdData(std::string ModelName)
@@ -462,7 +462,6 @@ void PmdActor::UpdatePmd()
 	//angle += 0.01f;
 	//mapTransform[0] = DirectX::XMMatrixRotationY(angle);
 
-	//SetPmdBone();
 }
 
 

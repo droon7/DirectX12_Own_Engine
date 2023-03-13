@@ -15,15 +15,21 @@ PmdBone::PmdBone(std::vector<PmdBoneData> pmdBoneDatas)
 void PmdBone::CreateBoneNodeTable(std::vector<PmdBoneData> pmdBoneDatas)
 {
 	boneNames.resize(pmdBoneDatas.size());
+	boneNodeAddressArray.resize(pmdBoneDatas.size());
 
-	//ボーンネームズと連想配列に全ボーンデータを入れる
+	//ボーンネームズと連想配列とノードアレイに全ボーンデータを入れる
 	for (int idx = 0; idx < pmdBoneDatas.size(); ++idx)
 	{
 		auto& pmdbonedata = pmdBoneDatas[idx];
 		boneNames[idx] = pmdbonedata.boneName;
+
 		auto& node = boneNodeTable[pmdbonedata.boneName];
 		node.boneIdx = idx;
 		node.startPos = pmdbonedata.pos;
+		node.boneType = pmdbonedata.Type;
+		node.ikParentBone = pmdbonedata.ikBoneNo;
+
+		boneNodeAddressArray[idx] = &node;
 	}
 
 	//全ての親子関係を作る

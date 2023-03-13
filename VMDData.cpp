@@ -52,7 +52,7 @@ void VMDData::SetMotionDatas()
 
 		//モーションテーブルにモーション構造体に格納
 		motionDatas[vmdMotion.boneName].emplace_back(
-			Motion(vmdMotion.frameNo, q, cp1, cp2)
+			Motion(vmdMotion.frameNo, q,vmdMotion.location, cp1, cp2)
 		);
 
 		duration = std::max<unsigned int>(duration, vmdMotion.frameNo);

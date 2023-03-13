@@ -4,24 +4,43 @@
 #include"VMDData.h"
 //ボーン情報、行列を管理、設定
 
+namespace
+{
+	//ボーン種別列挙体
+	enum class BoneType
+	{
+		Rotation,
+		RotAndMove,
+		IK,
+		Undefined,
+		IKChild,
+		RotationChild,
+		IkDestination,
+		Invisible
+	};
+}
+
 struct BoneNode
 {
 	int boneIdx;					//一意なボーンID
+	uint32_t boneType;				//ボーン種別
+	uint32_t ikParentBone;			//IK親ボーン
 	DirectX::XMFLOAT3 startPos;		//ボーン始点
-	DirectX::XMFLOAT3 endPos;		//ボーン先端点
+	//DirectX::XMFLOAT3 endPos;		//ボーン先端点
 	std::vector<BoneNode*> children;//子ノード
 };
 
 class PmdBone
 {
 private:
-	std::vector<std::string> boneNames;
-	std::map<std::string, BoneNode> boneNodeTable;
+	std::vector<std::string> boneNames;			  //ボーンIDに対応したボーン名を格納したデータ
+	std::vector<BoneNode*> boneNodeAddressArray;  //ボーンIDに対応したボーンノードを格納したデータ
+	std::map<std::string, BoneNode> boneNodeTable;//ボーン名をキーにしてボーンノードを格納した連想配列テーブル
 
 public:
 	PmdBone();
 	PmdBone(std::vector<PmdBoneData> pmdBoneDatas);
-	std::vector<DirectX::XMMATRIX> boneMatrices;
+	std::vector<DirectX::XMMATRIX> boneMatrices;	//実際の回転行列を格納したデータ
 
 	//PmdActorからボーンデータをもらう
 	//親子関係含めたボーンノードテーブルを作る
