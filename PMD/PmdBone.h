@@ -1,6 +1,6 @@
 #ifndef PMDBONE_H
 #define PMDBONE_H
-#include"PmdManager.h"
+#include"PmdData.h"
 #include"VMDData.h"
 //ボーン情報、行列を管理、設定
 

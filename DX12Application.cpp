@@ -1,6 +1,6 @@
 ﻿#include"pch.h"
 #include"DX12Application.h"
-#include"PmdManager.h"
+#include"PmdData.h"
 #include"Win32Application.h"
 
 using namespace::DirectX;

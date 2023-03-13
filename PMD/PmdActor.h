@@ -2,7 +2,7 @@
 #define PMDACTOR_H
 
 #include"pch.h"
-#include"PmdManager.h"
+#include"PmdData.h"
 #include"DX12Application.h"
 #include"PmdTexture.h"
 #include"PmdBone.h"

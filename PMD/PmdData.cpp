@@ -1,5 +1,5 @@
 #include"pch.h"
-#include"PmdManager.h"
+#include"PmdData.h"
 
 //ファイルパスからPMDモデルのデータを読み込むメソッド
 void PmdData::LoadPmdData(std::string strModelPath)
