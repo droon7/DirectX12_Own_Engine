@@ -21,15 +21,17 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 	GetTextureResource(app);
 	CreateMaterialAndTextureView(app);
 
+#ifdef _DEBUG
+	//デバッグ用
+	ShowIkBoneDebug();
+#endif 
+
 	//モデルの初期値
 	
 	SetPmdBone(0);
 	PlayAnimation();
 
-#ifdef _DEBUG
-	//デバッグ用
-	ShowIkBoneDebug();
-#endif 
+
 }
 //ここからロードとDirectX12のための処理
 void PmdActor::LoadPmdData(std::string ModelName)
@@ -472,7 +474,7 @@ void PmdActor::SetPmdBone(unsigned int frameNo)
 {
 	pmdBone.SetBoneMatrices(frameNo);
 	pmdBone.IKSolve();
-	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform + 1);
+	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform+1);
 }
 
 

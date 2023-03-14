@@ -85,6 +85,8 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 {
 	std::fill(boneMatrices.begin(), boneMatrices.end(), XMMatrixIdentity());
 
+
+
 	for (auto& bonemotion : vmdData.motionDatas)
 	{
 		//頂点のボーンデータとモーションのボーンデータが一致することを確認、なければcontinue
@@ -140,6 +142,8 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 	}
 
 	RecursiveMatrixMultiply(&boneNodeTable["センター"], XMMatrixIdentity());
+
+
 }
 
 
@@ -289,6 +293,7 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 
 void PmdBone::SolveLookAt(const PMDIK& ik)
 {
+	//間点は無いため最初のノードがルートノードとなる
 	auto rootNode = boneNodeAddressArray[ik.nodeIdx[0]];
 	auto targetNode = boneNodeAddressArray[ik.boneIdx];
 
@@ -310,11 +315,12 @@ void PmdBone::SolveLookAt(const PMDIK& ik)
 
 }
 
-//二回外積を計算し、座標軸を得てLookAt行列を返す
+//z軸がlookatに向く回転行列を作る
+//lookatと補助ベクトルで二回外積を行い、座標系を作ると正規化されたx,y,z成分が得られる。これを行列の各列に格納すると回転後座標が得られる。
 XMMATRIX PmdBone::LookAtMatrix(const XMVECTOR& lookat, XMFLOAT3& up, XMFLOAT3& right)
 {
 	//向かせたい方向
-	XMVECTOR vz = lookat;
+	XMVECTOR vz = XMVector3Normalize(lookat);
 
 	//仮のy軸ベクトル
 	XMVECTOR vy = XMVector3Normalize(XMLoadFloat3(&up));
@@ -340,8 +346,8 @@ XMMATRIX PmdBone::LookAtMatrix(const XMVECTOR& lookat, XMFLOAT3& up, XMFLOAT3& r
 	return ret;
 }
 
-//z軸を任意のベクトル(origin)に向ける行列を計算しその逆行列を計算する
-//得た逆行列とz軸を特定の方向(lookat)に向ける行列を計算し、乗算すると結果を得られる
+//z軸を任意のベクトル(origin)に向ける行列を計算しその逆行列を計算する。つまりoriginをz軸に向かせる回転行列を作る(1)
+//(1)とz軸をlookatに向かせる回転行列を掛け、originをlookatに向かせる回転行列を作る。
 XMMATRIX PmdBone::LookAtMatrix(const XMVECTOR& origin, const XMVECTOR& lookat, XMFLOAT3& up, XMFLOAT3& right)
 {
 	return XMMatrixTranspose(LookAtMatrix(origin, up, right))
