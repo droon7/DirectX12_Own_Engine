@@ -40,9 +40,9 @@ private:
 	std::map<std::string, BoneNode> boneNodeTable;//ボーン名をキーにしてボーンノードを格納した連想配列テーブル
 #endif // ! _DEBUG
 
-	VMDData vmdData;	//メンバにVMDDataクラスを持つ
-	std::vector<PMDIK> motionIKs;
-	std::vector<uint32_t> kneeIdxes;
+	VMDData vmdData;				//メンバにVMDDataクラスを持つ
+	std::vector<PMDIK> motionIKs;	//IKデータ	
+	std::vector<uint32_t> kneeIdxes;//ひざ番号データ
 
 public:
 
@@ -54,6 +54,8 @@ public:
 	//ボーンテーブル、回転行列、IK情報、モーション情報を初期化する
 	PmdBone(std::vector<PmdBoneData> pmdBoneDatas,std::vector<PMDIK> pmdIks, std::string motionPath);
 	std::vector<DirectX::XMMATRIX> boneMatrices;	//実際の回転行列を格納したデータ
+
+
 
 	//PmdActorからボーンデータをもらう
 	//親子関係含めたボーンノードテーブルを作る
@@ -81,7 +83,7 @@ public:
 	}
 
 	//IKソルバー
-	void IKSolve();
+	void IKSolve(uint32_t frameNo);
 
 	//CCD-IKによりボーン方向を解決
 	void SolveCCDIK(const PMDIK& ik);
@@ -97,6 +99,9 @@ public:
 
 	//特定のベクトルを特定の方向に向けるための行列を返す
 	DirectX::XMMATRIX LookAtMatrix(const DirectX::XMVECTOR& origin, const DirectX::XMVECTOR& lookat, DirectX::XMFLOAT3& up, DirectX::XMFLOAT3& right);
+
+	//フレーム毎のIKスイッチ確認メソッド
+	bool isOnIkInFrame(uint32_t frameNo, PMDIK& ik);
 };
 
 

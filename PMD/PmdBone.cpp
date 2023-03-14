@@ -100,13 +100,13 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 		auto motions = bonemotion.second;
 
 		//与えられたフレーム番号とモーションのフレーム番号が超えているか判定する関数オブジェクト
-		auto predicate = [frameNo](const Motion& motion) {
+		auto isMoreThanPredicate = [frameNo](const Motion& motion) {
 			return motion.frameNo <= frameNo;
 		};
 
 		//近い値のイテレーターを得る、昇順に並んでいるデータを探索するのでリバースイテレーターを使う
 		auto rit = std::find_if(
-			motions.rbegin(), motions.rend(), predicate
+			motions.rbegin(), motions.rend(), isMoreThanPredicate
 		);
 
 		//モーションデータがないならcontinue
@@ -138,6 +138,7 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 		}
 
 		//得た行列を格納。センターから再帰で伝搬させる。
+		//回転は原点で行う
 		auto& pos = node.startPos;
 		auto matrix = XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
 			* rotation
@@ -197,10 +198,16 @@ float PmdBone::GetYFromXOnBezier(float x, const XMFLOAT2& controlPoint1, const X
 	return ret;
 }
 
-void PmdBone::IKSolve()
+void PmdBone::IKSolve(uint32_t frameNo)
 {
 	for (auto& ik : motionIKs)
 	{
+		//IKスイッチチェック
+		if (isOnIkInFrame(frameNo, ik) == false)
+		{
+			continue;
+		}
+
 		auto childrenNodesCount = ik.nodeIdx.size();
 
 		//CCD-IKは重いので間点が少なければ簡単なIKで解く
@@ -463,4 +470,32 @@ XMMATRIX PmdBone::LookAtMatrix(const XMVECTOR& origin, const XMVECTOR& lookat, X
 {
 	return XMMatrixTranspose(LookAtMatrix(origin, up, right))
 			* LookAtMatrix(lookat, up, right);
+}
+
+
+// フレーム毎IKスイッチ確認
+bool PmdBone::isOnIkInFrame(uint32_t frameNo, PMDIK& ik)
+{
+	auto iterator = std::find_if(vmdData.vmdIkEnableDatas.rbegin(), vmdData.vmdIkEnableDatas.rend(),
+		[frameNo](const VMDIKEnable& ikEnable)
+		{
+			return ikEnable.frameNo <= frameNo;
+		});
+
+	//IKスイッチにあり、IKスイッチがfalseならfalseを返す
+	if (iterator != vmdData.vmdIkEnableDatas.rend())
+	{
+		auto ikEnableIt = iterator->ikEnableTable.find(boneNames[ik.boneIdx]);
+
+		if (ikEnableIt != iterator->ikEnableTable.end())
+		{
+			if (ikEnableIt->second == false)
+			{
+				return false;
+			}
+		}
+	}
+
+
+	return true;
 }

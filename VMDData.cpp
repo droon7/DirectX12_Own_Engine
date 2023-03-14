@@ -8,6 +8,7 @@ VMDData::VMDData(std::string strVMDPath)
 	SetMotionDatas();
 }
 
+
 //VMDÉfÅ[É^ì«Ç›çûÇ›
 void VMDData::LoadVMDData(std::string strVMDPath)
 {
@@ -117,3 +118,4 @@ void VMDData::SetMotionDatas()
 	}
 
 }
+
