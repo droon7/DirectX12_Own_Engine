@@ -34,6 +34,54 @@ void VMDData::LoadVMDData(std::string strVMDPath)
 
 	}
 
+	uint32_t morphCount = 0;
+	fread(&morphCount, sizeof(morphCount), 1, fp);
+	vmdMorphs.resize(morphCount);
+	fread(vmdMorphs.data(), sizeof(VMDMorph), morphCount, fp);
+
+	uint32_t cameraCount = 0;
+	fread(&cameraCount, sizeof(cameraCount), 1, fp);
+	vmdCameras.resize(cameraCount);
+	fread(vmdCameras.data(), sizeof(VMDCamera), cameraCount, fp);
+
+	uint32_t lightCount = 0;
+	fread(&lightCount, sizeof(lightCount), 1, fp);
+	vmdLights.resize(lightCount);
+	fread(vmdLights.data(), sizeof(VMDLight), lightCount, fp);
+
+	uint32_t selfShadowCount = 0;
+	fread(&selfShadowCount, sizeof(selfShadowCount), 1, fp);
+	vmdSelfShadows.resize(selfShadowCount);
+	fread(vmdSelfShadows.data(), sizeof(VMDSelfShadow), selfShadowCount, fp);
+
+	//IKスイッチ読み込み
+	uint32_t ikSwitchCount = 0;
+	fread(&ikSwitchCount, sizeof(ikSwitchCount), 1, fp);
+	vmdIkEnableDatas.resize(ikSwitchCount);
+
+	for (auto& ikEnable : vmdIkEnableDatas)
+	{
+		fread(&ikEnable.frameNo, sizeof(ikEnable.frameNo), 1, fp);
+
+		//使用しない可視フラグ1バイト
+		uint8_t visibleflag = 0;
+		fread(&visibleflag, sizeof(visibleflag), 1, fp);
+
+		//対象ボーン数読み込み
+		uint32_t ikBoneCount = 0;
+		fread(&ikBoneCount, sizeof(ikBoneCount), 1, fp);
+
+		//ボーン名とそれのオン/オフ情報読み込み
+		for (int i = 0; i < ikBoneCount; ++i)
+		{
+			char ikBoneName[20];
+			fread(ikBoneName, sizeof(ikBoneName), 1, fp);
+
+			uint8_t flg = 0;
+			fread(&flg, sizeof(flg), 1, fp);
+			ikEnable.ikEnableTable[ikBoneName] = flg;
+		}
+	}
 
 	fclose(fp);
 }
