@@ -79,7 +79,7 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 
 }
 
-//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。
+//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列+平行移動行列を決定する。
 //TODO: この関数は分割したい。
 void PmdBone::SetBoneMatrices(unsigned int frameNo)
 {
@@ -137,7 +137,7 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 			offset = XMVectorLerp(offset, XMLoadFloat3(&it->offset), t);
 		}
 
-		//得た回転行列を格納。センターから再帰で伝搬させる。
+		//得た行列を格納。センターから再帰で伝搬させる。
 		auto& pos = node.startPos;
 		auto matrix = XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
 			* rotation
@@ -236,7 +236,7 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 	auto& targetNode = boneNodeAddressArray[ik.boneIdx];
 	auto targetPos = XMVector3Transform(XMLoadFloat3(&targetNode->startPos), boneMatrices[ik.boneIdx]);
 
-	//実際にデータを格納する末端ボーンの座標格納
+	//末端ボーンの座標格納
 	auto endNode = boneNodeAddressArray[ik.targetIdx];
 	positions.emplace_back(XMLoadFloat3(&endNode->startPos));
 
@@ -253,29 +253,34 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 	edgeLens[0] = XMVector3Length(XMVectorSubtract(positions[1], positions[0])).m128_f32[0];
 	edgeLens[1] = XMVector3Length(XMVectorSubtract(positions[2], positions[1])).m128_f32[0];
 
-	//ルートボーンの座標変換
+	//ルートボーンをFKで得た現在の座標に変換
 	positions[0] = XMVector3Transform(positions[0], boneMatrices[ik.nodeIdx[1]]);
-	//先端ボーンの座標変換
+	//先端ボーンをFKで得た現在の座標に変換
 	positions[2] = XMVector3Transform(positions[2], boneMatrices[ik.boneIdx]);
 
+	//ルートから先端へのベクトルの作成
 	auto linearVec = XMVectorSubtract(positions[2], positions[0]);
+
+	//余弦定理の計算の準備
 	float A = XMVector3Length(linearVec).m128_f32[0];
 	float B = edgeLens[0];
 	float C = edgeLens[1];
 
 	linearVec = XMVector3Normalize(linearVec);
 	
-	//ルートから真ん中への角度計算
+	//ルートノードにおける角の計算
 	float theta1 = acosf((A * A + B * B - C * C) / (2 * A * B));
+	//真ん中ノードにおける角の計算
 	float theta2 = acosf((B * B + C * C - A * A) / (2 * B * C));
 
 	//回転軸の生成、真ん中のノードが膝ノードならx軸を回転軸とする
 	XMVECTOR axis;
 	if (std::find(kneeIdxes.begin(), kneeIdxes.end(), ik.nodeIdx[0]) == kneeIdxes.end())
 	{
+		//3つのノードがなす平面の法線ベクトルが回転軸
 		auto vm = XMVector3Normalize(XMVectorSubtract(positions[2], positions[0]));
 		auto vt = XMVector3Normalize(XMVectorSubtract(targetPos, positions[0]));
-		axis = XMVector3Cross(vt, vm);
+		axis = XMVector3Cross(vm, vt);
 	}
 	else
 	{
@@ -283,16 +288,20 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 		axis = XMLoadFloat3(&right);
 	}
 
+	//原点に戻してから回転させる
 	auto mat1 = XMMatrixTranslationFromVector(-positions[0]);
 	mat1 *= XMMatrixRotationAxis(axis, theta1);
 	mat1 *= XMMatrixTranslationFromVector(positions[0]);
 
+	//真ん中のノードは回転の正負が逆となるので-(pi-theta2)となる
 	auto mat2 = XMMatrixTranslationFromVector(-positions[1]);
-	mat2 *= XMMatrixRotationAxis(axis, theta2-XM_PI);
+	mat2 *= XMMatrixRotationAxis(axis, -(XM_PI-theta2));
 	mat2 *= XMMatrixTranslationFromVector(positions[1]);
 
 	boneMatrices[ik.nodeIdx[1]] *= mat1;
+	//ルートノードの結果にさらに回転行列を掛ける
 	boneMatrices[ik.nodeIdx[0]] = mat2 * boneMatrices[ik.nodeIdx[1]];
+	//末端ノードにも回転行列を伝搬
 	boneMatrices[ik.targetIdx] = boneMatrices[ik.nodeIdx[0]];
 }
 
