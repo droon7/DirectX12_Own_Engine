@@ -116,7 +116,9 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 		}
 
 		//前キーフレームと次キーフレームで補間を行う
+		//回転データ(quaternion)とロケーションデータ(offset)で行列を計算する
 		XMMATRIX rotation;
+		XMVECTOR offset = XMLoadFloat3(&rit->offset);
 		auto it = rit.base();
 
 		if (it == motions.end())
@@ -125,12 +127,14 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 		}
 		else 
 		{
-			//ベジェ曲線補間
+			//コントロールポイントからベジェ曲線を計算し、補間係数を計算
 			auto t = static_cast<float>(frameNo - rit->frameNo)
 				/ static_cast<float>(it->frameNo - rit->frameNo);
 			t = GetYFromXOnBezier(t, it->controlPoint1, it->controlPoint2, 12);
+
+			//線形補間を計算
 			rotation = XMMatrixRotationQuaternion(XMQuaternionSlerp(rit->quaternion, it->quaternion, t));
-			//rotation = XMMatrixRotationQuaternion(rit->quaternion);
+			offset = XMVectorLerp(offset, XMLoadFloat3(&it->offset), t);
 		}
 
 		//得た回転行列を格納。センターから再帰で伝搬させる。
@@ -138,7 +142,7 @@ void PmdBone::SetBoneMatrices(unsigned int frameNo)
 		auto matrix = XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
 			* rotation
 			* XMMatrixTranslation(pos.x, pos.y, pos.z);
-		boneMatrices[node.boneIdx] = matrix;
+		boneMatrices[node.boneIdx] = matrix * XMMatrixTranslationFromVector(offset);
 	}
 
 	RecursiveMatrixMultiply(&boneNodeTable["センター"], XMMatrixIdentity());
@@ -221,21 +225,22 @@ void PmdBone::SolveCCDIK(const PMDIK& ik)
 {
 }
 
+//
 void PmdBone::SolveCosineIK(const PMDIK& ik)
 {
+	//各ノードの位置、及びボーン長さを格納
 	std::vector<XMVECTOR> positions;
-
 	std::array<float, 2> edgeLens;
 
-	//ターゲット
+	//最終ターゲット位置を格納
 	auto& targetNode = boneNodeAddressArray[ik.boneIdx];
 	auto targetPos = XMVector3Transform(XMLoadFloat3(&targetNode->startPos), boneMatrices[ik.boneIdx]);
 
-	//末端ボーン
+	//実際にデータを格納する末端ボーンの座標格納
 	auto endNode = boneNodeAddressArray[ik.targetIdx];
 	positions.emplace_back(XMLoadFloat3(&endNode->startPos));
 
-	//中間及びルートボーン
+	//中間及びルートボーンの座標格納
 	for (auto& chainBoneIdx : ik.nodeIdx)
 	{
 		auto boneNode = boneNodeAddressArray[chainBoneIdx];
@@ -291,18 +296,19 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 	boneMatrices[ik.targetIdx] = boneMatrices[ik.nodeIdx[0]];
 }
 
+//IK適用前のルートからターゲットへのベクトルとIK適用後のベクトルを得る
+//それらでLookAtMatrixで適用前から適用後への回転行列を得て格納する
 void PmdBone::SolveLookAt(const PMDIK& ik)
 {
 	//間点は無いため最初のノードがルートノードとなる
 	auto rootNode = boneNodeAddressArray[ik.nodeIdx[0]];
 	auto targetNode = boneNodeAddressArray[ik.boneIdx];
-
+	
 	auto rootPos1 = XMLoadFloat3(&rootNode->startPos);
 	auto targetPos1 = XMLoadFloat3(&targetNode->startPos);
 
-	auto rootPos2 = XMVector3TransformCoord(rootPos1, boneMatrices[ik.nodeIdx[0]]);
-	auto targetPos2 = XMVector3TransformCoord(targetPos1, boneMatrices[ik.boneIdx]);
-
+	auto rootPos2 = XMVector3Transform(rootPos1, boneMatrices[ik.nodeIdx[0]]);
+	auto targetPos2 = XMVector3Transform(targetPos1, boneMatrices[ik.boneIdx]);
 	auto originVec = XMVectorSubtract(targetPos1, rootPos1);
 	auto targetVec = XMVectorSubtract(targetPos2, rootPos2);
 
