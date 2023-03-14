@@ -223,9 +223,103 @@ void PmdBone::IKSolve()
 
 void PmdBone::SolveCCDIK(const PMDIK& ik)
 {
+	//最終ターゲットの位置を格納
+	auto targetBoneNode = boneNodeAddressArray[ik.boneIdx];
+	auto targetOriginPos = XMLoadFloat3(&targetBoneNode->startPos);
+
+	auto parentMat = boneMatrices[boneNodeAddressArray[ik.boneIdx]->ikParentBone];
+	//一時的にIKの親の回転行列を無視するため逆行列を計算し適用
+	XMVECTOR determinant;
+	auto inverseParentMat = XMMatrixInverse(&determinant, parentMat);
+	auto targetNextPos = XMVector3Transform(targetOriginPos, boneMatrices[ik.boneIdx] * inverseParentMat);
+
+	//末端ノード位置
+	auto endPos = XMLoadFloat3(&boneNodeAddressArray[ik.targetIdx]->startPos);
+
+	//CCD-IK用の各ノードの位置、回転行列を格納
+	std::vector<XMVECTOR> positions;
+	std::vector<XMMATRIX> matrices;
+	matrices.resize(ik.nodeIdx.size());
+	for (auto& nodeId : ik.nodeIdx)
+	{
+		positions.emplace_back(XMLoadFloat3(&boneNodeAddressArray[nodeId]->startPos));
+	}
+	fill(matrices.begin(), matrices.end(), XMMatrixIdentity());
+
+	//許容誤差
+	float epsilon = 0.005f;
+
+	//CCD-IK本体
+	for (int c = 0; c < ik.iterations; ++c)
+	{
+		if (XMVector3Length(XMVectorSubtract(endPos, targetNextPos)).m128_f32[0] <= epsilon)
+		{
+			break;
+		}
+
+		//角度制限を考慮し、ノードをさかのぼりボーンを曲げていく
+		for (int nodeId = 0; nodeId < positions.size(); ++nodeId)
+		{
+			const auto& pos = positions[nodeId];
+
+			//現在のノードと末端ノード、目的位置へのベクトルをとる
+			auto vectorToEnd = XMVectorSubtract(endPos, pos);
+			auto vectorToTarget = XMVectorSubtract(targetNextPos, pos);
+			vectorToEnd = XMVector3Normalize(vectorToEnd);
+			vectorToTarget = XMVector3Normalize(vectorToTarget);
+
+			//上のベクトルが同じならできることは無いため次のノードヘ
+			if (XMVector3Length(XMVectorSubtract(vectorToEnd, vectorToTarget)).m128_f32[0] <= epsilon)
+			{
+				continue;
+			}
+
+			//座標軸とベクトル間角度を得る
+			auto cross = XMVector3Normalize(XMVector3Cross(vectorToEnd, vectorToTarget));
+			float angle = XMVector2AngleBetweenVectors(vectorToEnd, vectorToTarget).m128_f32[0];
+
+			//回転角制限を考慮
+			angle = min(angle, ik.limit);
+			XMMATRIX rotation = XMMatrixRotationAxis(cross, angle);
+
+			//pos中心に回転?
+			auto matrix = XMMatrixTranslationFromVector(-pos)
+				* rotation
+				* XMMatrixTranslationFromVector(pos);
+
+			//行列を掛け続け最終的な回転行列を作る
+			matrices[nodeId] *= matrix;
+
+			//自分より先端側にある点を全て今回計算した行列で回転する。
+			for (auto id = nodeId; id >= 0; --id)
+			{
+				positions[id] = XMVector3Transform(positions[id], matrix);
+			}
+			endPos = XMVector3Transform(endPos, matrix);
+
+
+			//許容誤差以内なら終了
+			if (XMVector3Length(XMVectorSubtract(endPos, targetNextPos)).m128_f32[0] <= epsilon)
+			{
+				break;
+			}
+		}
+	}
+
+	//CCD-IK終了後にボーンクラスの回転行列に反映
+	int id = 0;
+	for (auto& nodeId : ik.nodeIdx)
+	{
+		boneMatrices[nodeId] = matrices[id];
+		id++;
+	}
+
+	//無視した親の行列を戻し再計算
+	auto rootNode = boneNodeAddressArray[ik.nodeIdx.back()];
+	RecursiveMatrixMultiply(rootNode, parentMat);
 }
 
-//
+//余弦定理によるIK
 void PmdBone::SolveCosineIK(const PMDIK& ik)
 {
 	//各ノードの位置、及びボーン長さを格納
@@ -278,6 +372,7 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 	if (std::find(kneeIdxes.begin(), kneeIdxes.end(), ik.nodeIdx[0]) == kneeIdxes.end())
 	{
 		//3つのノードがなす平面の法線ベクトルが回転軸
+		//XXX : 3つのノードが直線上に並んでいるとクラッシュ
 		auto vm = XMVector3Normalize(XMVectorSubtract(positions[2], positions[0]));
 		auto vt = XMVector3Normalize(XMVectorSubtract(targetPos, positions[0]));
 		axis = XMVector3Cross(vm, vt);
@@ -305,8 +400,8 @@ void PmdBone::SolveCosineIK(const PMDIK& ik)
 	boneMatrices[ik.targetIdx] = boneMatrices[ik.nodeIdx[0]];
 }
 
-//IK適用前のルートからターゲットへのベクトルとIK適用後のベクトルを得る
-//それらでLookAtMatrixで適用前から適用後への回転行列を得て格納する
+//IK適用前のルートからターゲットへのベクトルとIK適用後のルートからターゲットへのベクトルを得る
+//それらでLookAtMatrixで適用前ベクトルから適用後ベクトルへの回転行列を得て格納する
 void PmdBone::SolveLookAt(const PMDIK& ik)
 {
 	//間点は無いため最初のノードがルートノードとなる
@@ -318,6 +413,7 @@ void PmdBone::SolveLookAt(const PMDIK& ik)
 
 	auto rootPos2 = XMVector3Transform(rootPos1, boneMatrices[ik.nodeIdx[0]]);
 	auto targetPos2 = XMVector3Transform(targetPos1, boneMatrices[ik.boneIdx]);
+
 	auto originVec = XMVectorSubtract(targetPos1, rootPos1);
 	auto targetVec = XMVectorSubtract(targetPos2, rootPos2);
 
