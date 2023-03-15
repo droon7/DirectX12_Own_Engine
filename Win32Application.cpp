@@ -83,6 +83,7 @@ void Win32Application::RunDX12()
 {
 	//DirectX12のパイプラインの初期化、リソースのロード
 	pDX12->OnInit(m_hwnd);
+	otherRenderTarget = OtherRenderTarget(pDX12);
 
 	pDX12->LoadPipeline();
 
@@ -110,6 +111,8 @@ void Win32Application::RunDX12()
 			DispatchMessage(&msg);
 		}
 
+
+
 		//DirectX12の処理
 		pDX12->BeginDraw();
 
@@ -128,6 +131,8 @@ void Win32Application::RunDX12()
 			pmd->DrawPmd(pDX12);
 		}
 
+		otherRenderTarget.DrawOtherRenderTarget(pDX12);
+
 		//DirectXコマンド実行
 		pDX12->EndDraw();
 
@@ -136,6 +141,8 @@ void Win32Application::RunDX12()
 		{
 			pmd->UpdatePmd();
 		}
+
+
 
 
 		//アプリケーションが終わるときmessageがWM_QUITになる

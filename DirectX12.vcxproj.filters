@@ -45,11 +45,14 @@
     <ClCompile Include="PMD\PmdTexture.cpp">
       <Filter>PMD</Filter>
     </ClCompile>
-    <ClCompile Include="VMDData.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="PMD\PmdData.cpp">
       <Filter>PMD</Filter>
+    </ClCompile>
+    <ClCompile Include="VMDData.cpp">
+      <Filter>PMD</Filter>
+    </ClCompile>
+    <ClCompile Include="OtherRenderTarget.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,11 +88,14 @@
     <ClInclude Include="PMD\PmdTexture.h">
       <Filter>PMD</Filter>
     </ClInclude>
-    <ClInclude Include="VMDData.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="PMD\PmdData.h">
       <Filter>PMD</Filter>
+    </ClInclude>
+    <ClInclude Include="VMDData.h">
+      <Filter>PMD</Filter>
+    </ClInclude>
+    <ClInclude Include="OtherRenderTarget.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

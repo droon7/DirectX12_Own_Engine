@@ -3,6 +3,7 @@
 
 #include"pch.h"
 #include"PmdData.h"
+#include"OtherRenderTarget.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -21,9 +22,11 @@ struct SceneMatrix
 	DirectX::XMFLOAT3 eye;
 };
 
+class OtherRenderTarget;
 //DirectX12の全体の設定をするクラス。
 class DX12Application
 {
+	friend OtherRenderTarget;
 private:
 
 	//シングルトンクラスにするためコンストラクタをprivate
@@ -34,6 +37,7 @@ private:
 	//	debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL);
 	//	debugDevice->Release();
 	//};
+	// 
 	//コピーコンストラクタと代入演算子を禁止
 	DX12Application(const DX12Application&) = delete;
 	void operator=(const DX12Application&) = delete;
@@ -60,6 +64,8 @@ private:
 	ComPtr<ID3D12Resource> depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeaps = nullptr;
 
+
+
 	//行列アセット
 	DirectX::XMMATRIX viewMat;
 	DirectX::XMMATRIX projMat;
@@ -69,7 +75,6 @@ private:
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;
 
-	void PopulateCommandList();
 	HRESULT InitializeDXGIDevice();
 	HRESULT InitializeCommands();
 	HRESULT CreateSwapChain(const HWND& hwnd);
@@ -88,6 +93,8 @@ public:
 	ComPtr<ID3D12Fence> _fence = nullptr;
 	UINT64 _fenceVal = 0;
 	HANDLE _fenceevent;
+
+
 
 	void OnInit(const HWND& hwnd);
 	//void OnUpdate();

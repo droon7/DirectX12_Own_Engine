@@ -1,6 +1,7 @@
 #ifndef VMDDATA_H
 #define VMDDATA_H
 //モーションデータを管理する
+//VMDのデータをロードするのが現在の役割
 
 //VMD生データ
 struct VMDMotionData

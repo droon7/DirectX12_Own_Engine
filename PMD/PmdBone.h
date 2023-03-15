@@ -67,6 +67,7 @@ public:
 	//行列初期化
 	void InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas);
 
+	//フォワードキネマティクスの実装
 	//フレームを見てキーフレームを発見、前キーフレームと補間し回転行列を決定する。毎フレーム呼び出す
 	void SetBoneMatrices(unsigned int frameNo);
 

@@ -45,6 +45,7 @@ void DX12Application::OnInit(const HWND& hwnd)
 		return;
 	}
 
+	
 }
 
 //パイプラインに必要なオブジェクトの生成、初期化を行う
@@ -195,6 +196,8 @@ HRESULT DX12Application::CreateFinalRenderTargets()
 		_dev->CreateRenderTargetView(_backBuffers[idx], &rtvDesc, handle);       //バッファの数生成する
 		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);  //ポインタをレンダービューの大きさ分ずらす
 	}
+
+	auto test = _backBuffers[0]->GetDesc();
 
 	//フェンスの生成
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.ReleaseAndGetAddressOf()));

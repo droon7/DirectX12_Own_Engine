@@ -13,6 +13,7 @@ private:
 	UINT mheight;
 
 	DX12Application* pDX12;
+	OtherRenderTarget otherRenderTarget;
 	std::shared_ptr<PmdRenderer> pmdRenderer;
 	std::vector<std::shared_ptr<PmdActor>> pmdActors;
 

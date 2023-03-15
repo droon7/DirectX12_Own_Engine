@@ -171,6 +171,7 @@
   <ItemGroup>
     <ClCompile Include="DX12Application.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="OtherRenderTarget.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
@@ -226,6 +227,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DX12Application.h" />
+    <ClInclude Include="OtherRenderTarget.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PMD\PmdActor.h" />
     <ClInclude Include="PMD\PmdBone.h" />

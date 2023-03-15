@@ -79,6 +79,7 @@ void PmdBone::InitBoneMatrices(std::vector<PmdBoneData> pmdBoneDatas)
 
 }
 
+//フォワードキネマティクスの実装部分
 //フレームを見てキーフレームを発見、前キーフレームと補間し回転行列+平行移動行列を決定する。
 //TODO: この関数は分割したい。
 void PmdBone::SetBoneMatrices(unsigned int frameNo)
