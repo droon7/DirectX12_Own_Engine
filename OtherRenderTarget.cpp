@@ -6,6 +6,7 @@ OtherRenderTarget::OtherRenderTarget(DX12Application* pdx12)
 	CreateRTVAndSRV(pdx12);
 }
 
+
 //RTV、RTVヒープ、SRVヒープを作る
 //
 void OtherRenderTarget::CreateRTVAndSRV(DX12Application* pdx12)
@@ -72,6 +73,35 @@ void OtherRenderTarget::CreateRTVAndSRV(DX12Application* pdx12)
 		&srvDesc,
 		planeSRVHeap->GetCPUDescriptorHandleForHeapStart()
 	);
+}
+
+//板ポリバッファー、ビュー作成
+void OtherRenderTarget::CreatePlanePolygon(DX12Application* pdx12)
+{
+	planeVertex pv[4] = { {{-1,-1,0.1}, {0,1}},
+						  {{-1, 1,0.1}, {0,0}},
+						  {{ 1,-1,0.1}, {1,1}},
+						  {{ 1 ,1,0.1}, {1,0}}  };
+
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(pv));
+
+	auto result = pdx12->_dev->CreateCommittedResource(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(planePolygonVertexBuffer.ReleaseAndGetAddressOf())
+	);
+
+	planePolygonVertexView.BufferLocation = planePolygonVertexBuffer->GetGPUVirtualAddress();
+	planePolygonVertexView.SizeInBytes = sizeof(pv);
+	planePolygonVertexView.StrideInBytes = sizeof(planeVertex);
+
+	planePolygonVertexBuffer->Map(0, nullptr, (void**)&mapPlaneVertex);
+	std::copy(std::begin(pv), std::end(pv), mapPlaneVertex);
+	planePolygonVertexBuffer->Unmap(0, nullptr);
 }
 
 //planeResourceを描画

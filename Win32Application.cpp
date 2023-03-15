@@ -130,7 +130,7 @@ void Win32Application::RunDX12()
 		{
 			pmd->DrawPmd(pDX12);
 		}
-
+		otherRenderTarget.CreatePlanePolygon(pDX12);
 		otherRenderTarget.DrawOtherRenderTarget(pDX12);
 
 		//DirectXコマンド実行
@@ -141,7 +141,6 @@ void Win32Application::RunDX12()
 		{
 			pmd->UpdatePmd();
 		}
-
 
 
 
