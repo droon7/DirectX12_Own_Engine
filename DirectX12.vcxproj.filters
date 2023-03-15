@@ -108,18 +108,6 @@
     <None Include="BasicShaderHeader.hlsli">
       <Filter>リソース ファイル</Filter>
     </None>
-    <None Include="motion\motion.vmd">
-      <Filter>リソース ファイル</Filter>
-    </None>
-    <None Include="motion\pose.vmd">
-      <Filter>リソース ファイル</Filter>
-    </None>
-    <None Include="motion\swing.vmd">
-      <Filter>リソース ファイル</Filter>
-    </None>
-    <None Include="motion\swing2.vmd">
-      <Filter>リソース ファイル</Filter>
-    </None>
     <None Include="planeHeader.hlsli">
       <Filter>リソース ファイル</Filter>
     </None>

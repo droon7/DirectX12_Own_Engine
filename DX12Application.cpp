@@ -315,7 +315,7 @@ HRESULT DX12Application::CreateSceneView()
 	projMat = XMMatrixPerspectiveFovLH(
 		XM_PIDIV4,
 		static_cast<float>(window_width) / static_cast<float>(window_height),
-		1.0f,
+		0.05f,
 		100.0f
 	);
 

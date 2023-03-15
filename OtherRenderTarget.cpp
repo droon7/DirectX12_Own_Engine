@@ -249,6 +249,14 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 		&dsvHead
 	);
 
+	pdx12->_cmdList->SetGraphicsRootSignature(planeRootsignature.Get());
+	pdx12->_cmdList->SetPipelineState(planePipelinestate.Get());
+	pdx12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	pdx12->_cmdList->IASetVertexBuffers(0, 1, &planePolygonVertexView);
+	pdx12->_cmdList->DrawInstanced(4,1,0,0);
+
+
+
 	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
 		planeResource.Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
