@@ -18,6 +18,8 @@ public:
 	explicit PmdRenderer(DX12Application* app);
 	ComPtr<ID3D12RootSignature> GetRootsignature();
 	ComPtr<ID3D12PipelineState> GetPipelinestate();
+	
+	void EndDrawPmd(DX12Application* pdx12);
 };
 
 

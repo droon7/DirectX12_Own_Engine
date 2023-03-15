@@ -87,7 +87,7 @@ void Win32Application::RunDX12()
 	pDX12->LoadPipeline();
 
 
-	otherRenderTarget = OtherRenderTarget(pDX12);
+	otherRenderTarget.reset(new OtherRenderTarget(pDX12));
 	pmdRenderer.reset(new PmdRenderer(pDX12));
 	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd","motion/swing.vmd",0);
 	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd", "motion/squat2.vmd",0);
@@ -128,11 +128,12 @@ void Win32Application::RunDX12()
 
 		for (auto& pmd : pmdActors)
 		{
-			//pmd->DrawPmd(pDX12);
+			pmd->DrawPmd(pDX12);
 		}
+		pmdRenderer->EndDrawPmd(pDX12);
 
 		//マルチレンダーターゲットによる描画
-		otherRenderTarget.DrawOtherRenderTarget(pDX12);
+		otherRenderTarget->DrawOtherRenderTarget(pDX12);
 
 		//DirectXコマンド実行
 		pDX12->EndDraw();

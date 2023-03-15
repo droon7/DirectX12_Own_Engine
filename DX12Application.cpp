@@ -193,7 +193,7 @@ HRESULT DX12Application::CreateFinalRenderTargets()
 
 	for (int idx = 0; idx < static_cast<int>(swcDesc.BufferCount); ++idx) {
 		result = _swapchain->GetBuffer(idx, IID_PPV_ARGS(&_backBuffers[idx]));  //_backBufferにスワップチェーン上のバックバッファのメモリを入れる
-		_dev->CreateRenderTargetView(_backBuffers[idx], &rtvDesc, handle);       //バッファの数生成する
+		_dev->CreateRenderTargetView(_backBuffers[idx].Get(), &rtvDesc, handle);       //バッファの数生成する
 		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);  //ポインタをレンダービューの大きさ分ずらす
 	}
 
@@ -374,7 +374,7 @@ void DX12Application::BeginDraw()
 	//リソースバリアをバックバッファーリソースに指定する
 	//ヘルパー構造体を使用
 	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-		_backBuffers[bbIdx],
+		_backBuffers[bbIdx].Get(),
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	);
@@ -415,14 +415,7 @@ void DX12Application::SetScene()
 //描画終了メソッド、バリア設定、コマンドリスト実行、フェンスによる同期、コマンドのリセット、画面のスワップによるディスプレイへの描画
 void DX12Application::EndDraw()
 {
-	//リソースバリアの状態の設定
-	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
-	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-		_backBuffers[bbIdx],
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT
-	);
-	_cmdList->ResourceBarrier(1, &BarrierDesc);
+
 
 	_cmdList->Close();
 

@@ -17,14 +17,11 @@ OtherRenderTarget::OtherRenderTarget(DX12Application* pdx12)
 void OtherRenderTarget::CreateRTVAndSRV(DX12Application* pdx12)
 {
 	//RTVƒŠƒ\[ƒXì¬
-	auto rtvResourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, pdx12->window_width, pdx12->window_height);
-	rtvResourceDesc.Alignment = 65536;
-	rtvResourceDesc.MipLevels = 1;
-	rtvResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	auto rtvResourceDesc = pdx12->_backBuffers[0]->GetDesc();
 
 	D3D12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-	float clsColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float clsColor[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
 	D3D12_CLEAR_VALUE clearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsColor);
 
 	auto result = pdx12->_dev->CreateCommittedResource(
@@ -166,7 +163,7 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
 			0
-		},
+		}
 	};
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsDesc = {};
@@ -233,7 +230,6 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 //planeResource‚ğ•`‰æ
 void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 {
-	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
 
 	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
 		planeResource.Get(),
@@ -243,11 +239,13 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 
 	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 
+	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
 	auto dsvHead = pdx12->dsvHeaps->GetCPUDescriptorHandleForHeapStart();
 	pdx12->_cmdList->OMSetRenderTargets(
-		1, &rtvHeapPointer, false,
-		&dsvHead
-	);
+		1, &rtvHeapPointer, false,&dsvHead);
+	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+	pdx12->_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
+	pdx12->_cmdList->ClearDepthStencilView(dsvHead,D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	pdx12->_cmdList->SetGraphicsRootSignature(planeRootsignature.Get());
 	pdx12->_cmdList->SetPipelineState(planePipelinestate.Get());

@@ -35,7 +35,6 @@ private:
 	void CreateRTVAndSRV(DX12Application* pdx12);
 
 public:
-	OtherRenderTarget() {}
 	OtherRenderTarget(DX12Application* pdx12);
 
 	//”Âƒ|ƒŠƒrƒ…[‚ğì‚é

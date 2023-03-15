@@ -23,10 +23,12 @@ struct SceneMatrix
 };
 
 class OtherRenderTarget;
+class PmdRenderer;
 //DirectX12の全体の設定をするクラス。
 class DX12Application
 {
 	friend OtherRenderTarget;
+	friend PmdRenderer;
 private:
 
 	//シングルトンクラスにするためコンストラクタをprivate
@@ -55,7 +57,7 @@ private:
 	D3D12_VIEWPORT viewport = {};
 	ComPtr<IDXGIFactory6> _dxgiFactory ;
 	ComPtr<ID3D12DescriptorHeap> rtvHeaps = nullptr;
-	std::vector<ID3D12Resource*> _backBuffers;
+	std::vector<ComPtr<ID3D12Resource>> _backBuffers;
 
 	//アセットの宣言
 	ComPtr<ID3D12DescriptorHeap> matrixCsvHeaps = nullptr;
