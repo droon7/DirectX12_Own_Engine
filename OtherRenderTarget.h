@@ -20,13 +20,17 @@ class OtherRenderTarget
 {
 private:
 	ComPtr<ID3D12Resource> planeResource; //板ポリゴン用リソース
+	ComPtr<ID3D12DescriptorHeap> planeRTVHeap; //板ポリ用RTV
+	ComPtr<ID3D12DescriptorHeap> planeSRVHeap; //板ポリ用SRV
 
-	ComPtr<ID3D12DescriptorHeap> planeRTVHeap;
-	ComPtr<ID3D12DescriptorHeap> planeSRVHeap;
-
-	ComPtr<ID3D12Resource> planePolygonVertexBuffer = {}; //
-	D3D12_VERTEX_BUFFER_VIEW planePolygonVertexView = {};
+	ComPtr<ID3D12Resource> planePolygonVertexBuffer = {}; //板ポリバッファ
+	D3D12_VERTEX_BUFFER_VIEW planePolygonVertexView = {}; //板ポリビュー
 	planeVertex* mapPlaneVertex;
+
+	ComPtr<ID3D12RootSignature> planeRootsignature = nullptr; //
+	ComPtr<ID3D12PipelineState> planePipelinestate = nullptr; //
+
+
 
 	void CreateRTVAndSRV(DX12Application* pdx12);
 
@@ -36,6 +40,10 @@ public:
 
 	//板ポリビューを作る
 	void CreatePlanePolygon(DX12Application* pdx12);
+	//ルートシグネチャを作る
+	void CreateRootsignature(DX12Application* pdx12);
+	//パイプラインステートを作る
+	void CreateGraphicsPipeline(DX12Application* pdx12);
 
 	void DrawOtherRenderTarget(DX12Application* pdx12);
 };
