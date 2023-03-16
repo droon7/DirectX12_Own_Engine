@@ -43,29 +43,53 @@ float4 ps(Output input) : SV_TARGET
 
 	//return ret;
 
-	//近傍テーブルの利用による単純なエンボス加工, 色がつくと不自然な色となるのでグレースケール
+	////近傍テーブルの利用による単純なエンボス加工, 色がつくと不自然な色となるのでグレースケール
+	//float w, h, levels;
+	//tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
+
+	//float dx = 1.0f / w; //1ピクセル分の幅
+	//float dy = 1.0f / h;
+
+	//int gap = 1;
+	//float4 ret = float4(0, 0, 0, 0);
+
+	//ret += tex.Sample(smp, input.uv + float2(-gap * dx, -gap * dy )) * 2;
+	//ret += tex.Sample(smp, input.uv + float2(0, -gap * dy));
+	//ret += tex.Sample(smp, input.uv + float2(gap * dx, -gap * dy)) * 0;
+
+	//ret += tex.Sample(smp, input.uv + float2(-gap * dx, 0));
+	//ret += tex.Sample(smp, input.uv + float2(0, 0));
+	//ret += tex.Sample(smp, input.uv + float2(gap * dx, 0)) * -1;
+
+	//ret += tex.Sample(smp, input.uv + float2(-gap * dx, gap * dy)) * 0;
+	//ret += tex.Sample(smp, input.uv + float2(0, gap * dy)) * -1;
+	//ret += tex.Sample(smp, input.uv + float2(gap * dy, gap * dy)) * -2;
+
+	//float Y = dot(ret.rgb, float3(0.299, 0.587, 0.114));
+	//ret =  float4(Y, Y, Y, 1);
+	//return ret;
+
+	//シャープネスの強調
 	float w, h, levels;
 	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
 
 	float dx = 1.0f / w; //1ピクセル分の幅
 	float dy = 1.0f / h;
 
-	int gap = 1;
+	int gap = -1;
 	float4 ret = float4(0, 0, 0, 0);
 
-	ret += tex.Sample(smp, input.uv + float2(-gap * dx, -gap * dy )) * 2;
-	ret += tex.Sample(smp, input.uv + float2(0, -gap * dy));
+	ret += tex.Sample(smp, input.uv + float2(-gap * dx, -gap * dy )) * 0;
+	ret += tex.Sample(smp, input.uv + float2(0, -gap * dy)) * -1 ;
 	ret += tex.Sample(smp, input.uv + float2(gap * dx, -gap * dy)) * 0;
 
-	ret += tex.Sample(smp, input.uv + float2(-gap * dx, 0));
-	ret += tex.Sample(smp, input.uv + float2(0, 0));
+	ret += tex.Sample(smp, input.uv + float2(-gap * dx, 0)) * -1;
+	ret += tex.Sample(smp, input.uv + float2(0, 0)) * 5;
 	ret += tex.Sample(smp, input.uv + float2(gap * dx, 0)) * -1;
 
 	ret += tex.Sample(smp, input.uv + float2(-gap * dx, gap * dy)) * 0;
 	ret += tex.Sample(smp, input.uv + float2(0, gap * dy)) * -1;
-	ret += tex.Sample(smp, input.uv + float2(gap * dy, gap * dy)) * -2;
+	ret += tex.Sample(smp, input.uv + float2(gap * dy, gap * dy)) * 0;
 
-	float Y = dot(ret.rgb, float3(0.299, 0.587, 0.114));
-	ret =  float4(Y, Y, Y, 1);
 	return ret;
 }
