@@ -45,6 +45,10 @@ public:
 	void CreateGraphicsPipeline(DX12Application* pdx12);
 
 	void DrawOtherRenderTarget(DX12Application* pdx12);
+
+	void PreDrawOtherRenderTargets(DX12Application* pdx12);
+
+	void PostDrawOtherRenderTargets(DX12Application* pdx12);
 };
 
 

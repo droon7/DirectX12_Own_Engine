@@ -21,7 +21,7 @@ void OtherRenderTarget::CreateRTVAndSRV(DX12Application* pdx12)
 
 	D3D12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-	float clsColor[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
+	float clsColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	D3D12_CLEAR_VALUE clearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsColor);
 
 	auto result = pdx12->_dev->CreateCommittedResource(
@@ -97,13 +97,14 @@ void OtherRenderTarget::CreatePlanePolygon(DX12Application* pdx12)
 		IID_PPV_ARGS(planePolygonVertexBuffer.ReleaseAndGetAddressOf())
 	);
 
+	planePolygonVertexBuffer->Map(0, nullptr, (void**)&mapPlaneVertex);
+	std::copy(std::begin(pv), std::end(pv), mapPlaneVertex);
+	planePolygonVertexBuffer->Unmap(0, nullptr);
+
 	planePolygonVertexView.BufferLocation = planePolygonVertexBuffer->GetGPUVirtualAddress();
 	planePolygonVertexView.SizeInBytes = sizeof(pv);
 	planePolygonVertexView.StrideInBytes = sizeof(planeVertex);
 
-	planePolygonVertexBuffer->Map(0, nullptr, (void**)&mapPlaneVertex);
-	std::copy(std::begin(pv), std::end(pv), mapPlaneVertex);
-	planePolygonVertexBuffer->Unmap(0, nullptr);
 }
 
 void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
@@ -205,6 +206,8 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 
 	gpsDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	gpsDesc.DepthStencilState.DepthEnable = false;
+	gpsDesc.DepthStencilState.StencilEnable = false;
 	gpsDesc.NumRenderTargets = 1;
 	gpsDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	gpsDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -231,21 +234,12 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 {
 
-	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-		planeResource.Get(),
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		D3D12_RESOURCE_STATE_RENDER_TARGET
-	);
 
-	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 
-	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
-	auto dsvHead = pdx12->dsvHeaps->GetCPUDescriptorHandleForHeapStart();
-	pdx12->_cmdList->OMSetRenderTargets(
-		1, &rtvHeapPointer, false,&dsvHead);
-	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	pdx12->_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
-	pdx12->_cmdList->ClearDepthStencilView(dsvHead,D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+
+
+
 
 	pdx12->_cmdList->SetGraphicsRootSignature(planeRootsignature.Get());
 	pdx12->_cmdList->SetPipelineState(planePipelinestate.Get());
@@ -255,7 +249,36 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 
 
 
-	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+
+}
+
+void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
+{
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		planeResource.Get(),
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
+	auto dsvHead = pdx12->dsvHeaps->GetCPUDescriptorHandleForHeapStart();
+	pdx12->_cmdList->OMSetRenderTargets(
+		1, &rtvHeapPointer, false, &dsvHead);
+	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
+	pdx12->_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
+	pdx12->_cmdList->ClearDepthStencilView(dsvHead, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, pdx12->window_width, pdx12->window_height);
+	pdx12->_cmdList->RSSetViewports(1, &vp);//ビューポート
+
+	CD3DX12_RECT rc(0, 0, pdx12->window_width, pdx12->window_height);
+	pdx12->_cmdList->RSSetScissorRects(1, &rc);//シザー(切り抜き)矩形
+}
+
+void OtherRenderTarget::PostDrawOtherRenderTargets(DX12Application* pdx12)
+{
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
 		planeResource.Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE

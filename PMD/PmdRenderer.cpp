@@ -131,6 +131,16 @@ HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 	gpipeline.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	//ブレンドステートの設定
 	gpipeline.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+
+
+	gpipeline.BlendState.RenderTarget[0].BlendEnable = true;
+	gpipeline.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	gpipeline.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	gpipeline.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	gpipeline.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	gpipeline.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	gpipeline.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+
 	//ラスタライザーの設定
 	gpipeline.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	gpipeline.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;

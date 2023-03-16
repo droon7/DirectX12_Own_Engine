@@ -197,7 +197,6 @@ HRESULT DX12Application::CreateFinalRenderTargets()
 		handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);  //ポインタをレンダービューの大きさ分ずらす
 	}
 
-	auto test = _backBuffers[0]->GetDesc();
 
 	//フェンスの生成
 	result = _dev->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(_fence.ReleaseAndGetAddressOf()));
@@ -387,7 +386,7 @@ void DX12Application::BeginDraw()
 	rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	//画面カラーをクリア
-	float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float clearColor[] = { 0.3f, 0.4f, 0.5f, 1.0f };
 	_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
 
 

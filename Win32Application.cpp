@@ -112,9 +112,11 @@ void Win32Application::RunDX12()
 		}
 
 
+		otherRenderTarget->DrawOtherRenderTarget(pDX12);
 
 		//DirectX12の処理
-		pDX12->BeginDraw();
+
+		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
 
 		//PMD用の描画パイプラインに合わせる
 		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
@@ -130,11 +132,16 @@ void Win32Application::RunDX12()
 		{
 			pmd->DrawPmd(pDX12);
 		}
-		pmdRenderer->EndDrawPmd(pDX12);
+		otherRenderTarget->PostDrawOtherRenderTargets(pDX12);
+		
+
 
 		//マルチレンダーターゲットによる描画
+		pDX12->BeginDraw();
+
 		otherRenderTarget->DrawOtherRenderTarget(pDX12);
 
+		pmdRenderer->EndDrawPmd(pDX12);
 		//DirectXコマンド実行
 		pDX12->EndDraw();
 
