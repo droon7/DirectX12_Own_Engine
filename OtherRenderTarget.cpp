@@ -389,9 +389,10 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 
 	pdx12->_cmdList->SetDescriptorHeaps(1, planeSRVHeap.GetAddressOf());
 	auto handle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
 
-	handle.ptr += 2*pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, handle);
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
@@ -464,16 +465,16 @@ void OtherRenderTarget::DrawOtherRenderTargetsFull(DX12Application* pdx12)
 	
 	//•`‰æŠÖŒW–½—ß
 	pdx12->_cmdList->SetGraphicsRootSignature(planeRootsignature.Get());
-	pdx12->_cmdList->SetPipelineState(planePipelinestate.Get());
+	pdx12->_cmdList->SetPipelineState(planePipelinestate2.Get());
 	pdx12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	pdx12->_cmdList->IASetVertexBuffers(0, 1, &planePolygonVertexView);
 
 	pdx12->_cmdList->SetDescriptorHeaps(1, planeSRVHeap.GetAddressOf());
 	auto handle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
 
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	handle.ptr += 2*pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, handle);
 
 	pdx12->_cmdList->DrawInstanced(4, 1, 0, 0);
