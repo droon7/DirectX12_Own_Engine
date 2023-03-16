@@ -8,6 +8,9 @@ float4 ps(Output input) : SV_TARGET
 	//float Y = dot(color.rgb, float3(0.299, 0.587, 0.114));
 	//return float4(Y, Y, Y, 1);
 
-	//F‚Ì”½“]
-	return float4(1.0f - color.rgb, color.a);
+	////F‚Ì”½“]
+	//return float4(1.0f - color.rgb, color.a);
+
+	//F‚Ì4ŠK’²‰» 
+	return float4(color.rgb - fmod(color.rgb , 0.25f), color.a);
 }
