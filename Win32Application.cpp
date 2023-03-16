@@ -112,36 +112,35 @@ void Win32Application::RunDX12()
 		}
 
 
-		otherRenderTarget->DrawOtherRenderTarget(pDX12);
+		//以下DirectX12の処理
 
-		//DirectX12の処理
-
+		//まずPMDの描画をする
 		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
-
 		//PMD用の描画パイプラインに合わせる
 		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
 		////ルートシグネチャもPMD用に合わせる
 		pDX12->_cmdList->SetGraphicsRootSignature(pmdRenderer->GetRootsignature().Get());
 		pDX12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 		//シーン行列設定
 		pDX12->SetScene();
 		//PMDモデル描画
-
 		for (auto& pmd : pmdActors)
 		{
 			pmd->DrawPmd(pDX12);
 		}
+		pmdRenderer->EndDrawPmd(pDX12);
 		otherRenderTarget->PostDrawOtherRenderTargets(pDX12);
-		
+			
+		//ここまでPMDの描画
 
 
 		//マルチレンダーターゲットによる描画
-		pDX12->BeginDraw();
+		pDX12->SetBackBufferToRTV();
 
 		otherRenderTarget->DrawOtherRenderTarget(pDX12);
 
-		pmdRenderer->EndDrawPmd(pDX12);
+		pDX12->EndBackBufferDraw();
+
 		//DirectXコマンド実行
 		pDX12->EndDraw();
 

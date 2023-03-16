@@ -31,23 +31,24 @@ private:
 	ComPtr<ID3D12PipelineState> planePipelinestate = nullptr; //
 
 
-
+	//別のRTV、ポストエフェクト用SRVの作成
 	void CreateRTVAndSRV(DX12Application* pdx12);
-
+	//板ポリビューを作る
+	void CreatePlanePolygon(DX12Application* pdx12);
+	//ポストエフェクト用ルートシグネチャ作成
+	void CreateRootsignature(DX12Application* pdx12);
+	//ポストエフェクト用PSO作成
+	void CreateGraphicsPipeline(DX12Application* pdx12);
 public:
 	OtherRenderTarget(DX12Application* pdx12);
 
-	//板ポリビューを作る
-	void CreatePlanePolygon(DX12Application* pdx12);
-	//ルートシグネチャを作る
-	void CreateRootsignature(DX12Application* pdx12);
-	//パイプラインステートを作る
-	void CreateGraphicsPipeline(DX12Application* pdx12);
-
+	//planeResourceを描画
 	void DrawOtherRenderTarget(DX12Application* pdx12);
 
+	//最初に描画するレンダーターゲットの前処理。現在はPMDモデルの描画に使用している
 	void PreDrawOtherRenderTargets(DX12Application* pdx12);
 
+	//最初に描画するレンダーターゲットの後処理。現在はPMDモデルの描画に使用している
 	void PostDrawOtherRenderTargets(DX12Application* pdx12);
 };
 

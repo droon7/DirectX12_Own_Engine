@@ -365,7 +365,7 @@ HRESULT DX12Application::CreateSceneView()
 }
 
 //描画開始メソッド、レンダーターゲット、バリア、深度ビュー、ビューポートのコマンド追加
-void DX12Application::BeginDraw()
+void DX12Application::SetBackBufferToRTV()
 {
 	//レンダーターゲットをバックバッファーにセット
 	auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
@@ -399,6 +399,18 @@ void DX12Application::BeginDraw()
 	//ビューポート、シザー矩形をセット
 	_cmdList->RSSetViewports(1, &viewport);
 	_cmdList->RSSetScissorRects(1, &scissorrect);
+}
+
+void DX12Application::EndBackBufferDraw()
+{
+
+		auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
+		auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+			_backBuffers[bbIdx].Get(),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT
+		);
+		_cmdList->ResourceBarrier(1, &BarrierDesc);
 }
 
 //カメラをセットしシーンを設定

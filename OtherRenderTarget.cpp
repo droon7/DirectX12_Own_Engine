@@ -13,7 +13,6 @@ OtherRenderTarget::OtherRenderTarget(DX12Application* pdx12)
 
 
 //RTV、RTVヒープ、SRVヒープを作る
-//
 void OtherRenderTarget::CreateRTVAndSRV(DX12Application* pdx12)
 {
 	//RTVリソース作成
@@ -107,6 +106,7 @@ void OtherRenderTarget::CreatePlanePolygon(DX12Application* pdx12)
 
 }
 
+//ポストエフェクト用ルートシグネチャ作成
 void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 {
 	D3D12_DESCRIPTOR_RANGE range = {};
@@ -157,6 +157,7 @@ void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 	}
 }
 
+//ポストエフェクト用PSO作成
 void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 {
 	//シェーダーへの入力レイアウト作成
@@ -248,16 +249,6 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 //planeResourceを描画
 void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 {
-
-
-
-
-
-
-
-
-
-
 	pdx12->_cmdList->SetGraphicsRootSignature(planeRootsignature.Get());
 	pdx12->_cmdList->SetPipelineState(planePipelinestate.Get());
 	pdx12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -268,12 +259,10 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
-
-
-
-
 }
 
+//最初に描画するレンダーターゲットの前処理。現在はPMDモデルの描画に使用している
+//このクラスが保持するRTVを設定している。
 void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 {
 	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -298,6 +287,7 @@ void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 	pdx12->_cmdList->RSSetScissorRects(1, &rc);//シザー(切り抜き)矩形
 }
 
+//最初に描画するレンダーターゲットの後処理。現在はPMDモデルの描画に使用している
 void OtherRenderTarget::PostDrawOtherRenderTargets(DX12Application* pdx12)
 {
 	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(

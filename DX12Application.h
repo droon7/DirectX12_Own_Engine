@@ -107,8 +107,10 @@ public:
 	// 
 	//シングルトンパターンのためstaticの生成メソッド
 	static DX12Application* Instance(UINT width, UINT height);
-	//描画開始メソッド、レンダーターゲット、バリア、深度ビュー、ビューポートのコマンド追加
-	void BeginDraw();
+	//バックバッファの描画開始メソッド、レンダーターゲット、バリア、深度ビュー、ビューポートのコマンド追加
+	void SetBackBufferToRTV();
+	//バックバッファのリソースバリアの設定
+	void EndBackBufferDraw();
 	// カメラをセットしシーンを設定
 	void SetScene();
 	//描画終了メソッド、バリア設定、コマンドリスト実行、フェンスによる同期、コマンドのリセット、画面のスワップによるディスプレイへの描画

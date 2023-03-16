@@ -19,14 +19,7 @@ ComPtr<ID3D12PipelineState> PmdRenderer::GetPipelinestate()
 }
 
 void PmdRenderer::EndDrawPmd(DX12Application* pdx12)
-{	//リソースバリアの状態の設定
-	auto bbIdx = pdx12->_swapchain->GetCurrentBackBufferIndex();
-	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-		pdx12->_backBuffers[bbIdx].Get(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT
-	);
-	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+{
 }
 
 
