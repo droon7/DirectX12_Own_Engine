@@ -109,9 +109,24 @@ void OtherRenderTarget::CreatePlanePolygon(DX12Application* pdx12)
 
 void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 {
+	D3D12_DESCRIPTOR_RANGE range = {};
+	range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	range.BaseShaderRegister = 0;
+	range.NumDescriptors = 1;
+
+	D3D12_ROOT_PARAMETER rp = {};
+	rp.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rp.DescriptorTable.pDescriptorRanges = &range;
+	rp.DescriptorTable.NumDescriptorRanges = 1;
+
+	D3D12_STATIC_SAMPLER_DESC sampler = CD3DX12_STATIC_SAMPLER_DESC(0);
+
 	D3D12_ROOT_SIGNATURE_DESC rsDesc = {};
-	rsDesc.NumParameters = 0;
-	rsDesc.NumStaticSamplers = 0;
+	rsDesc.NumParameters = 1;
+	rsDesc.pParameters = &rp;
+	rsDesc.NumStaticSamplers = 1;
+	rsDesc.pStaticSamplers = &sampler;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	
 	ComPtr<ID3DBlob> rsBlob;
@@ -241,10 +256,17 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 
 
 
+
+
 	pdx12->_cmdList->SetGraphicsRootSignature(planeRootsignature.Get());
 	pdx12->_cmdList->SetPipelineState(planePipelinestate.Get());
 	pdx12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	pdx12->_cmdList->IASetVertexBuffers(0, 1, &planePolygonVertexView);
+
+	pdx12->_cmdList->SetDescriptorHeaps(1, planeSRVHeap.GetAddressOf());
+	auto handle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
+
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 
 
