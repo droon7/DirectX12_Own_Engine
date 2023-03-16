@@ -245,6 +245,30 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 	}
 }
 
+std::vector<float> OtherRenderTarget::GetGaussianWeights(const size_t count, const float s)
+{
+	std::vector<float> weights(count);
+	float x = 0.0f;
+	float total = 0.0f;
+	//ガウス分布における離散化された確率密度関数を計算する。
+	//離散化のためcountの段階分e^(-x^2 / -2s)を計算し、その総和が1となるように調整する
+	for (auto& wgt : weights)
+	{
+		wgt = expf(-(x * x) / (2 * s * s)); 
+		total += wgt;
+		x += 1.0f;
+	}
+	total = total * 2.0f - 1; //実際にガウス分布は正負両方のため２倍にし、0の分は重複しかつe^0=1のため1は引く
+
+	//weightsの総和が1となるよう総和で割る
+	for (auto& wgt : weights)
+	{
+		wgt /= total;
+	}
+
+	return weights;
+}
+
 
 //planeResourceを描画
 void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)

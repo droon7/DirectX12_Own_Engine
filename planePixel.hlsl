@@ -115,11 +115,9 @@ float4 ps(Output input) : SV_TARGET
 	ret += tex.Sample(smp, input.uv + float2(gap * dy, gap * dy)) * 0;
 
 	float3 Y = dot(ret.rgb, float3(0.299, 0.587, 0.114));
-	Y = pow(1.0f - Y, 10.0f);
+	Y = pow(1.0f - Y, 20.0f);
 	Y = step(0.2f, Y);
 	Y = 1.0f - Y;
-	//ret = color + float4(Y, 0);
-	//return color;
-	return float4(color.rgb-Y, color.a);
-	//return float4(Y, color.a);
+	//return float4(color.rgb-Y, color.a); //’Êí‚Ì•`‰æ{—ÖŠsü
+	return float4(Y, color.a);			   //—ÖŠsü‚Ì‚İ
 }

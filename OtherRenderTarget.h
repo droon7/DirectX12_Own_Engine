@@ -39,6 +39,9 @@ private:
 	void CreateRootsignature(DX12Application* pdx12);
 	//ポストエフェクト用PSO作成
 	void CreateGraphicsPipeline(DX12Application* pdx12);
+
+	//ガウス分布よりボケウェイトを得る
+	std::vector<float> GetGaussianWeights(const size_t count, const float s);
 public:
 	OtherRenderTarget(DX12Application* pdx12);
 
