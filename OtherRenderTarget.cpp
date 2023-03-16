@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "OtherRenderTarget.h"
+#include "Utility.h"
 
 OtherRenderTarget::OtherRenderTarget(DX12Application* pdx12)
 {
 	CreateRTVAndSRV(pdx12);
+	CreateCBVForPostEffect(pdx12);
 
 	CreatePlanePolygon(pdx12);
 
@@ -54,7 +56,7 @@ void OtherRenderTarget::CreateRTVAndSRV(DX12Application* pdx12)
 		planeRTVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	//SRV作成
-	heapDesc.NumDescriptors = 1;
+	heapDesc.NumDescriptors = 2;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -62,6 +64,8 @@ void OtherRenderTarget::CreateRTVAndSRV(DX12Application* pdx12)
 		&heapDesc,
 		IID_PPV_ARGS(planeSRVHeap.ReleaseAndGetAddressOf())
 	);
+
+
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -106,25 +110,71 @@ void OtherRenderTarget::CreatePlanePolygon(DX12Application* pdx12)
 
 }
 
+//ボケウェイトでCSVを作る
+void OtherRenderTarget::CreateCBVForPostEffect(DX12Application* pdx12)
+{
+	std::vector<float> gaussWeights = GetGaussianWeights(8, 5.0f);
+
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<int>(AlignmentedSize(sizeof(gaussWeights[0]) * gaussWeights.size(), 256)));
+
+	auto result = pdx12->_dev->CreateCommittedResource(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(bokehParameterBuffer.ReleaseAndGetAddressOf())
+	);
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
+	mappedWeight = nullptr;
+	result = bokehParameterBuffer->Map(0, nullptr, (void**)&mappedWeight);
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
+	copy(gaussWeights.begin(), gaussWeights.end(), mappedWeight);
+	bokehParameterBuffer->Unmap(0, nullptr);
+
+	auto handle = planeSRVHeap->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	cbvDesc.BufferLocation = bokehParameterBuffer->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = bokehParameterBuffer->GetDesc().Width;
+	pdx12->_dev->CreateConstantBufferView(&cbvDesc, handle);
+}
+
 //ポストエフェクト用ルートシグネチャ作成
 void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 {
-	D3D12_DESCRIPTOR_RANGE range = {};
-	range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range.BaseShaderRegister = 0;
-	range.NumDescriptors = 1;
+	D3D12_DESCRIPTOR_RANGE range[2] = {};
+	range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	range[0].BaseShaderRegister = 0;
+	range[0].NumDescriptors = 1;
+	range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	range[1].BaseShaderRegister = 0;
+	range[1].NumDescriptors = 1;
 
-	D3D12_ROOT_PARAMETER rp = {};
-	rp.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rp.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rp.DescriptorTable.pDescriptorRanges = &range;
-	rp.DescriptorTable.NumDescriptorRanges = 1;
+
+	D3D12_ROOT_PARAMETER rp[2] = {};
+	rp[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rp[0].DescriptorTable.pDescriptorRanges = range;
+	rp[0].DescriptorTable.NumDescriptorRanges = 1;
+	rp[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rp[1].DescriptorTable.pDescriptorRanges = &range[1];
+	rp[1].DescriptorTable.NumDescriptorRanges = 1;
 
 	D3D12_STATIC_SAMPLER_DESC sampler = CD3DX12_STATIC_SAMPLER_DESC(0);
 
 	D3D12_ROOT_SIGNATURE_DESC rsDesc = {};
-	rsDesc.NumParameters = 1;
-	rsDesc.pParameters = &rp;
+	rsDesc.NumParameters = 2;
+	rsDesc.pParameters = rp;
 	rsDesc.NumStaticSamplers = 1;
 	rsDesc.pStaticSamplers = &sampler;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -281,6 +331,9 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	pdx12->_cmdList->SetDescriptorHeaps(1, planeSRVHeap.GetAddressOf());
 	auto handle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
+
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, handle);
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }
