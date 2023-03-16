@@ -386,7 +386,7 @@ void DX12Application::SetBackBufferToRTV()
 	rtvH.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	//画面カラーをクリア
-	float clearColor[] = { 0.3f, 0.4f, 0.5f, 1.0f };
+	float clearColor[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 	_cmdList->ClearRenderTargetView(rtvH, clearColor, 0, nullptr);
 
 

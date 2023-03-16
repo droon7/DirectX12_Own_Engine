@@ -1,8 +1,49 @@
 #include"planeHeader.hlsli"
 
+//縦方向のガウスブラー
+float4 VerticalBokePS(Output input) : SV_TARGET
+{
+	float4 color = tex.Sample(smp,input.uv);
+
+	//ガウスブラー
+	float w, h, levels;
+	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
+
+	float dx = 1.0f / w; //1ピクセル分の幅
+	float dy = 1.0f / h;
+	float4 ret = float4(0, 0, 0, 0);
+
+	ret += bkweights[0] * color;
+	for (int i = 1; i < 8; ++i)
+	{
+		ret += bkweights[i >> 2][i % 4] * tex.Sample(smp, input.uv + float2(0, i*dx));
+		ret += bkweights[i >> 2][i % 4] * tex.Sample(smp, input.uv + float2(0, -i*dx));
+	}
+	return float4(ret.rgb, color.a);
+}
+
 float4 ps(Output input) : SV_TARGET
 {
 	float4 color = tex.Sample(smp,input.uv);
+
+	//ガウスブラー
+	float w, h, levels;
+	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
+
+	float dx = 1.0f / w; //1ピクセル分の幅
+	float dy = 1.0f / h;
+	float4 ret = float4(0, 0, 0, 0);
+
+	ret += bkweights[0] * color;
+	for(int i = 1; i < 8; ++i)
+	{
+		ret += bkweights[i >> 2][i % 4] * tex.Sample(smp, input.uv + float2(i * dx, 0));
+		ret += bkweights[i >> 2][i % 4] * tex.Sample(smp, input.uv + float2(-i * dx, 0));
+	}
+
+	return float4(ret.rgb, color.a);
+
+	//以下は試したポストエフェクト
 
 	//何もせず描画
 	//return color;
@@ -129,20 +170,4 @@ float4 ps(Output input) : SV_TARGET
 	//return float4(Y, color.a);			   //輪郭線のみ
 
 
-	//ガウスブラー
-	float w, h, levels;
-	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
-
-	float dx = 1.0f / w; //1ピクセル分の幅
-	float dy = 1.0f / h;
-	float4 ret = float4(0, 0, 0, 0);
-
-	ret += bkweights[0] * color;
-	for(int i = 1; i < 8; ++i)
-	{
-		ret += bkweights[i >> 2][i % 4] * tex.Sample(smp, input.uv + float2(i * dx, 0));
-		ret += bkweights[i >> 2][i % 4] * tex.Sample(smp, input.uv + float2(-i * dx, 0));
-	}
-
-	return float4(ret.rgb, color.a);
 }
