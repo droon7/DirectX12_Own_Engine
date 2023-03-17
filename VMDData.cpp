@@ -34,6 +34,11 @@ void VMDData::LoadVMDData(std::string strVMDPath)
 			fp);
 
 	}
+	
+	if (strVMDPath == std::string("motion/squat.vmd"))
+	{
+		return;
+	}
 
 	uint32_t morphCount = 0;
 	fread(&morphCount, sizeof(morphCount), 1, fp);

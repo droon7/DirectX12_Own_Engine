@@ -13,7 +13,9 @@ Output BasicVS(
 	matrix boneMatrix = bones[boneno[0]] * s_weight + bones[boneno[1]] * (1 - s_weight);
 
 	pos = mul(boneMatrix, pos);
-	output.svpos = mul(mul(projection, mul(view, world)), pos);
+	pos = mul(world, pos);
+	pos = mul(shadow, pos);
+	output.svpos = mul(mul(projection, view), pos);
 
 	normal.w = 0; // •½sˆÚ“®¬•ª‚ğ–³Œø‚É‚·‚é
 

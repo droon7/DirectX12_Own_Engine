@@ -19,6 +19,7 @@ struct SceneMatrix
 {
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
+	DirectX::XMMATRIX shadow;
 	DirectX::XMFLOAT3 eye;
 };
 
@@ -73,6 +74,9 @@ private:
 	DirectX::XMMATRIX projMat;
 	SceneMatrix* mapTransform = nullptr;
 	float angle = 0.0f;
+
+	//影用アセット
+	DirectX::XMFLOAT3 parallelLightVec;
 
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;

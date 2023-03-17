@@ -10,7 +10,7 @@ using namespace::DirectX;
 DX12Application::DX12Application(UINT width, UINT height) :
 	window_width(width),
 	window_height(height),
-	_backBuffers(buffer_count)
+	_backBuffers(buffer_count),parallelLightVec(1,-1,1)
 {
 }
 
@@ -423,6 +423,10 @@ HRESULT DX12Application::CreateSceneView()
 	mapTransform->view = viewMat;
 	mapTransform->projection = projMat;
 	mapTransform->eye = eye;
+
+	//影行列のセット及びmapTransformへの適用
+	XMFLOAT4 planeVec(0, 1, 0, 0);
+	mapTransform->shadow = XMMatrixShadow(XMLoadFloat4(&planeVec), -XMLoadFloat3(&parallelLightVec));
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成

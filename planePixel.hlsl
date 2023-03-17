@@ -4,6 +4,7 @@
 float4 VerticalBokePS(Output input) : SV_TARGET
 {
 	float4 color = tex.Sample(smp,input.uv);
+	return color;
 
 	//縦ガウスブラー+ 法線マップによる歪み
 	float w, h, levels;
@@ -26,8 +27,8 @@ float4 VerticalBokePS(Output input) : SV_TARGET
 float4 ps(Output input) : SV_TARGET
 {
 
-
 	float4 color = tex.Sample(smp,input.uv);
+	return color;
 
 	//横ガウスブラー
 	float w, h, levels;
