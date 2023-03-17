@@ -15,10 +15,11 @@ Output BasicVS(
 
 	pos = mul(boneMatrix, pos);
 	pos = mul(world, pos);
-	if (instNo == 1) {
-		pos = mul(shadow, pos);
-	}
-	output.svpos = mul(mul(projection, view), pos);
+	//if (instNo == 1) {
+	//	pos = mul(shadow, pos);
+	//}
+	//output.svpos = mul(mul(projection, view), pos);
+	output.svpos = mul(lightCamera, pos);
 
 	normal.w = 0; // •½sˆÚ“®¬•ª‚ğ–³Œø‚É‚·‚é
 

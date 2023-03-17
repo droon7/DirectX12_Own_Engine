@@ -19,7 +19,8 @@ struct SceneMatrix
 {
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
-	DirectX::XMMATRIX shadow;
+	DirectX::XMMATRIX lightCamera;  //シャドウマップ用
+	DirectX::XMMATRIX shadow;		//影行列用
 	DirectX::XMFLOAT3 eye;
 };
 
@@ -77,6 +78,7 @@ private:
 
 	//影用アセット
 	DirectX::XMFLOAT3 parallelLightVec;
+	DirectX::XMMATRIX lightMat;
 
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;

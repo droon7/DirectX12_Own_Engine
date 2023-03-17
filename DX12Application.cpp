@@ -10,7 +10,7 @@ using namespace::DirectX;
 DX12Application::DX12Application(UINT width, UINT height) :
 	window_width(width),
 	window_height(height),
-	_backBuffers(buffer_count),parallelLightVec(1,-1,1)
+	_backBuffers(buffer_count),parallelLightVec(-1,1,-1)
 {
 }
 
@@ -395,7 +395,11 @@ HRESULT DX12Application::CreateSceneView()
 	XMFLOAT3 target(0, 10, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
-	viewMat = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+	auto eyePos = XMLoadFloat3(&eye);
+	auto targetPos = XMLoadFloat3(&target);
+	auto upPos = XMLoadFloat3(&up);
+
+	viewMat = XMMatrixLookAtLH(eyePos,targetPos,upPos);
 
 	projMat = XMMatrixPerspectiveFovLH(
 		XM_PIDIV4,
@@ -427,6 +431,13 @@ HRESULT DX12Application::CreateSceneView()
 	//影行列のセット及びmapTransformへの適用
 	XMFLOAT4 planeVec(0, 1, 0, 0);
 	mapTransform->shadow = XMMatrixShadow(XMLoadFloat4(&planeVec), -XMLoadFloat3(&parallelLightVec));
+	//シャドウマップ用の光源ビューの設定
+	//lightの位置はカメラ位置とターゲット位置の距離とライトの位置とターゲット位置が同じになるように設置する。
+	XMVECTOR lightPos = targetPos + XMVector3Normalize(XMLoadFloat3(&parallelLightVec))
+		* XMVector3Length(XMVectorSubtract(targetPos, eyePos)).m128_f32[0];
+	lightMat = XMMatrixLookAtLH(lightPos, targetPos, upPos)
+		* XMMatrixOrthographicLH(40, 40, 1.0f, 100.0f);
+	mapTransform->lightCamera = lightMat;
 
 	//定数バッファービューの作成のための設定
 	//行列用定数バッファービュー用のディスクリプタヒープの作成

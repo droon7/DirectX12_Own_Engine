@@ -10,6 +10,7 @@ cbuffer SceneData : register(b0)
 {
 	matrix view;
 	matrix projection;
+	matrix lightCamera;
 	matrix shadow;
 	float3 eye;
 };

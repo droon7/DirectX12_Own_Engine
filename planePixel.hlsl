@@ -4,7 +4,7 @@
 float4 VerticalBokePS(Output input) : SV_TARGET
 {
 	float4 color = tex.Sample(smp,input.uv);
-	//return color;
+	return color;
 
 	//縦ガウスブラー+ 法線マップによる歪み
 	float w, h, levels;
@@ -26,13 +26,13 @@ float4 VerticalBokePS(Output input) : SV_TARGET
 
 float4 ps(Output input) : SV_TARGET
 {
-	//深度マップテスト
-	float dep = pow(depthTex.Sample(smp, input.uv), 1000);
-	return float4(dep,dep,dep, 1);
+	////深度マップテスト
+	//float dep = pow(depthTex.Sample(smp, input.uv), 500);
+	//return float4(dep,dep,dep, 1);
 
 
 	float4 color = tex.Sample(smp,input.uv);
-	//return color;
+	return color;
 
 	//横ガウスブラー
 	float w, h, levels;
