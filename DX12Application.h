@@ -4,6 +4,7 @@
 #include"pch.h"
 #include"PmdData.h"
 #include"OtherRenderTarget.h"
+#include"Shadow.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -26,11 +27,13 @@ struct SceneMatrix
 
 class OtherRenderTarget;
 class PmdRenderer;
+class Shadow;
 //DirectX12の全体の設定をするクラス。
 class DX12Application
 {
 	friend OtherRenderTarget;
 	friend PmdRenderer;
+	friend Shadow;
 private:
 
 	//シングルトンクラスにするためコンストラクタをprivate
@@ -79,6 +82,7 @@ private:
 	//影用アセット
 	DirectX::XMFLOAT3 parallelLightVec;
 	DirectX::XMMATRIX lightMat;
+	Shadow shadowClass;
 
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;
