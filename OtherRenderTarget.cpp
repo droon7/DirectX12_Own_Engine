@@ -366,7 +366,7 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 //ポストエフェクト用SRV作成
 void OtherRenderTarget::CreateEffectBufferAndView(DX12Application* pdx12)
 {
-	pdx12->LoadPictureFromFile(L"normal/crack_n.png", effectTextureBuffer);
+	pdx12->LoadPictureFromFile(L"normal/normalmap.jpg", effectTextureBuffer);
 
 	//ポストエフェクト用ディスクリプタヒープ作成
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -374,7 +374,7 @@ void OtherRenderTarget::CreateEffectBufferAndView(DX12Application* pdx12)
 	heapDesc.NumDescriptors = 1;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-	auto result = pdx12->_dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(effectTextureBuffer.ReleaseAndGetAddressOf()));
+	auto result = pdx12->_dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(effectSRVHeap.ReleaseAndGetAddressOf()));
 
 	if (FAILED(result)) {
 		assert(0);
@@ -435,6 +435,9 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 
 	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, handle);
+
+	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }
@@ -518,8 +521,7 @@ void OtherRenderTarget::DrawOtherRenderTargetsFull(DX12Application* pdx12)
 	handle.ptr += 2*pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, handle);
 
-	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
-	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
 
 
 	pdx12->_cmdList->DrawInstanced(4, 1, 0, 0);

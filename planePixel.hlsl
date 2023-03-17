@@ -13,9 +13,6 @@ float4 VerticalBokePS(Output input) : SV_TARGET
 	float dy = 1.0f / h;
 	float4 ret = float4(0, 0, 0, 0);
 
-	float2 nmTex = effectTex.Sample(smp, input.uv).xy;
-	nmTex = nmTex * 2.0f - 1.0f;
-	return tex.Sample(smp, input.uv + nmTex * 0.1f);
 
 	ret += bkweights[0] * color;
 	for (float i = 1; i < 8; ++i)
@@ -39,6 +36,10 @@ float4 ps(Output input) : SV_TARGET
 	float dx = 1.0f / w; //1ƒsƒNƒZƒ‹•ª‚Ì•
 	float dy = 1.0f / h;
 	float4 ret = float4(0, 0, 0, 0);
+
+	float2 nmTex = effectTex.Sample(smp, input.uv).xy;
+	nmTex = nmTex * 2.0f - 1.0f;
+	return tex.Sample(smp, input.uv + nmTex * 0.1f);
 
 	ret += bkweights[0] * color;
 	for(float i = 1; i < 8; ++i)
