@@ -2,6 +2,7 @@
 #include"DX12Application.h"
 #include"PmdData.h"
 #include"Win32Application.h"
+#include"Utility.h"
 
 using namespace::DirectX;
 
@@ -237,6 +238,80 @@ void DX12Application::WaitForPreviousFrame()
 
 		CloseHandle(event);
 	}
+}
+
+void DX12Application::LoadPictureFromFile(std::wstring filepath, ComPtr<ID3D12Resource>& buff)
+{
+	TexMetadata metadata = {};
+	ScratchImage scratchImg = {};
+	HRESULT result = S_OK;
+
+	result = LoadFromWICFile(filepath.c_str(),
+		WIC_FLAGS_NONE,
+		&metadata,
+		scratchImg);
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
+
+	auto img = scratchImg.GetImage(0, 0, 0);
+
+	D3D12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto resDesc =	CD3DX12_RESOURCE_DESC::Buffer(AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT * img->height));
+
+	ComPtr<ID3D12Resource> internalBuffer = nullptr;
+	result = _dev->CreateCommittedResource(&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(internalBuffer.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
+	uint8_t* mappedInternal = nullptr;
+	internalBuffer->Map(0, nullptr, (void**)&mappedInternal);
+	auto address = img->pixels;
+	uint32_t height = img->height;
+	for (int i = 0; i < height; ++i)
+	{
+		std::copy_n(address, img->rowPitch, mappedInternal);
+		address += img->rowPitch;
+		mappedInternal += AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+	}
+	internalBuffer->Unmap(0, nullptr);
+
+	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
+	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	src.pResource = internalBuffer.Get();
+	src.PlacedFootprint.Offset = 0;
+	src.PlacedFootprint.Footprint.Width = img->width;
+	src.PlacedFootprint.Footprint.Height = img->height;
+	src.PlacedFootprint.Footprint.RowPitch = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+	src.PlacedFootprint.Footprint.Depth = metadata.depth;
+	src.PlacedFootprint.Footprint.Format = img->format;
+
+	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	dst.SubresourceIndex = 0;
+	dst.pResource = buff.Get();
+
+	_cmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		buff.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+
+	_cmdList->ResourceBarrier(1, &BarrierDesc);
+	_cmdList->Close();
+	ID3D12CommandList* cmds[] = { _cmdList.Get() };
+	_cmdQueue->ExecuteCommandLists(1, cmds);
+	WaitForPreviousFrame();
+	_cmdAllocator->Reset();
+	_cmdList->Reset(_cmdAllocator.Get(), nullptr);
 }
 
 

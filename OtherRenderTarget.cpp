@@ -2,10 +2,12 @@
 #include "OtherRenderTarget.h"
 #include "Utility.h"
 
+
 OtherRenderTarget::OtherRenderTarget(DX12Application* pdx12)
 {
 	CreateRTVsAndSRVs(pdx12);
 	CreateCBVForPostEffect(pdx12);
+	CreateEffectBufferAndView(pdx12);
 
 	CreatePlanePolygon(pdx12);
 
@@ -184,16 +186,19 @@ void OtherRenderTarget::CreateCBVForPostEffect(DX12Application* pdx12)
 //ポストエフェクト用ルートシグネチャ作成
 void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 {
-	D3D12_DESCRIPTOR_RANGE range[2] = {};
+	D3D12_DESCRIPTOR_RANGE range[3] = {};
 	range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	range[0].BaseShaderRegister = 0;
 	range[0].NumDescriptors = 1;
 	range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	range[1].BaseShaderRegister = 0;
 	range[1].NumDescriptors = 1;
+	range[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	range[2].BaseShaderRegister = 1;
+	range[2].NumDescriptors = 1;
 
 
-	D3D12_ROOT_PARAMETER rp[2] = {};
+	D3D12_ROOT_PARAMETER rp[3] = {};
 	rp[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rp[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rp[0].DescriptorTable.pDescriptorRanges = range;
@@ -202,11 +207,15 @@ void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 	rp[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rp[1].DescriptorTable.pDescriptorRanges = &range[1];
 	rp[1].DescriptorTable.NumDescriptorRanges = 1;
+	rp[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rp[2].DescriptorTable.pDescriptorRanges = &range[2];
+	rp[2].DescriptorTable.NumDescriptorRanges = 1;
 
 	D3D12_STATIC_SAMPLER_DESC sampler = CD3DX12_STATIC_SAMPLER_DESC(0);
 
 	D3D12_ROOT_SIGNATURE_DESC rsDesc = {};
-	rsDesc.NumParameters = 2;
+	rsDesc.NumParameters = 3;
 	rsDesc.pParameters = rp;
 	rsDesc.NumStaticSamplers = 1;
 	rsDesc.pStaticSamplers = &sampler;
@@ -354,6 +363,38 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 
 }
 
+//ポストエフェクト用SRV作成
+void OtherRenderTarget::CreateEffectBufferAndView(DX12Application* pdx12)
+{
+	pdx12->LoadPictureFromFile(L"normal/crack_n.png", effectTextureBuffer);
+
+	//ポストエフェクト用ディスクリプタヒープ作成
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.NumDescriptors = 1;
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	auto result = pdx12->_dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(effectTextureBuffer.ReleaseAndGetAddressOf()));
+
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
+
+	auto desc = effectTextureBuffer->GetDesc();
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = desc.Format;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	pdx12->_dev->CreateShaderResourceView(
+		effectTextureBuffer.Get(),
+		&srvDesc,
+		effectSRVHeap->GetCPUDescriptorHandleForHeapStart()
+	);
+}
+
 std::vector<float> OtherRenderTarget::GetGaussianWeights(const size_t count, const float s)
 {
 	std::vector<float> weights(count);
@@ -476,6 +517,10 @@ void OtherRenderTarget::DrawOtherRenderTargetsFull(DX12Application* pdx12)
 
 	handle.ptr += 2*pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, handle);
+
+	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
 
 	pdx12->_cmdList->DrawInstanced(4, 1, 0, 0);
 

@@ -5,13 +5,17 @@ float4 VerticalBokePS(Output input) : SV_TARGET
 {
 	float4 color = tex.Sample(smp,input.uv);
 
-	//ガウスブラー
+	//縦ガウスブラー+ 法線マップによる歪み
 	float w, h, levels;
 	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
 
 	float dx = 1.0f / w; //1ピクセル分の幅
 	float dy = 1.0f / h;
 	float4 ret = float4(0, 0, 0, 0);
+
+	float2 nmTex = effectTex.Sample(smp, input.uv).xy;
+	nmTex = nmTex * 2.0f - 1.0f;
+	return tex.Sample(smp, input.uv + nmTex * 0.1f);
 
 	ret += bkweights[0] * color;
 	for (float i = 1; i < 8; ++i)
@@ -24,9 +28,11 @@ float4 VerticalBokePS(Output input) : SV_TARGET
 
 float4 ps(Output input) : SV_TARGET
 {
+
+
 	float4 color = tex.Sample(smp,input.uv);
 
-	//ガウスブラー
+	//横ガウスブラー
 	float w, h, levels;
 	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
 

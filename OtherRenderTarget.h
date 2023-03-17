@@ -1,8 +1,7 @@
 #ifndef OTHERRENDERTARGET_H
 #define  OTHERRENDERTARGET_H
-
-#include"DX12Application.h"
 #include"pch.h"
+#include"DX12Application.h"
 using Microsoft::WRL::ComPtr;
 
 //板ポリ頂点
@@ -38,6 +37,9 @@ private:
 	//ボケパラメタリソース、CSV
 	ComPtr<ID3D12Resource> bokehParameterBuffer;
 
+	//法線マップ歪みテクスチャ用
+	ComPtr<ID3D12DescriptorHeap> effectSRVHeap;
+	ComPtr<ID3D12Resource> effectTextureBuffer; //めんどくさいのでPmdTexture使用
 
 
 	//別のRTV、ポストエフェクト用SRVの作成、
@@ -50,6 +52,8 @@ private:
 	void CreateRootsignature(DX12Application* pdx12);
 	//ポストエフェクト用PSO作成
 	void CreateGraphicsPipeline(DX12Application* pdx12);
+	//ポストエフェクト用テクスチャバッファ＋ビュー作成
+	void CreateEffectBufferAndView(DX12Application* pdx12);
 
 	//ガウス分布の確率分布関数からボケウェイトを得る
 	std::vector<float> GetGaussianWeights(const size_t count, const float s);

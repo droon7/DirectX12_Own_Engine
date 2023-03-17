@@ -117,6 +117,9 @@ public:
 	void EndDraw();
 	//GPUがコマンドを全て実行完了するまで待ち、CPUと同期する
 	void WaitForPreviousFrame();
+
+	//ピクチャロード
+	void LoadPictureFromFile(std::wstring filepath, ComPtr<ID3D12Resource>& buff);
 };
 
 
