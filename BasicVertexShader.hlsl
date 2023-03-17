@@ -5,7 +5,8 @@ Output BasicVS(
 	float4 normal : NORMAL,
 	float2 uv: TEXCOORD,
 	min16uint2 boneno: BONE_NO,
-	min16uint weight: WEIGHT
+	min16uint weight: WEIGHT,
+	uint instNo : SV_InstanceID
 ){
 	Output output;
 
@@ -14,7 +15,9 @@ Output BasicVS(
 
 	pos = mul(boneMatrix, pos);
 	pos = mul(world, pos);
-	pos = mul(shadow, pos);
+	if (instNo == 1) {
+		pos = mul(shadow, pos);
+	}
 	output.svpos = mul(mul(projection, view), pos);
 
 	normal.w = 0; // ïΩçsà⁄ìÆê¨ï™Çñ≥å¯Ç…Ç∑ÇÈ
@@ -24,5 +27,6 @@ Output BasicVS(
 	output.uv = uv;
 	output.normal = mul(world, normal);
 	output.vnormal = mul(view, output.normal);
+	output.instNo = instNo;
 	return output;
 }

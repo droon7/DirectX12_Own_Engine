@@ -441,7 +441,7 @@ void PmdActor::DrawPmd(DX12Application* app)
 	{
 		app->_cmdList->SetGraphicsRootDescriptorTable(2, materialH);
 
-		app->_cmdList->DrawIndexedInstanced(m.indicesNum, 1, idxOffset, 0, 0);
+		app->_cmdList->DrawIndexedInstanced(m.indicesNum, 2, idxOffset, 0, 0);
 
 		materialH.ptr += cbvSrvIncSize;
 
@@ -473,7 +473,7 @@ void PmdActor::UpdatePmd()
 void PmdActor::SetPmdBone(unsigned int frameNo)
 {
 	pmdBone.SetBoneMatrices(frameNo);
-	pmdBone.IKSolve(frameNo);
+	//pmdBone.IKSolve(frameNo);
 	std::copy(pmdBone.boneMatrices.cbegin(), pmdBone.boneMatrices.cend(), mapTransform+1);
 }
 

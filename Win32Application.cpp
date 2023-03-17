@@ -90,7 +90,7 @@ void Win32Application::RunDX12()
 	otherRenderTarget.reset(new OtherRenderTarget(pDX12));
 	pmdRenderer.reset(new PmdRenderer(pDX12));
 	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd","motion/swing.vmd",0);
-	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd", "motion/squat2.vmd",0);
+	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd", "motion/yagokoro.vmd",0);
 	pmdActors.push_back(sharedPmdActor);
 	//sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/亞北ネル.pmd", "motion/motion.vmd",12);
 	//pmdActors.push_back(sharedPmdActor);

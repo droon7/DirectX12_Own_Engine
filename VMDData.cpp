@@ -35,7 +35,8 @@ void VMDData::LoadVMDData(std::string strVMDPath)
 
 	}
 	
-	if (strVMDPath == std::string("motion/squat.vmd"))
+	//yagokoro.vmdは後ろまでロードするとバグが発生するのでここでリターン
+	if (strVMDPath == std::string("motion/yagokoro.vmd"))
 	{
 		return;
 	}

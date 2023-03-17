@@ -2,6 +2,11 @@
 
 float4 BasicPS(Output input) : SV_TARGET
 {
+	if (input.instNo == 1)
+	{
+		return float4(0,0,0,1);
+	}
+
 	float3 light = normalize(float3(1, -1, 1));//平行光線ベクトル
 	float3 lightColor = float3(1, 1, 1);
 
