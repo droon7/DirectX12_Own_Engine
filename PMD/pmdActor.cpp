@@ -8,14 +8,14 @@ void* Transform::operator new(size_t size)
 
 //コンストラクタでロードからビュー作成
 //モデルの初期値設定
-PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string motionPath, int x)
-	:angle(0.0f), stringModelPath(ModelName)
+PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string motionPath)
+	:stringModelPath(ModelName), position(0, 0, 0), rotation(0, 0, 0)
 {
 	//ロードからビュー作成
 	LoadPmdData(ModelName);
 	pmdBone = PmdBone(pmdData.pmdBoneDatas,pmdData.pmdIkDatas, motionPath);
 	CreateVertexViewIndexView(app);
-	SetTransform(x,0,0);
+	SetTransform(position);
 	CreateTransformView(app);
 	GetMaterialResource(app);
 	GetTextureResource(app);
@@ -33,6 +33,9 @@ PmdActor::PmdActor(DX12Application* app, std::string ModelName, std::string moti
 
 
 }
+
+
+
 //ここからロードとDirectX12のための処理
 void PmdActor::LoadPmdData(std::string ModelName)
 {
@@ -98,11 +101,11 @@ void PmdActor::CreateVertexViewIndexView(DX12Application* app)
 
 }
 
-//初期位置セット
-void PmdActor::SetTransform(int x, int y, int z)
+//位置セット
+void PmdActor::SetTransform(DirectX::XMFLOAT3 pos)
 {
 	transform.worldMatrix = DirectX::XMMatrixIdentity();
-	transform.worldMatrix = DirectX::XMMatrixTranslation(x, y, z);
+	transform.worldMatrix = DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 }
 
 //PMDモデルの位置変換行列のビューの作成、ワールド行列とボーン変換行列
@@ -449,6 +452,12 @@ void PmdActor::DrawPmd(DX12Application* app)
 	}
 }
 
+void PmdActor::Move(float x,float y,float z)
+{
+	position.x += x;
+	position.y += y;
+	position.z += z;
+}
 
 void PmdActor::UpdatePmd()
 {
@@ -464,8 +473,10 @@ void PmdActor::UpdatePmd()
 	}
 
 	SetPmdBone(frameNo);
-	angle += 0.001f;
-	mapTransform[0] = DirectX::XMMatrixRotationY(angle);
+	rotation.y += 0.001f;
+	mapTransform[0] = DirectX::XMMatrixIdentity();
+	mapTransform[0] *= DirectX::XMMatrixRotationY(rotation.y);
+	mapTransform[0] *= DirectX::XMMatrixTranslation(position.x, position.y, position.z);
 
 }
 

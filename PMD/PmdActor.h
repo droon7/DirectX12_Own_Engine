@@ -43,11 +43,12 @@ private:
 	ComPtr<ID3D12Resource> gradTex;
 
 	//ワールド座標情報
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT3 rotation;
 	ComPtr<ID3D12DescriptorHeap> transformDescHeap; //バッファーの解釈する。実質ビュー
 	ComPtr<ID3D12Resource> transformBuff; //実際のデータ
 	Transform transform;
 	DirectX::XMMATRIX* mapTransform = nullptr; //コピー用バッファ
-	float angle;
 
 	//ボーン情報
 	PmdBone pmdBone ;
@@ -62,7 +63,7 @@ private:
 	//vbViewとibViewに設定
 	void CreateVertexViewIndexView(DX12Application* app);
 	//ワールド座標、座標変換行列をセット
-	void SetTransform(int x, int y, int z);
+	void SetTransform(DirectX::XMFLOAT3 pos);
 	//座標変換行列情報をセット
 	HRESULT CreateTransformView(DX12Application* app);
 	//PMDデータからマテリアルのリソースを読み込む
@@ -78,12 +79,14 @@ private:
 	void ShowIkBoneDebug();
 public:
 
-	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath, int x);
+	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath);
 
 	//pmdモデル描画命令
 	void DrawPmd(DX12Application* app);   
-
-	void UpdatePmd(); //pmdモデルアップデート
+	//pmdモデルアップデート
+	void UpdatePmd(); 
+	//pmdモデル移動
+	void Move(float x, float y, float z);
 
 	//アニメーション起動
 	void PlayAnimation();
