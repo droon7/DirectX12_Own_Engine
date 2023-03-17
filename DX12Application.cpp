@@ -338,7 +338,7 @@ HRESULT DX12Application::CreateDepthStencilView()
 	depthResourceDescriptor.Width = window_width;
 	depthResourceDescriptor.Height = window_height;
 	depthResourceDescriptor.DepthOrArraySize = 1;
-	depthResourceDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
+	depthResourceDescriptor.Format = DXGI_FORMAT_R32_TYPELESS;
 	depthResourceDescriptor.SampleDesc.Count = 1;
 	depthResourceDescriptor.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -484,7 +484,7 @@ void DX12Application::SetBackBufferToRTV()
 	auto dsvH = dsvHeaps->GetCPUDescriptorHandleForHeapStart();
 	_cmdList->OMSetRenderTargets(1, &rtvH, true, &dsvH);
 	//深度バッファークリア
-	_cmdList->ClearDepthStencilView(dsvH, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	//_cmdList->ClearDepthStencilView(dsvH, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	//ビューポート、シザー矩形をセット
 	_cmdList->RSSetViewports(1, &viewport);

@@ -41,6 +41,8 @@ private:
 	ComPtr<ID3D12DescriptorHeap> effectSRVHeap;
 	ComPtr<ID3D12Resource> effectTextureBuffer; //めんどくさいのでPmdTexture使用
 
+	//深度マップ用
+	ComPtr<ID3D12DescriptorHeap> depthSRVHeap;
 
 	//別のRTV、ポストエフェクト用SRVの作成、
 	void CreateRTVsAndSRVs(DX12Application* pdx12);
@@ -54,6 +56,8 @@ private:
 	void CreateGraphicsPipeline(DX12Application* pdx12);
 	//ポストエフェクト用テクスチャバッファ＋ビュー作成
 	void CreateEffectBufferAndView(DX12Application* pdx12);
+	//深度マップ用オブジェクト作成（現在はSRVのみ）
+	void CreateDepthMapObjects(DX12Application* pdx12);
 
 	//ガウス分布の確率分布関数からボケウェイトを得る
 	std::vector<float> GetGaussianWeights(const size_t count, const float s);

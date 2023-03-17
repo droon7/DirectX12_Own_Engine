@@ -8,6 +8,7 @@ OtherRenderTarget::OtherRenderTarget(DX12Application* pdx12)
 	CreateRTVsAndSRVs(pdx12);
 	CreateCBVForPostEffect(pdx12);
 	CreateEffectBufferAndView(pdx12);
+	CreateDepthMapObjects(pdx12);
 
 	CreatePlanePolygon(pdx12);
 
@@ -186,7 +187,7 @@ void OtherRenderTarget::CreateCBVForPostEffect(DX12Application* pdx12)
 //ポストエフェクト用ルートシグネチャ作成
 void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 {
-	D3D12_DESCRIPTOR_RANGE range[3] = {};
+	D3D12_DESCRIPTOR_RANGE range[4] = {};
 	range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	range[0].BaseShaderRegister = 0;
 	range[0].NumDescriptors = 1;
@@ -196,26 +197,33 @@ void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 	range[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	range[2].BaseShaderRegister = 1;
 	range[2].NumDescriptors = 1;
+	range[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	range[3].BaseShaderRegister = 2;
+	range[3].NumDescriptors = 1;
 
 
-	D3D12_ROOT_PARAMETER rp[3] = {};
-	rp[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	D3D12_ROOT_PARAMETER rp[4] = {};
+	rp[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // RTV
 	rp[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rp[0].DescriptorTable.pDescriptorRanges = range;
 	rp[0].DescriptorTable.NumDescriptorRanges = 1;
-	rp[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //gauss weight cbv
 	rp[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rp[1].DescriptorTable.pDescriptorRanges = &range[1];
 	rp[1].DescriptorTable.NumDescriptorRanges = 1;
-	rp[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rp[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //normal map
 	rp[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 	rp[2].DescriptorTable.pDescriptorRanges = &range[2];
 	rp[2].DescriptorTable.NumDescriptorRanges = 1;
+	rp[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //depth map
+	rp[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rp[3].DescriptorTable.pDescriptorRanges = &range[3];
+	rp[3].DescriptorTable.NumDescriptorRanges = 1;
 
 	D3D12_STATIC_SAMPLER_DESC sampler = CD3DX12_STATIC_SAMPLER_DESC(0);
 
 	D3D12_ROOT_SIGNATURE_DESC rsDesc = {};
-	rsDesc.NumParameters = 3;
+	rsDesc.NumParameters = 4;
 	rsDesc.pParameters = rp;
 	rsDesc.NumStaticSamplers = 1;
 	rsDesc.pStaticSamplers = &sampler;
@@ -395,6 +403,27 @@ void OtherRenderTarget::CreateEffectBufferAndView(DX12Application* pdx12)
 	);
 }
 
+//シャドウマップ用SRV作成
+void OtherRenderTarget::CreateDepthMapObjects(DX12Application* pdx12)
+{
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.NodeMask = 0;
+	heapDesc.NumDescriptors = 1;
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	auto result = pdx12->_dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&depthSRVHeap));
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC resDesc = {};
+	resDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	resDesc.Texture2D.MipLevels = 1;
+	resDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	resDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	auto handle = depthSRVHeap->GetCPUDescriptorHandleForHeapStart();
+	pdx12->_dev->CreateShaderResourceView(pdx12->depthBuffer.Get(), &resDesc, handle);
+}
+
+
 std::vector<float> OtherRenderTarget::GetGaussianWeights(const size_t count, const float s)
 {
 	std::vector<float> weights(count);
@@ -438,6 +467,9 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 
 	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
+
+	pdx12->_cmdList->SetDescriptorHeaps(1, depthSRVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, depthSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }
