@@ -579,10 +579,10 @@ void DX12Application::PreDrawShadowMap()
 
 	_cmdList->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, window_width, window_height);
+	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, shadowDifinition, shadowDifinition);
 	_cmdList->RSSetViewports(1, &vp);//ビューポート
 
-	CD3DX12_RECT rc(0, 0, window_width, window_height);
+	CD3DX12_RECT rc(0, 0, shadowDifinition, shadowDifinition);
 	_cmdList->RSSetScissorRects(1, &rc);//シザー(切り抜き)矩形
 }
 

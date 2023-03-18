@@ -121,6 +121,13 @@ void Win32Application::RunDX12()
 		}
 
 
+		//PMDƒ‚ƒfƒ‹Update
+		for (auto& pmd : pmdActors)
+		{
+			pmd->UpdatePmd();
+		}
+
+
 		//ˆÈ‰ºDirectX12‚Ìˆ—
 
 
@@ -163,10 +170,7 @@ void Win32Application::RunDX12()
 		pDX12->EndDraw();
 
 
-		for (auto& pmd : pmdActors)
-		{
-			pmd->UpdatePmd();
-		}
+
 
 
 
