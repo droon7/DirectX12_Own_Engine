@@ -77,8 +77,12 @@ private:
 	float angle = 0.0f;
 
 	//影用アセット
+	static constexpr unsigned int shadowDifinition = 40;
 	DirectX::XMFLOAT3 parallelLightVec;
 	DirectX::XMMATRIX lightMat;
+	ComPtr<ID3D12Resource> shadowMapBuffer = nullptr; 
+	ComPtr<ID3D12DescriptorHeap> depthSRVHeaps = nullptr;
+	ComPtr<ID3D12PipelineState> shadowMapPls = nullptr;
 
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;
