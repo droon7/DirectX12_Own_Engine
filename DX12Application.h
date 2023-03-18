@@ -123,6 +123,8 @@ public:
 	void EndBackBufferDraw();
 	// カメラをセットしシーンを設定
 	void SetScene();
+	// シャドウマップを描画するための前設定をする。
+	void PreDrawShadowMap();
 	//描画終了メソッド、バリア設定、コマンドリスト実行、フェンスによる同期、コマンドのリセット、画面のスワップによるディスプレイへの描画
 	void EndDraw();
 	//GPUがコマンドを全て実行完了するまで待ち、CPUと同期する

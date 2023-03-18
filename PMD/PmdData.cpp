@@ -34,7 +34,7 @@ void PmdData::LoadPmdData(std::string strModelPath)
 	//マテリアルデータを整形
 	for (int i = 0; i < pmdMaterialForLoad.size(); ++i)
 	{
-		materialDatas[i].indicesNum = pmdMaterialForLoad[i].indicesNum;
+		materialDatas[i].materialIndicesNum = pmdMaterialForLoad[i].indicesNum;
 		materialDatas[i].material.diffuse = pmdMaterialForLoad[i].diffuse;
 		materialDatas[i].material.alpha = pmdMaterialForLoad[i].alpha;
 		materialDatas[i].material.specular = pmdMaterialForLoad[i].specular;

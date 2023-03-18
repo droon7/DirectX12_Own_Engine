@@ -19,7 +19,10 @@ public:
 	ComPtr<ID3D12RootSignature> GetRootsignature();
 	ComPtr<ID3D12PipelineState> GetPipelinestate();
 	
-	void EndDrawPmd(DX12Application* pdx12); //åªç›ÇÕãÛ
+	void PreDrawPmd(DX12Application* pdx12);
+	void PostDrawPmd(DX12Application* pdx12); //åªç›ÇÕãÛ
+
+	void PreDrawShadow(DX12Application* pdx12);
 };
 
 

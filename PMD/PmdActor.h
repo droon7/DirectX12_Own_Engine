@@ -82,7 +82,7 @@ public:
 	explicit PmdActor(DX12Application* app, std::string ModelName, std::string motionPath);
 
 	//pmdモデル描画命令
-	void DrawPmd(DX12Application* app);   
+	void DrawPmd(DX12Application* app, bool isShadow = 0);   
 	//pmdモデルアップデート
 	void UpdatePmd(); 
 	//pmdモデル移動

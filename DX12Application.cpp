@@ -570,6 +570,22 @@ void DX12Application::SetScene()
 	_cmdList->SetGraphicsRootDescriptorTable(0, matrixCsvHeaps->GetGPUDescriptorHandleForHeapStart());
 }
 
+//DSVヒープのみをRTVとして設定、DSVクリア、ビューポートの設定
+void DX12Application::PreDrawShadowMap()
+{
+	auto handle = dsvHeaps->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	_cmdList->OMSetRenderTargets(0, nullptr, false, &handle);
+
+	_cmdList->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, shadowDifinition, shadowDifinition);
+	_cmdList->RSSetViewports(1, &vp);//ビューポート
+
+	CD3DX12_RECT rc(0, 0, shadowDifinition, shadowDifinition);
+	_cmdList->RSSetScissorRects(1, &rc);//シザー(切り抜き)矩形
+}
+
 //描画終了メソッド、バリア設定、コマンドリスト実行、フェンスによる同期、コマンドのリセット、画面のスワップによるディスプレイへの描画
 void DX12Application::EndDraw()
 {

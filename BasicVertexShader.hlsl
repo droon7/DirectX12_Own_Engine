@@ -19,7 +19,7 @@ Output BasicVS(
 	//	pos = mul(shadow, pos);
 	//}
 	output.svpos = mul(mul(projection, view), pos);
-	//output.svpos = mul(lightCamera, pos);
+	output.tpos = mul(lightCamera, pos);
 
 	normal.w = 0; // ïΩçsà⁄ìÆê¨ï™Çñ≥å¯Ç…Ç∑ÇÈ
 
@@ -38,8 +38,9 @@ float4 ShadowVS(
 	float4 normal : NORMAL,
 	float2 uv : TEXCOORD,
 	min16uint2 boneno : BONE_NO,
-	min16uint weight : WEIGHT) : SV_POSITION 
+	min16uint weight : WEIGHT) : SV_POSITION
 {
+
 	float s_weight = weight / 100.0f;
 	matrix boneMatrix = bones[boneno[0]] * s_weight + bones[boneno[1]] * (1 - s_weight);
 

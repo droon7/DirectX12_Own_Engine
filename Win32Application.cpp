@@ -123,21 +123,28 @@ void Win32Application::RunDX12()
 
 		//以下DirectX12の処理
 
+
 		//まずPMDの描画をする
-		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
-		//PMD用の描画パイプラインに合わせる
-		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
-		////ルートシグネチャもPMD用に合わせる
-		pDX12->_cmdList->SetGraphicsRootSignature(pmdRenderer->GetRootsignature().Get());
-		pDX12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//シーン行列設定
+
+		//PMDモデルを光源からのデプスマップとして描画する
+		pmdRenderer->PreDrawShadow(pDX12);
 		pDX12->SetScene();
-		//PMDモデル描画
+		pDX12->PreDrawShadowMap();
 		for (auto& pmd : pmdActors)
 		{
-			pmd->DrawPmd(pDX12);
+			pmd->DrawPmd(pDX12,true);
 		}
-		pmdRenderer->EndDrawPmd(pDX12);
+
+		//PMDモデル描画
+		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
+		pmdRenderer->PreDrawPmd(pDX12);
+		//シーン行列設定
+		pDX12->SetScene();
+		for (auto& pmd : pmdActors)
+		{
+			pmd->DrawPmd(pDX12,false);
+		}
+		pmdRenderer->PostDrawPmd(pDX12);
 		otherRenderTarget->PostDrawOtherRenderTargets(pDX12);
 			
 		//ここまでPMDの描画

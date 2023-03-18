@@ -26,12 +26,26 @@ float4 BasicPS(Output input) : SV_TARGET
 	//float2 normalUV = (input.normal.xy + float2(1, -1)) * float2(0.5, -0.5);
 	float2 sphereMapUV = (input.vnormal.xy + float2(1, -1)) * float2(0.5, -0.5);
 
+	//シャドウマップ計算
+	//まずライトから見た座標をUV座標に戻す
+	float3 posFromLightVP = input.tpos.xyz / input.tpos.z;
+	float2 shadowUV = (posFromLightVP + float2(1, -1)) * float2(0.5, -0.5);
+	//ライトから見た深度と得たUVをサンプル
+	float depthFromLight = lightDepthTex.Sample(smp, shadowUV);
+	//深度値を比較して遠い場合は影ウェイトを掛ける。
+	float shadowWeight = 1.0f;
+	//if (depthFromLight < posFromLightVP.z)
+	//{
+	//	shadowWeight = 0.5f;
+	//}
+
 	//描画する値を返す
 	return  max(
 		saturate(toonDif)
 		* diffuse
 		* texColor
 		* sph.Sample(smp, sphereMapUV)
+		* shadowWeight
 		+ saturate(spa.Sample(smp, sphereMapUV))
 		+ float4(specularB * specular.rgb, 1)
 		, float4(texColor * ambient/2, 1));

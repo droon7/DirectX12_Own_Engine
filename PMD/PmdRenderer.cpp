@@ -18,8 +18,28 @@ ComPtr<ID3D12PipelineState> PmdRenderer::GetPipelinestate()
 	return pipelinestate;
 }
 
-void PmdRenderer::EndDrawPmd(DX12Application* pdx12)
+
+
+void PmdRenderer::PreDrawPmd(DX12Application* pdx12)
 {
+	//PMD用の描画パイプラインに合わせる
+	pdx12->_cmdList->SetPipelineState(pipelinestate.Get());
+	////ルートシグネチャもPMD用に合わせる
+	pdx12->_cmdList->SetGraphicsRootSignature(rootsignature.Get());
+	pdx12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void PmdRenderer::PostDrawPmd(DX12Application* pdx12)
+{
+}
+
+void PmdRenderer::PreDrawShadow(DX12Application* pdx12)
+{
+	auto commandList = pdx12->_cmdList;
+
+	commandList->SetPipelineState(pdx12->shadowMapPls.Get());
+	commandList->SetGraphicsRootSignature(rootsignature.Get());
+	commandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 
@@ -240,7 +260,7 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 
 	//ルートパラメーターを設定
 	rootSignatureDesc.pParameters = &rootparam[0];
-	rootSignatureDesc.NumParameters = 3;
+	rootSignatureDesc.NumParameters = 4;
 	//サンプラーを設定
 	rootSignatureDesc.pStaticSamplers = samplerDesc;
 	rootSignatureDesc.NumStaticSamplers = 2;
