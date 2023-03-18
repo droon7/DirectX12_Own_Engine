@@ -128,16 +128,16 @@ void Win32Application::RunDX12()
 
 		//PMDモデルを光源からのデプスマップとして描画する
 		pmdRenderer->PreDrawShadow(pDX12);
-		pDX12->SetScene();
 		pDX12->PreDrawShadowMap();
+		pDX12->SetScene();
 		for (auto& pmd : pmdActors)
 		{
 			pmd->DrawPmd(pDX12,true);
 		}
 
 		//PMDモデル描画
-		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
 		pmdRenderer->PreDrawPmd(pDX12);
+		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
 		//シーン行列設定
 		pDX12->SetScene();
 		for (auto& pmd : pmdActors)

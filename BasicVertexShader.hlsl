@@ -18,8 +18,10 @@ Output BasicVS(
 	//if (instNo == 1) {
 	//	pos = mul(shadow, pos);
 	//}
+	//output.svpos = mul(lightCamera, pos);
 	output.svpos = mul(mul(projection, view), pos);
 	output.tpos = mul(lightCamera, pos);
+
 
 	normal.w = 0; // •½sˆÚ“®¬•ª‚ğ–³Œø‚É‚·‚é
 

@@ -41,8 +41,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> effectSRVHeap;
 	ComPtr<ID3D12Resource> effectTextureBuffer; //めんどくさいのでPmdTexture使用
 
-	//深度マップ用
-	ComPtr<ID3D12DescriptorHeap> depthSRVHeap;
+
 
 	//別のRTV、ポストエフェクト用SRVの作成、
 	void CreateRTVsAndSRVs(DX12Application* pdx12);
