@@ -363,6 +363,9 @@ HRESULT DX12Application::CreateDepthStencilView()
 		IID_PPV_ARGS(depthBuffer.ReleaseAndGetAddressOf())
 	);
 
+	depthResourceDescriptor.Width = shadowDifinition;
+	depthResourceDescriptor.Height = shadowDifinition;
+
 	//シャドウマップ用バッファーの作成
 	result = _dev->CreateCommittedResource(
 		&depthHeapProperty,
@@ -437,8 +440,8 @@ HRESULT DX12Application::CreateSceneView()
 {
 	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
 
-	XMFLOAT3 eye(0, 12, -30);
-	XMFLOAT3 target(0, 12, 0); // eye座標とtarget座標から視線ベクトルを作る
+	XMFLOAT3 eye(0, 15, -25);
+	XMFLOAT3 target(0, 10, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
 	auto eyePos = XMLoadFloat3(&eye);
@@ -479,10 +482,11 @@ HRESULT DX12Application::CreateSceneView()
 	mapTransform->shadow = XMMatrixShadow(XMLoadFloat4(&planeVec), -XMLoadFloat3(&parallelLightVec));
 	//シャドウマップ用の光源ビューの設定
 	//lightの位置はカメラ位置とターゲット位置の距離とライトの位置とターゲット位置が同じになるように設置する。
+	float armLength = XMVector3Length(XMVectorSubtract(targetPos, eyePos)).m128_f32[0];
 	XMVECTOR lightPos = targetPos + XMVector3Normalize(-XMLoadFloat3(&parallelLightVec))
-		* XMVector3Length(XMVectorSubtract(targetPos, eyePos)).m128_f32[0];
+		* armLength;
 	lightMat = XMMatrixLookAtLH(lightPos, targetPos, upPos)
-		* XMMatrixOrthographicLH(shadowDifinition, shadowDifinition, 1.0f, 100.0f);
+		* XMMatrixOrthographicLH(40, 40, 1.0f, 100.0f);
 	mapTransform->lightCamera = lightMat;
 
 	//定数バッファービューの作成のための設定

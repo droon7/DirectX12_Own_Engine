@@ -480,7 +480,7 @@ void PmdActor::UpdatePmd()
 	}
 
 	SetPmdBone(frameNo);
-	rotation.y += 0.001f;
+	//rotation.y += 0.001f;
 	mapTransform[0] = DirectX::XMMatrixIdentity();
 	mapTransform[0] *= DirectX::XMMatrixRotationY(rotation.y);
 	mapTransform[0] *= DirectX::XMMatrixTranslation(position.x, position.y, position.z);

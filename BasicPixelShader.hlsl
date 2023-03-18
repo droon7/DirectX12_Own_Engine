@@ -34,10 +34,12 @@ float4 BasicPS(Output input) : SV_TARGET
 	float depthFromLight = lightDepthTex.Sample(smp, shadowUV);
 	//深度値を比較して遠い場合は影ウェイトを掛ける。
 	float shadowWeight = 1.0f;
-	//if (depthFromLight < posFromLightVP.z)
-	//{
-	//	shadowWeight = 0.5f;
-	//}
+	if (depthFromLight < posFromLightVP.z - 0.01)
+	{
+		shadowWeight = 0.8f;
+	}
+
+	return shadowWeight;
 
 	//描画する値を返す
 	return  max(

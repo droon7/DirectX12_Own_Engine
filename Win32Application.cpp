@@ -139,7 +139,7 @@ void Win32Application::RunDX12()
 		pDX12->SetScene();
 		for (auto& pmd : pmdActors)
 		{
-			pmd->DrawPmd(pDX12,true);
+			pmd->DrawPmd(pDX12,false);
 		}
 
 		//PMDƒ‚ƒfƒ‹•`‰æ
