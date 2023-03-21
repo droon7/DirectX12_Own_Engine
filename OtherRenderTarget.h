@@ -44,6 +44,7 @@ private:
 
 	//ブルーム用オブジェクト
 	std::array<ComPtr<ID3D12Resource>, 2> bloomBuffer;
+	ComPtr<ID3D12PipelineState> blurPipeline;
 
 
 	//別のRTV、ポストエフェクト用SRVの作成、
@@ -65,7 +66,7 @@ private:
 public:
 	OtherRenderTarget(DX12Application* pdx12);
 
-	//planeResource1を描画。現在水平ガウスブラー
+	//planeResource1を描画。
 	void DrawOtherRenderTarget(DX12Application* pdx12);
 
 	//最初に描画するレンダーターゲットの前処理。現在はPMDモデルの描画に使用している
@@ -74,8 +75,11 @@ public:
 	//最初に描画するレンダーターゲットの後処理。現在はPMDモデルの描画に使用している
 	void PostDrawOtherRenderTargets(DX12Application* pdx12);
 
-	//設定らも含めて描画する。現在垂直ガウスブラー
+	//設定らも含めて描画する。現在
 	void DrawOtherRenderTargetsFull(DX12Application* pdx12);
+
+	//縮小バッファに対する書き込み
+	void DrawShrinkTextureForBlur(DX12Application* pdx12);
 };
 
 

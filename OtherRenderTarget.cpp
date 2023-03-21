@@ -54,7 +54,6 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
 		);
 		rtvResourceDesc.Width >>= 1;
-		rtvResourceDesc.Height >>= 1;
 		if (FAILED(result)) {
 			assert(0);
 			return;
@@ -79,7 +78,7 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	heapDesc.NodeMask = 0;
-	heapDesc.NumDescriptors = 4;
+	heapDesc.NumDescriptors = 5;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 	result = pdx12->_dev->CreateDescriptorHeap(
@@ -101,8 +100,13 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
-	pdx12->_dev->CreateRenderTargetView(bloomBuffer[0].Get(), &rtvDesc, handle);
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	for (auto& resource : bloomBuffer) {
+		pdx12->_dev->CreateRenderTargetView(
+			resource.Get(),
+			&rtvDesc,
+			handle);
+		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	}
 
 	pdx12->_dev->CreateRenderTargetView(
 		planeResource2.Get(),
@@ -111,7 +115,7 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 
 
 	//SRV作成
-	heapDesc.NumDescriptors = 4;
+	heapDesc.NumDescriptors = 5;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -138,9 +142,14 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
-	pdx12->_dev->CreateShaderResourceView(bloomBuffer[0].Get(), &srvDesc, handle);
-
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	for (auto& resource : bloomBuffer) {
+		pdx12->_dev->CreateShaderResourceView(
+			resource.Get(),
+			&srvDesc,
+			handle
+		);
+		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	}
 
 	pdx12->_dev->CreateShaderResourceView(
 		planeResource2.Get(),
@@ -228,18 +237,18 @@ void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 	D3D12_DESCRIPTOR_RANGE range[5] = {};
 	range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	range[0].BaseShaderRegister = 0;
-	range[0].NumDescriptors = 3;
+	range[0].NumDescriptors = 4;
 	range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	range[1].BaseShaderRegister = 0;
 	range[1].NumDescriptors = 1;
 	range[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[2].BaseShaderRegister = 3;
+	range[2].BaseShaderRegister = 4;
 	range[2].NumDescriptors = 1;
 	range[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[3].BaseShaderRegister = 4;
+	range[3].BaseShaderRegister = 5;
 	range[3].NumDescriptors = 1;
 	range[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[4].BaseShaderRegister = 5;
+	range[4].BaseShaderRegister = 6;
 	range[4].NumDescriptors = 1;
 
 
@@ -417,6 +426,24 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 		return;
 	}
 
+	result = D3DCompileFromFile(
+		L"planePixel.hlsl", nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"BlurPS", "ps_5_0", 0, 0,
+		planePs.ReleaseAndGetAddressOf(),
+		errorBlob.ReleaseAndGetAddressOf()
+	);
+
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
+
+	gpsDesc.PS = CD3DX12_SHADER_BYTECODE(planePs.Get());
+	result = pdx12->_dev->CreateGraphicsPipelineState(
+		&gpsDesc,
+		IID_PPV_ARGS(blurPipeline.ReleaseAndGetAddressOf())
+	);
 }
 
 //ポストエフェクト用SRV作成
@@ -649,5 +676,79 @@ void OtherRenderTarget::DrawOtherRenderTargetsFull(DX12Application* pdx12)
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+}
+
+void OtherRenderTarget::DrawShrinkTextureForBlur(DX12Application* pdx12)
+{
+	auto commandList = pdx12->_cmdList;
+
+	commandList->SetPipelineState(blurPipeline.Get());
+	commandList->SetGraphicsRootSignature(planeRootsignature.Get());
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	commandList->IASetVertexBuffers(0, 1, &planePolygonVertexView);
+
+
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		bloomBuffer[0].Get(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		bloomBuffer[1].Get(),
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+
+	auto rtvHandle = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
+	auto srvHandle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
+
+	rtvHandle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * 3;
+
+	commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+	srvHandle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 2;
+
+	commandList->SetDescriptorHeaps(1, planeSRVHeap.GetAddressOf());
+	commandList->SetGraphicsRootDescriptorTable(0, srvHandle);
+
+	auto desc = bloomBuffer[0]->GetDesc();
+	D3D12_VIEWPORT vp = {};
+	D3D12_RECT rect = {};
+
+	vp.MaxDepth = 1.0f;
+	vp.MinDepth = 0.0f;
+	vp.Height = desc.Height / 2;
+	vp.Width = desc.Width / 2;
+	rect.top = 0;
+	rect.left = 0;
+	rect.bottom = vp.Height;
+	rect.right = vp.Width;
+
+	//八回縮小バッファを描画する
+	for (int i = 0; i < 8; ++i)
+	{
+		commandList->RSSetViewports(1, &vp);
+		commandList->RSSetScissorRects(1, &rect);
+		commandList->DrawInstanced(4, 1, 0, 0);
+
+		//描画を下にずらし、描画サイズを小さくする
+		rect.top += vp.Height;
+		vp.TopLeftX = 0;
+		vp.TopLeftY = rect.top;
+
+		vp.Width /= 2;
+		vp.Height /= 2;
+		rect.bottom = rect.top + vp.Height;
+	}
+
+	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		bloomBuffer[1].Get(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
 	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 }
