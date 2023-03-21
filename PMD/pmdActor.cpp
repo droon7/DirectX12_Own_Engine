@@ -418,7 +418,7 @@ void PmdActor::CreateMaterialAndTextureView(DX12Application* app)
 //ここまでDirectX12の内部処理
 
 
-void PmdActor::DrawPmd(DX12Application* app)
+void PmdActor::DrawPmd(DX12Application* app, bool isShadow)
 {
 	//頂点バッファーのセット
 	app->_cmdList->IASetVertexBuffers(0, 1, &vbView);
@@ -440,15 +440,22 @@ void PmdActor::DrawPmd(DX12Application* app)
 	auto cbvSrvIncSize = app->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 5;
 
 	unsigned int idxOffset = 0;
-	for (auto& m : pmdData.materialDatas)
+	//シャドウ描画時にはマテリアルを参照せずに描画する。
+	if (isShadow == true)
 	{
-		app->_cmdList->SetGraphicsRootDescriptorTable(2, materialH);
+		app->_cmdList->DrawIndexedInstanced(pmdData.indicesNum, 0, 0, 0, 0);
+	}
+	else {
+		for (auto& m : pmdData.materialDatas)
+		{
+			app->_cmdList->SetGraphicsRootDescriptorTable(2, materialH);
 
-		app->_cmdList->DrawIndexedInstanced(m.indicesNum, 2, idxOffset, 0, 0);
+			app->_cmdList->DrawIndexedInstanced(m.materialIndicesNum, 2, idxOffset, 0, 0);
 
-		materialH.ptr += cbvSrvIncSize;
+			materialH.ptr += cbvSrvIncSize;
 
-		idxOffset += m.indicesNum;
+			idxOffset += m.materialIndicesNum;
+		}
 	}
 }
 
@@ -473,7 +480,7 @@ void PmdActor::UpdatePmd()
 	}
 
 	SetPmdBone(frameNo);
-	rotation.y += 0.001f;
+	//rotation.y += 0.001f;
 	mapTransform[0] = DirectX::XMMatrixIdentity();
 	mapTransform[0] *= DirectX::XMMatrixRotationY(rotation.y);
 	mapTransform[0] *= DirectX::XMMatrixTranslation(position.x, position.y, position.z);

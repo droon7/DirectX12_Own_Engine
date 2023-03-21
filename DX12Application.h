@@ -80,9 +80,12 @@ private:
 	float angle = 0.0f;
 
 	//影用アセット
+	static constexpr unsigned int shadowDifinition = 1024;
 	DirectX::XMFLOAT3 parallelLightVec;
 	DirectX::XMMATRIX lightMat;
-	Shadow shadowClass;
+	ComPtr<ID3D12Resource> shadowMapBuffer = nullptr; 
+	ComPtr<ID3D12DescriptorHeap> depthSRVHeaps = nullptr;
+	ComPtr<ID3D12PipelineState> shadowMapPls = nullptr;
 
 	//デバッグオブジェクトの宣言
 	ID3D12DebugDevice* debugDevice;
@@ -123,6 +126,8 @@ public:
 	void EndBackBufferDraw();
 	// カメラをセットしシーンを設定
 	void SetScene();
+	// シャドウマップを描画するための前設定をする。
+	void PreDrawShadowMap();
 	//描画終了メソッド、バリア設定、コマンドリスト実行、フェンスによる同期、コマンドのリセット、画面のスワップによるディスプレイへの描画
 	void EndDraw();
 	//GPUがコマンドを全て実行完了するまで待ち、CPUと同期する

@@ -402,7 +402,16 @@ void OtherRenderTarget::CreateEffectBufferAndView(DX12Application* pdx12)
 	);
 }
 
+//シャドウマップ用SRV作成
+void OtherRenderTarget::CreateDepthMapObjects(DX12Application* pdx12)
+{
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+}
 
+	resDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	auto handle = depthSRVHeap->GetCPUDescriptorHandleForHeapStart();
+	pdx12->_dev->CreateShaderResourceView(pdx12->depthBuffer.Get(), &resDesc, handle);
+}
 
 
 std::vector<float> OtherRenderTarget::GetGaussianWeights(const size_t count, const float s)
@@ -444,13 +453,13 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
 
 	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, handle);
-
+	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart());
 	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
-	//pdx12->_cmdList->SetDescriptorHeaps(1, depthSRVHeap.GetAddressOf());
-	//pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, depthSRVHeap->GetGPUDescriptorHandleForHeapStart());
+	pdx12->_cmdList->SetDescriptorHeaps(1, depthSRVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, depthSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }
@@ -479,6 +488,15 @@ void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 
 	CD3DX12_RECT rc(0, 0, pdx12->window_width, pdx12->window_height);
 	pdx12->_cmdList->RSSetScissorRects(1, &rc);//シザー(切り抜き)矩形
+
+
+
+	//シャドウマップ描画のためのディスクリプタヒープ設定
+	//シャドウマップDSVが指してるリソースをSRVとして設定
+	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
+	auto handle = pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart();
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, handle);
 }
 
 //最初に描画するレンダーターゲットの後処理。現在はPMDモデルの描画に使用している

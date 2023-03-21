@@ -18,8 +18,28 @@ ComPtr<ID3D12PipelineState> PmdRenderer::GetPipelinestate()
 	return pipelinestate;
 }
 
-void PmdRenderer::EndDrawPmd(DX12Application* pdx12)
+
+
+void PmdRenderer::PreDrawPmd(DX12Application* pdx12)
 {
+	//PMD用の描画パイプラインに合わせる
+	pdx12->_cmdList->SetPipelineState(pipelinestate.Get());
+	////ルートシグネチャもPMD用に合わせる
+	pdx12->_cmdList->SetGraphicsRootSignature(rootsignature.Get());
+	pdx12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void PmdRenderer::PostDrawPmd(DX12Application* pdx12)
+{
+}
+
+void PmdRenderer::PreDrawShadow(DX12Application* pdx12)
+{
+	auto commandList = pdx12->_cmdList;
+
+	commandList->SetPipelineState(pdx12->shadowMapPls.Get());
+	commandList->SetGraphicsRootSignature(rootsignature.Get());
+	commandList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 
@@ -163,24 +183,68 @@ HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 	//PSOの作成
 	gpipeline.pRootSignature = rootsignature.Get();
 	result = app->_dev->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(pipelinestate.ReleaseAndGetAddressOf()));
+
+
+	//ShasowMap用シェーダー作成
+	result = D3DCompileFromFile(
+		L"BasicVertexShader.hlsl",
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"ShadowVS",
+		"vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&vsBlob,
+		&errorBlob
+	);
+
+	//エラー発生時の処理
+	if (FAILED(result)) {
+		if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {
+			::OutputDebugStringA("ファイルが見当たりません");
+		}
+		else {
+			std::string errstr;
+			errstr.resize(errorBlob->GetBufferSize());
+			std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errstr.begin());
+			errstr += "\n";
+			::OutputDebugStringA(errstr.c_str());
+		}
+		exit(1);
+	}
+
+	gpipeline.VS = CD3DX12_SHADER_BYTECODE(vsBlob.Get());
+	gpipeline.PS.BytecodeLength = 0;
+	gpipeline.PS.pShaderBytecode = nullptr;
+	gpipeline.NumRenderTargets = 0;
+	gpipeline.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+
+	result = app->_dev->CreateGraphicsPipelineState(
+		&gpipeline,
+		IID_PPV_ARGS(app->shadowMapPls.ReleaseAndGetAddressOf())
+	);
+
+
 	return result;
 }
 
 HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 {
 	//ルートシグネチャに設定するルートパラメータ及びディスクリプタテーブル、ディスクリプタレンジの設定
-	CD3DX12_DESCRIPTOR_RANGE descTblRange[4] = {};
+	CD3DX12_DESCRIPTOR_RANGE descTblRange[5] = {};
 	descTblRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);//CBV b0 viewProjectMatrix
 	descTblRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);//CBV b1 worldTransformMatrix
 	descTblRange[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);//CBV b2 Material
 	descTblRange[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0);//SRV t0 - t3 Textures
+	descTblRange[4] = CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4); //SRV t4 ShadowMap
 
 	//ルートパラメーターの設定
-	CD3DX12_ROOT_PARAMETER rootparam[3] = {};
+	CD3DX12_ROOT_PARAMETER rootparam[4] = {};
 
 	rootparam[0].InitAsDescriptorTable(1, &descTblRange[0]);// view projection matrix;
 	rootparam[1].InitAsDescriptorTable(1, &descTblRange[1]);// worldTransformMatrix;
 	rootparam[2].InitAsDescriptorTable(2, &descTblRange[2]);// material;
+	rootparam[3].InitAsDescriptorTable(1, &descTblRange[4]);// ShadowMap;
 
 
 	//ルートシグネチャに設定するサンプラーの設定
@@ -196,7 +260,7 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 
 	//ルートパラメーターを設定
 	rootSignatureDesc.pParameters = &rootparam[0];
-	rootSignatureDesc.NumParameters = 3;
+	rootSignatureDesc.NumParameters = 4;
 	//サンプラーを設定
 	rootSignatureDesc.pStaticSamplers = samplerDesc;
 	rootSignatureDesc.NumStaticSamplers = 2;
@@ -217,6 +281,7 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 		rootSigBlob->GetBufferPointer(),
 		rootSigBlob->GetBufferSize(),
 		IID_PPV_ARGS(rootsignature.ReleaseAndGetAddressOf()));
+
 
 
 	return result;

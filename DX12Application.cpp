@@ -363,10 +363,23 @@ HRESULT DX12Application::CreateDepthStencilView()
 		IID_PPV_ARGS(depthBuffer.ReleaseAndGetAddressOf())
 	);
 
+	depthResourceDescriptor.Width = shadowDifinition;
+	depthResourceDescriptor.Height = shadowDifinition;
+
+	//シャドウマップ用バッファーの作成
+	result = _dev->CreateCommittedResource(
+		&depthHeapProperty,
+		D3D12_HEAP_FLAG_NONE,
+		&depthResourceDescriptor,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(shadowMapBuffer.ReleaseAndGetAddressOf())
+	);
 
 	//深度のためのディスクリプタヒープの作成
+	//ライトデプスマップも入れる
 	D3D12_DESCRIPTOR_HEAP_DESC depthStencilViewHeapDescriptor = {};
-	depthStencilViewHeapDescriptor.NumDescriptors = 1;
+	depthStencilViewHeapDescriptor.NumDescriptors = 2;
 	depthStencilViewHeapDescriptor.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	result = _dev->CreateDescriptorHeap(&depthStencilViewHeapDescriptor, IID_PPV_ARGS(dsvHeaps.ReleaseAndGetAddressOf()));
 
@@ -375,11 +388,47 @@ HRESULT DX12Application::CreateDepthStencilView()
 	dsvDescriptor.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDescriptor.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDescriptor.Flags = D3D12_DSV_FLAG_NONE;
+
+	auto handle = dsvHeaps->GetCPUDescriptorHandleForHeapStart();
+
+	//通常デプス
 	_dev->CreateDepthStencilView(
 		depthBuffer.Get(),
 		&dsvDescriptor,
-		dsvHeaps->GetCPUDescriptorHandleForHeapStart()
+		handle
 	);
+
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	//ライトデプス
+	_dev->CreateDepthStencilView(
+		shadowMapBuffer.Get(),
+		&dsvDescriptor,
+		handle
+	);
+
+	//デプスバッファのSRVをそれぞれ作成
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.NodeMask = 0;
+	heapDesc.NumDescriptors = 2;
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	result = _dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&depthSRVHeaps));
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC resDesc = {};
+	resDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	resDesc.Texture2D.MipLevels = 1;
+	resDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	resDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	handle = depthSRVHeaps->GetCPUDescriptorHandleForHeapStart();
+
+	//通常デプスSRV
+	_dev->CreateShaderResourceView(depthBuffer.Get(), &resDesc, handle);
+
+	//ライトデプスSRV
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	_dev->CreateShaderResourceView(shadowMapBuffer.Get(), &resDesc, handle);
 
 	return result;
 }
@@ -391,8 +440,8 @@ HRESULT DX12Application::CreateSceneView()
 {
 	//ワールド行列、ビュー行列、プロジェクション行列を計算し乗算していく
 
-	XMFLOAT3 eye(0, 12, -30);
-	XMFLOAT3 target(0, 12, 0); // eye座標とtarget座標から視線ベクトルを作る
+	XMFLOAT3 eye(0, 15, -25);
+	XMFLOAT3 target(0, 10, 0); // eye座標とtarget座標から視線ベクトルを作る
 	XMFLOAT3 up(0, 1, 0);
 
 	auto eyePos = XMLoadFloat3(&eye);
@@ -433,8 +482,9 @@ HRESULT DX12Application::CreateSceneView()
 	mapTransform->shadow = XMMatrixShadow(XMLoadFloat4(&planeVec), -XMLoadFloat3(&parallelLightVec));
 	//シャドウマップ用の光源ビューの設定
 	//lightの位置はカメラ位置とターゲット位置の距離とライトの位置とターゲット位置が同じになるように設置する。
+	float armLength = XMVector3Length(XMVectorSubtract(targetPos, eyePos)).m128_f32[0];
 	XMVECTOR lightPos = targetPos + XMVector3Normalize(-XMLoadFloat3(&parallelLightVec))
-		* XMVector3Length(XMVectorSubtract(targetPos, eyePos)).m128_f32[0];
+		* armLength;
 	lightMat = XMMatrixLookAtLH(lightPos, targetPos, upPos)
 		* XMMatrixOrthographicLH(40, 40, 1.0f, 100.0f);
 	mapTransform->lightCamera = lightMat;
@@ -522,6 +572,22 @@ void DX12Application::SetScene()
 	_cmdList->SetDescriptorHeaps(1, matrixHeaps);
 	//ルートパラメタとシーン行列定数ヒープのアドレスの関連付け
 	_cmdList->SetGraphicsRootDescriptorTable(0, matrixCsvHeaps->GetGPUDescriptorHandleForHeapStart());
+}
+
+//DSVヒープのみをRTVとして設定、DSVクリア、ビューポートの設定
+void DX12Application::PreDrawShadowMap()
+{
+	auto handle = dsvHeaps->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	_cmdList->OMSetRenderTargets(0, nullptr, false, &handle);
+
+	_cmdList->ClearDepthStencilView(handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, shadowDifinition, shadowDifinition);
+	_cmdList->RSSetViewports(1, &vp);//ビューポート
+
+	CD3DX12_RECT rc(0, 0, shadowDifinition, shadowDifinition);
+	_cmdList->RSSetScissorRects(1, &rc);//シザー(切り抜き)矩形
 }
 
 //描画終了メソッド、バリア設定、コマンドリスト実行、フェンスによる同期、コマンドのリセット、画面のスワップによるディスプレイへの描画

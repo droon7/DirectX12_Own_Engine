@@ -91,19 +91,22 @@ void Win32Application::RunDX12()
 	pmdRenderer.reset(new PmdRenderer(pDX12));
 	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd","motion/swing.vmd",0);
 	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd", "motion/yagokoro.vmd");
+	sharedPmdActor->Move(-10, 0, 10);
+	pmdActors.push_back(sharedPmdActor);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd", "motion/swing.vmd");
 	sharedPmdActor->Move(0, 0, 0);
 	pmdActors.push_back(sharedPmdActor);
-	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/巡音ルカ.pmd", "motion/swing.vmd");
-	sharedPmdActor->Move(12, 0, 0);
-	pmdActors.push_back(sharedPmdActor);
 	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/カイト.pmd", "motion/motion.vmd");
-	sharedPmdActor->Move(-12, 0, 0);
+	sharedPmdActor->Move(-5, 0, 5);
 	pmdActors.push_back(sharedPmdActor);
 	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/咲音メイコ.pmd", "motion/yagokoro.vmd");
-	sharedPmdActor->Move(-6, 0, 5);
+	sharedPmdActor->Move(-10, 0, 0);
 	pmdActors.push_back(sharedPmdActor);
-	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/弱音ハク.pmd", "motion/yagokoro.vmd");
-	sharedPmdActor->Move(6, 0, 5);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/鏡音リン.pmd", "motion/yagokoro.vmd");
+	sharedPmdActor->Move(10, 0, 0);
+	pmdActors.push_back(sharedPmdActor);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/巡音ルカ.pmd", "motion/yagokoro.vmd");
+	sharedPmdActor->Move(10, 0, 10);
 	pmdActors.push_back(sharedPmdActor);
 
 	//ウィンドウ表示
@@ -121,23 +124,37 @@ void Win32Application::RunDX12()
 		}
 
 
-		//以下DirectX12の処理
-
-		//まずPMDの描画をする
-		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
-		//PMD用の描画パイプラインに合わせる
-		pDX12->_cmdList->SetPipelineState(pmdRenderer->GetPipelinestate().Get());
-		////ルートシグネチャもPMD用に合わせる
-		pDX12->_cmdList->SetGraphicsRootSignature(pmdRenderer->GetRootsignature().Get());
-		pDX12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//シーン行列設定
-		pDX12->SetScene();
-		//PMDモデル描画
+		//PMDモデルUpdate
 		for (auto& pmd : pmdActors)
 		{
-			pmd->DrawPmd(pDX12);
+			pmd->UpdatePmd();
 		}
-		pmdRenderer->EndDrawPmd(pDX12);
+
+
+		//以下DirectX12の処理
+
+
+		//まずPMDの描画をする
+
+		//PMDモデルを光源からのデプスマップとして描画する
+		pmdRenderer->PreDrawShadow(pDX12);
+		pDX12->PreDrawShadowMap();
+		pDX12->SetScene();
+		for (auto& pmd : pmdActors)
+		{
+			pmd->DrawPmd(pDX12,false);
+		}
+
+		//PMDモデル描画
+		pmdRenderer->PreDrawPmd(pDX12);
+		otherRenderTarget->PreDrawOtherRenderTargets(pDX12);
+		//シーン行列設定
+		pDX12->SetScene();
+		for (auto& pmd : pmdActors)
+		{
+			pmd->DrawPmd(pDX12,false);
+		}
+		pmdRenderer->PostDrawPmd(pDX12);
 		otherRenderTarget->PostDrawOtherRenderTargets(pDX12);
 			
 		//ここまでPMDの描画
@@ -156,10 +173,7 @@ void Win32Application::RunDX12()
 		pDX12->EndDraw();
 
 
-		for (auto& pmd : pmdActors)
-		{
-			pmd->UpdatePmd();
-		}
+
 
 
 

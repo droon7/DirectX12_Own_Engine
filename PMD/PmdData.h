@@ -52,7 +52,7 @@ struct AdditionalMaterial
 //マテリアルデータをまとめる
 struct MaterialData
 {
-	unsigned int indicesNum;
+	unsigned int materialIndicesNum;
 	MaterialForHlsl material;
 	AdditionalMaterial additional;
 };
