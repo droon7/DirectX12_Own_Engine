@@ -36,6 +36,7 @@ private:
 
 	//ボケパラメタリソース、CSV
 	ComPtr<ID3D12Resource> bokehParameterBuffer;
+	ComPtr<ID3D12DescriptorHeap> bokeCSVHeap;
 
 	//法線マップ歪みテクスチャ用
 	ComPtr<ID3D12DescriptorHeap> effectSRVHeap;

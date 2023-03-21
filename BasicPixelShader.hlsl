@@ -76,7 +76,7 @@ PixelOutput BasicPS(Output input) : SV_TARGET
 
 	float y = dot(float3 (0.299f, 0.587f, 0.114f), output.col);
 
-	output.highLum = y > 0.99f ? output.col : 0.0f;
+	output.highLum = y > 0.99f ? y : float4(0,0,0,1);
 
 
 	return output;

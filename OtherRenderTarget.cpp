@@ -41,6 +41,8 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 		}
 	}
 
+	clsColor[0] = clsColor[1] = clsColor[2] = 0; clsColor[3] = 1;
+	clearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsColor);
 	//ブルーム用リソース作成
 	for (auto& resource : bloomBuffer) {
 		auto result = pdx12->_dev->CreateCommittedResource(
@@ -206,14 +208,18 @@ void OtherRenderTarget::CreateCBVForPostEffect(DX12Application* pdx12)
 	copy(gaussWeights.begin(), gaussWeights.end(), mappedWeight);
 	bokehParameterBuffer->Unmap(0, nullptr);
 
-	auto handle = planeSRVHeap->GetCPUDescriptorHandleForHeapStart();
-	//間にSRVがもう一つ入るため2*incrementSizeにする
-	handle.ptr += 2 * pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descriptorHeapDesc.NodeMask = 0;
+	descriptorHeapDesc.NumDescriptors = 1;
+	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	result = pdx12->_dev->CreateDescriptorHeap(&descriptorHeapDesc,
+		IID_PPV_ARGS(&bokeCSVHeap));
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 	cbvDesc.BufferLocation = bokehParameterBuffer->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = bokehParameterBuffer->GetDesc().Width;
-	pdx12->_dev->CreateConstantBufferView(&cbvDesc, handle);
+	pdx12->_dev->CreateConstantBufferView(&cbvDesc, bokeCSVHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 //ポストエフェクト用ルートシグネチャ作成
@@ -363,9 +369,10 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 	gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	gpsDesc.DepthStencilState.DepthEnable = false;
 	gpsDesc.DepthStencilState.StencilEnable = false;
-	gpsDesc.NumRenderTargets = 1;
+	gpsDesc.NumRenderTargets = 3;
 	gpsDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-
+	gpsDesc.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	gpsDesc.RTVFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	gpsDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	gpsDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
@@ -484,6 +491,13 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	auto handle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
 
+
+	//ガウスブラー用ボケウェイト
+	pdx12->_cmdList->SetDescriptorHeaps(1, bokeCSVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, bokeCSVHeap->GetGPUDescriptorHandleForHeapStart());
+	//エフェクト用ノーマルマップ
+	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
 	//深度マップ設定
 	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart());
@@ -491,9 +505,6 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	handle = pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart();
 	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(4, handle);
-	//エフェクト用ノーマルマップ
-	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
-	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }
@@ -535,10 +546,17 @@ void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 	pdx12->_cmdList->OMSetRenderTargets(
 		3, handles, false, &dsvHead);
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	for (auto& rt : handles)
+	for (int i =0; i < _countof(handles); ++i)
 	{
-		pdx12->_cmdList->ClearRenderTargetView(rt, clsClr, 0, nullptr);
+		if (i == 2)
+		{
+			clsClr[0] = clsClr[1] = clsClr[2] = 0;
+			clsClr[3] = 1;
+		}
+		pdx12->_cmdList->ClearRenderTargetView(handles[i], clsClr, 0, nullptr);
 	}
+
+
 	pdx12->_cmdList->ClearDepthStencilView(dsvHead, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, pdx12->window_width, pdx12->window_height);

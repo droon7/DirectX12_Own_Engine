@@ -43,9 +43,13 @@ float4 ps(Output input) : SV_TARGET
 	{
 		return texNormal.Sample(smp, (input.uv - float2(0, 0.4)) * 5);
 	}
+	else if (input.uv.x < 0.2 && input.uv.y < 0.8)
+	{
+		return texHighLum.Sample(smp, (input.uv - float2(0, 0.6)) * 5);
+	}
 
 	float4 color = tex.Sample(smp,input.uv);
-	return color;
+	//return color;
 
 
 
@@ -57,18 +61,15 @@ float4 ps(Output input) : SV_TARGET
 	float dy = 1.0f / h;
 	float4 ret = float4(0, 0, 0, 0);
 
-	float2 nmTex = effectTex.Sample(smp, input.uv).xy;
-	nmTex = nmTex * 2.0f - 1.0f;
-	return tex.Sample(smp, input.uv + nmTex * 0.1f);
 
-	ret += bkweights[0] * color;
+	ret += bkweights[0] * texHighLum.Sample(smp, input.uv);
 	for(float i = 1; i < 8; ++i)
 	{
-		ret += bkweights[i / 4 % 2][i % 4] * tex.Sample(smp, input.uv + float2(i * dx, 0));
-		ret += bkweights[i / 4 % 2][i % 4] * tex.Sample(smp, input.uv + float2(-i * dx, 0));
+		ret += bkweights[i / 4 % 2][i % 4] * texHighLum.Sample(smp, input.uv + float2(i * dx, 0));
+		ret += bkweights[i / 4 % 2][i % 4] * texHighLum.Sample(smp, input.uv + float2(-i * dx, 0));
 	}
 
-	return float4(ret.rgb, color.a);
+	return color + float4(ret.rgb, color.a);
 
 	//以下は試したポストエフェクト
 
@@ -196,5 +197,9 @@ float4 ps(Output input) : SV_TARGET
 	////return float4(color.rgb-Y, color.a); //通常の描画＋輪郭線
 	//return float4(Y, color.a);			   //輪郭線のみ
 
-
+	
+	//法線マップによる歪みエフェクト
+	//float2 nmTex = effectTex.Sample(smp, input.uv).xy;
+	//nmTex = nmTex * 2.0f - 1.0f;
+	//return tex.Sample(smp, input.uv + nmTex * 0.1f);
 }
