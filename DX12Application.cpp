@@ -45,7 +45,6 @@ void DX12Application::OnInit(const HWND& hwnd)
 		assert(0);
 		return;
 	}
-	shadowClass = Shadow(this);
 	
 }
 

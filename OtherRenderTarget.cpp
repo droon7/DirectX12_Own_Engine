@@ -402,16 +402,6 @@ void OtherRenderTarget::CreateEffectBufferAndView(DX12Application* pdx12)
 	);
 }
 
-//シャドウマップ用SRV作成
-void OtherRenderTarget::CreateDepthMapObjects(DX12Application* pdx12)
-{
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-}
-
-	resDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	auto handle = depthSRVHeap->GetCPUDescriptorHandleForHeapStart();
-	pdx12->_dev->CreateShaderResourceView(pdx12->depthBuffer.Get(), &resDesc, handle);
-}
 
 
 std::vector<float> OtherRenderTarget::GetGaussianWeights(const size_t count, const float s)
@@ -458,8 +448,8 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
-	pdx12->_cmdList->SetDescriptorHeaps(1, depthSRVHeap.GetAddressOf());
-	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, depthSRVHeap->GetGPUDescriptorHandleForHeapStart());
+	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart());
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }

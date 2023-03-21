@@ -4,7 +4,6 @@
 #include"pch.h"
 #include"PmdData.h"
 #include"OtherRenderTarget.h"
-#include"Shadow.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
