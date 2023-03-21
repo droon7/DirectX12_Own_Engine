@@ -26,13 +26,28 @@ float4 VerticalBokePS(Output input) : SV_TARGET
 
 float4 ps(Output input) : SV_TARGET
 {
-	////深度マップテスト
-	//float dep = pow(depthTex.Sample(smp, input.uv), 500);
-	//return float4(dep,dep,dep, 1);
 
+	if (input.uv.x < 0.2 && input.uv.y < 0.2)	//深度マップ
+	{
+		float depth = depthTex.Sample(smp, input.uv * 5);
+		depth = 1.0f - pow(depth, 500);
+		return float4(depth,depth,depth, 1);
+	}
+	else if (input.uv.x < 0.2 && input.uv.y < 0.4) //ライトからの深度
+	{
+		float depth = shadowMapTex.Sample(smp, (input.uv - float2(0, 0.2)) * 5);
+		depth = 1 - depth;
+		return float4(depth, depth, depth, 1);
+	}
+	else if (input.uv.x < 0.2 && input.uv.y < 0.6)
+	{
+		return texNormal.Sample(smp, (input.uv - float2(0, 0.4)) * 5);
+	}
 
 	float4 color = tex.Sample(smp,input.uv);
 	return color;
+
+
 
 	//横ガウスブラー
 	float w, h, levels;

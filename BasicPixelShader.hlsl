@@ -1,10 +1,16 @@
 #include"BasicShaderHeader.hlsli"
 
-float4 BasicPS(Output input) : SV_TARGET
+PixelOutput BasicPS(Output input) : SV_TARGET
 {
 	if (input.instNo == 1)
 	{
-		return float4(0,0,0,1);
+		PixelOutput po;
+		po.col = float4(0, 0, 0, 1);
+
+		po.normal.rgb = float3((input.normal.xyz + 1.0f) / 2.0f);
+		po.normal.a = 1;
+
+		return po;
 	}
 
 	float3 light = normalize(float3(1, -1, 1));//平行光線ベクトル
@@ -46,10 +52,11 @@ float4 BasicPS(Output input) : SV_TARGET
 
 	shadowWeight = lerp(0.5f, 1.0f, depthFromLight);
 
-	//return shadowWeight;
 
-	//描画する値を返す
-	return  max(
+	//複数のレンダーターゲットに返す（現在は色と法線マップを返す）
+	PixelOutput output;
+
+	output.col = max(
 		saturate(toonDif)
 		* diffuse
 		* texColor
@@ -57,6 +64,16 @@ float4 BasicPS(Output input) : SV_TARGET
 		* shadowWeight
 		+ saturate(spa.Sample(smp, sphereMapUV))
 		+ float4(specularB * specular.rgb, 1)
-		, float4(texColor * ambient/2, 1));
+		, float4(texColor * ambient / 2, 1));
+
+	//法線が色で表現されるように加工
+	output.normal.rgb = float3((input.normal.xyz + 1.0f) / 2.0f);
+	output.normal.a = 1;
+
+	return output;
+
+
+
+
 
 }
