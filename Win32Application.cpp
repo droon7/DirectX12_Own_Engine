@@ -161,10 +161,10 @@ void Win32Application::RunDX12()
 
 
 		//マルチレンダーターゲットによる描画
-		//垂直ガウスブラー
-		otherRenderTarget->DrawOtherRenderTargetsFull(pDX12);
+		//
+		//otherRenderTarget->DrawOtherRenderTargetsFull(pDX12);
 
-		//水平ガウスブラー
+		//
 		pDX12->SetBackBufferToRTV();
 		otherRenderTarget->DrawOtherRenderTarget(pDX12);
 		pDX12->EndBackBufferDraw();

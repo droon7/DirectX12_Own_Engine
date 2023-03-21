@@ -197,22 +197,25 @@ void OtherRenderTarget::CreateCBVForPostEffect(DX12Application* pdx12)
 //ポストエフェクト用ルートシグネチャ作成
 void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 {
-	D3D12_DESCRIPTOR_RANGE range[4] = {};
+	D3D12_DESCRIPTOR_RANGE range[5] = {};
 	range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	range[0].BaseShaderRegister = 0;
-	range[0].NumDescriptors = 1;
+	range[0].NumDescriptors = 2;
 	range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	range[1].BaseShaderRegister = 0;
 	range[1].NumDescriptors = 1;
 	range[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[2].BaseShaderRegister = 1;
+	range[2].BaseShaderRegister = 2;
 	range[2].NumDescriptors = 1;
 	range[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[3].BaseShaderRegister = 2;
+	range[3].BaseShaderRegister = 3;
 	range[3].NumDescriptors = 1;
+	range[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	range[4].BaseShaderRegister = 4;
+	range[4].NumDescriptors = 1;
 
 
-	D3D12_ROOT_PARAMETER rp[4] = {};
+	D3D12_ROOT_PARAMETER rp[5] = {};
 	rp[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // RTV
 	rp[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rp[0].DescriptorTable.pDescriptorRanges = range;
@@ -229,11 +232,15 @@ void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 	rp[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rp[3].DescriptorTable.pDescriptorRanges = &range[3];
 	rp[3].DescriptorTable.NumDescriptorRanges = 1;
+	rp[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; //light map
+	rp[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rp[4].DescriptorTable.pDescriptorRanges = &range[4];
+	rp[4].DescriptorTable.NumDescriptorRanges = 1;
 
 	D3D12_STATIC_SAMPLER_DESC sampler = CD3DX12_STATIC_SAMPLER_DESC(0);
 
 	D3D12_ROOT_SIGNATURE_DESC rsDesc = {};
-	rsDesc.NumParameters = 4;
+	rsDesc.NumParameters = 5;
 	rsDesc.pParameters = rp;
 	rsDesc.NumStaticSamplers = 1;
 	rsDesc.pStaticSamplers = &sampler;
@@ -450,19 +457,21 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	pdx12->_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	pdx12->_cmdList->IASetVertexBuffers(0, 1, &planePolygonVertexView);
 
+	//RTVの描画結果を設定
 	pdx12->_cmdList->SetDescriptorHeaps(1, planeSRVHeap.GetAddressOf());
 	auto handle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
 
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//深度マップ設定
 	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart());
+	//ライトから見た深度マップを設定
+	handle = pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart();
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(4, handle);
+	//エフェクト用ノーマルマップ
 	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
-
-	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
-	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart());
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }
@@ -486,11 +495,18 @@ void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 
 
 	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
+	auto handleRTV = rtvHeapPointer;
+	handleRTV.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvs[2] = { rtvHeapPointer, handleRTV };
+
 	auto dsvHead = pdx12->dsvHeaps->GetCPUDescriptorHandleForHeapStart();
 	pdx12->_cmdList->OMSetRenderTargets(
-		1, &rtvHeapPointer, false, &dsvHead);
+		2, rtvs, false, &dsvHead);
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	pdx12->_cmdList->ClearRenderTargetView(rtvHeapPointer, clsClr, 0, nullptr);
+	for (auto& rt : rtvs)
+	{
+		pdx12->_cmdList->ClearRenderTargetView(rt, clsClr, 0, nullptr);
+	}
 	pdx12->_cmdList->ClearDepthStencilView(dsvHead, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, pdx12->window_width, pdx12->window_height);
@@ -504,9 +520,9 @@ void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 	//シャドウマップ描画のためのディスクリプタヒープ設定
 	//シャドウマップDSVが指してるリソースをSRVとして設定
 	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
-	auto handle = pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart();
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, handle);
+	auto handleSRV = pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart();
+	handleSRV.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, handleSRV);
 }
 
 //最初に描画するレンダーターゲットの後処理。現在はPMDモデルの描画に使用している
@@ -535,7 +551,7 @@ void OtherRenderTarget::DrawOtherRenderTargetsFull(DX12Application* pdx12)
 
 	//RTV関係命令
 	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
-	rtvHeapPointer.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	rtvHeapPointer.ptr += 2 * pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	auto dsvHead = pdx12->dsvHeaps->GetCPUDescriptorHandleForHeapStart();
 	pdx12->_cmdList->OMSetRenderTargets(
 		1, &rtvHeapPointer, false, &dsvHead);

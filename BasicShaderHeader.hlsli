@@ -43,3 +43,10 @@ struct Output
 	uint instNo : SV_InstanceID;
 	float4 tpos : TPOS;
 };
+
+//複数のレンダーターゲットに対して異なる値を返す時に使う構造体
+struct PixelOutput
+{
+	float4 col :SV_TARGET0;
+	float4 normal : SV_TARGET1;
+};
