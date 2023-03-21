@@ -26,20 +26,24 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 
 	float clsColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	D3D12_CLEAR_VALUE clearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsColor);
+	for (auto& resource : planeResources) {
+		auto result = pdx12->_dev->CreateCommittedResource(
+			&heapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&rtvResourceDesc,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			&clearValue,
+			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
+		);
+		if (FAILED(result)) {
+			assert(0);
+			return;
+		}
+	}
+
+
 
 	auto result = pdx12->_dev->CreateCommittedResource(
-		&heapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&rtvResourceDesc,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		&clearValue,
-		IID_PPV_ARGS(planeResource.ReleaseAndGetAddressOf())
-	);
-	if (FAILED(result)) {
-		assert(0);
-		return;
-	}
-	result = pdx12->_dev->CreateCommittedResource(
 		&heapProp,
 		D3D12_HEAP_FLAG_NONE,
 		&rtvResourceDesc,
@@ -56,7 +60,7 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	heapDesc.NodeMask = 0;
-	heapDesc.NumDescriptors = 2;
+	heapDesc.NumDescriptors = 3;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 	result = pdx12->_dev->CreateDescriptorHeap(
@@ -69,12 +73,16 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	auto handle = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
 
-	pdx12->_dev->CreateRenderTargetView(
-		planeResource.Get(),
-		&rtvDesc,
-		handle);
+	for (auto& resource : planeResources)
+	{
+		pdx12->_dev->CreateRenderTargetView(
+			resource.Get(),
+			&rtvDesc,
+			handle);
+		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	}
 
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
 	pdx12->_dev->CreateRenderTargetView(
 		planeResource2.Get(),
 		&rtvDesc,
@@ -99,13 +107,16 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 
 	handle = planeSRVHeap->GetCPUDescriptorHandleForHeapStart();
 
-	pdx12->_dev->CreateShaderResourceView(
-		planeResource.Get(),
-		&srvDesc,
-		handle
-	);
+	for (auto& resource : planeResources)
+	{
+		pdx12->_dev->CreateShaderResourceView(
+			resource.Get(),
+			&srvDesc,
+			handle
+		);
+		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	}
 
-	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	pdx12->_dev->CreateShaderResourceView(
 		planeResource2.Get(),
@@ -323,8 +334,10 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 	gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	gpsDesc.DepthStencilState.DepthEnable = false;
 	gpsDesc.DepthStencilState.StencilEnable = false;
-	gpsDesc.NumRenderTargets = 1;
+	gpsDesc.NumRenderTargets = 2;
 	gpsDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	gpsDesc.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 	gpsDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	gpsDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	gpsDesc.SampleDesc.Count = 1;
@@ -458,12 +471,19 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 //このクラスが保持するRTVを設定している。
 void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 {
-	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-		planeResource.Get(),
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-		D3D12_RESOURCE_STATE_RENDER_TARGET
-	);
-	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+	for (auto& resource : planeResources)
+	{
+		auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+			resource.Get(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+		pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+	}
+
+
+
+
 
 	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
 	auto dsvHead = pdx12->dsvHeaps->GetCPUDescriptorHandleForHeapStart();
@@ -492,13 +512,15 @@ void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 //最初に描画するレンダーターゲットの後処理。現在はPMDモデルの描画に使用している
 void OtherRenderTarget::PostDrawOtherRenderTargets(DX12Application* pdx12)
 {
-	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
-		planeResource.Get(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-	);
-
-	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+		for (auto& resource : planeResources)
+		{
+			auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+				resource.Get(),
+				D3D12_RESOURCE_STATE_RENDER_TARGET,
+				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+			);
+			pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+		}
 }
 
 //リソースバリアの設定、レンダーターゲットの設定も書く

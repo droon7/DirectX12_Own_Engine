@@ -18,7 +18,7 @@ class DX12Application;
 class OtherRenderTarget
 {
 private:
-	ComPtr<ID3D12Resource> planeResource; //板ポリゴン用リソース 横方向ガウスブラーに使用
+	std::array<ComPtr<ID3D12Resource>, 2> planeResources; //板ポリゴン用リソース 横方向ガウスブラーに使用
 	ComPtr<ID3D12DescriptorHeap> planeRTVHeap; //板ポリ用RTV
 	ComPtr<ID3D12DescriptorHeap> planeSRVHeap; //板ポリ用SRV、CBVも入る
 
