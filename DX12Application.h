@@ -77,7 +77,7 @@ private:
 	float angle = 0.0f;
 
 	//影用アセット
-	static constexpr unsigned int shadowDifinition = 1910;
+	static constexpr unsigned int shadowDifinition = 1024;
 	DirectX::XMFLOAT3 parallelLightVec;
 	DirectX::XMMATRIX lightMat;
 	ComPtr<ID3D12Resource> shadowMapBuffer = nullptr; 

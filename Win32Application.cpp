@@ -91,19 +91,22 @@ void Win32Application::RunDX12()
 	pmdRenderer.reset(new PmdRenderer(pDX12));
 	//std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd","motion/swing.vmd",0);
 	std::shared_ptr<PmdActor> sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミクmetal.pmd", "motion/yagokoro.vmd");
+	sharedPmdActor->Move(-10, 0, 10);
+	pmdActors.push_back(sharedPmdActor);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/初音ミク.pmd", "motion/swing.vmd");
 	sharedPmdActor->Move(0, 0, 0);
 	pmdActors.push_back(sharedPmdActor);
-	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/巡音ルカ.pmd", "motion/swing.vmd");
-	sharedPmdActor->Move(12, 0, 0);
-	pmdActors.push_back(sharedPmdActor);
 	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/カイト.pmd", "motion/motion.vmd");
-	sharedPmdActor->Move(-12, 0, 0);
+	sharedPmdActor->Move(-5, 0, 5);
 	pmdActors.push_back(sharedPmdActor);
 	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/咲音メイコ.pmd", "motion/yagokoro.vmd");
-	sharedPmdActor->Move(-6, 0, 5);
+	sharedPmdActor->Move(-10, 0, 0);
 	pmdActors.push_back(sharedPmdActor);
-	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/弱音ハク.pmd", "motion/yagokoro.vmd");
-	sharedPmdActor->Move(6, 0, 5);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/鏡音リン.pmd", "motion/yagokoro.vmd");
+	sharedPmdActor->Move(10, 0, 0);
+	pmdActors.push_back(sharedPmdActor);
+	sharedPmdActor = std::make_shared<PmdActor>(pDX12, "Model/巡音ルカ.pmd", "motion/yagokoro.vmd");
+	sharedPmdActor->Move(10, 0, 10);
 	pmdActors.push_back(sharedPmdActor);
 
 	//ウィンドウ表示
