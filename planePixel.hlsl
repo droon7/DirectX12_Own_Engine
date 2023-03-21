@@ -44,8 +44,17 @@ float4 ps(Output input) : SV_TARGET
 		return texNormal.Sample(smp, (input.uv - float2(0, 0.4)) * 5);
 	}
 
-	float4 color = tex.Sample(smp,input.uv);
+	float4 normalMap = texNormal.Sample(smp, input.uv);
+	normalMap = normalMap * 2.0f - 1.0f; 
+
+	float3 light = normalize(float3(1.0f, -1.0f, 1.0f));
+	const float ambient = 0.25f;
+	float diffB = max(saturate(dot(normalMap.xyz, -light)), ambient);
+
+	float4 color = tex.Sample(smp,input.uv) * float4(diffB, diffB, diffB, 1);
 	return color;
+
+
 
 
 

@@ -13,6 +13,7 @@ PixelOutput BasicPS(Output input) : SV_TARGET
 		return po;
 	}
 
+
 	float3 light = normalize(float3(1, -1, 1));//平行光線ベクトル
 	float3 lightColor = float3(1, 1, 1);
 
@@ -52,19 +53,13 @@ PixelOutput BasicPS(Output input) : SV_TARGET
 
 	shadowWeight = lerp(0.5f, 1.0f, depthFromLight);
 
+	float4 sphColor = sph.Sample(smp, sphereMapUV);
+	float4 spaColor = saturate(spa.Sample(smp, sphereMapUV));
 
 	//複数のレンダーターゲットに返す（現在は色と法線マップを返す）
 	PixelOutput output;
 
-	output.col = max(
-		saturate(toonDif)
-		* diffuse
-		* texColor
-		* sph.Sample(smp, sphereMapUV)
-		* shadowWeight
-		+ saturate(spa.Sample(smp, sphereMapUV))
-		+ float4(specularB * specular.rgb, 1)
-		, float4(texColor * ambient / 2, 1));
+	output.col = float4(spaColor + sphColor * texColor * diffuse);
 
 	//法線が色で表現されるように加工
 	output.normal.rgb = float3((input.normal.xyz + 1.0f) / 2.0f);
