@@ -29,16 +29,22 @@ float4 BasicPS(Output input) : SV_TARGET
 	//シャドウマップ計算
 	//まずライトから見た座標をUV座標に戻す
 	float3 posFromLightVP = input.tpos.xyz / input.tpos.w;
-	float2 shadowUV = (posFromLightVP + float2(1, -1)) * float2(0.5, -0.5);
-	//float2 shadowUV = (input.tpos.xy / input.tpos.z + float2(1, -1)) * float2(0.5, -0.5);
+	float2 shadowUV = (input.tpos.xy / input.tpos.w + float2(1, -1)) * float2(0.5, -0.5);
 	//ライトから見た深度と得たUVをサンプル
-	float depthFromLight = lightDepthTex.Sample(smp, shadowUV);
+	//float depthFromLight = lightDepthTex.Sample(smp, shadowUV);
+	float depthFromLight = lightDepthTex.SampleCmp(
+		shadowSmp,
+		shadowUV,
+		posFromLightVP.z - 0.005f
+	);
 	//深度値を比較して遠い場合は影ウェイトを掛ける。
 	float shadowWeight = 1.0f;
-	if (depthFromLight < posFromLightVP.z -0.005f)
-	{
-		shadowWeight = 0.5f;
-	}
+	//if (depthFromLight < posFromLightVP.z -0.005f)
+	//{
+	//	shadowWeight = 0.5f;
+	//}
+
+	shadowWeight = lerp(0.5f, 1.0f, depthFromLight);
 
 	//return shadowWeight;
 

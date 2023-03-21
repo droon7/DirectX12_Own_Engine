@@ -248,10 +248,19 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 
 
 	//ルートシグネチャに設定するサンプラーの設定
-	CD3DX12_STATIC_SAMPLER_DESC samplerDesc[2] = {};
+	CD3DX12_STATIC_SAMPLER_DESC samplerDesc[3] = {};
 
 	samplerDesc[0].Init(0);
 	samplerDesc[1].Init(1, D3D12_FILTER_ANISOTROPIC, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+	//ソフトシャドウ用サンプラー
+	samplerDesc[2] = samplerDesc[0];
+	samplerDesc[2].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDesc[2].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDesc[2].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	samplerDesc[2].ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;   //<=で比較し、trueなら1.0、falseなら0.0を返す。
+	samplerDesc[2].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; //比較結果をバイリニア補間
+	samplerDesc[2].MaxAnisotropy = 1; // 深度傾斜を有効
+	samplerDesc[2].ShaderRegister = 2;
 
 	//ルートシグネチャの設定、生成
 	//ルートシグネチャディスクリプタの設定
@@ -263,7 +272,7 @@ HRESULT PmdRenderer::CreateRootSignature(DX12Application* app)
 	rootSignatureDesc.NumParameters = 4;
 	//サンプラーを設定
 	rootSignatureDesc.pStaticSamplers = samplerDesc;
-	rootSignatureDesc.NumStaticSamplers = 2;
+	rootSignatureDesc.NumStaticSamplers = 3;
 
 	//ルートシグネチャのBlobの作成
 	ComPtr<ID3DBlob> rootSigBlob = nullptr;

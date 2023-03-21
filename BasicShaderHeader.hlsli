@@ -5,6 +5,7 @@ Texture2D<float4> toon : register(t3);
 Texture2D<float4> lightDepthTex : register(t4);
 SamplerState smp : register(s0);
 SamplerState smpToon : register(s1);
+SamplerComparisonState shadowSmp : register(s2);
 
 //行列定数バッファー
 cbuffer SceneData : register(b0)
