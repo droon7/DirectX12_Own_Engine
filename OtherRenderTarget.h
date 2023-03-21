@@ -41,6 +41,8 @@ private:
 	ComPtr<ID3D12DescriptorHeap> effectSRVHeap;
 	ComPtr<ID3D12Resource> effectTextureBuffer; //めんどくさいのでPmdTexture使用
 
+	//ブルーム用オブジェクト
+	std::array<ComPtr<ID3D12Resource>, 2> bloomBuffer;
 
 
 	//別のRTV、ポストエフェクト用SRVの作成、
