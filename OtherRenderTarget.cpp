@@ -5,6 +5,7 @@
 
 OtherRenderTarget::OtherRenderTarget(DX12Application* pdx12)
 {
+	CreateBlurForDOFBuffer(pdx12);
 	CreateRTVsAndSRVs(pdx12);
 	CreateCBVForPostEffect(pdx12);
 	CreateEffectBufferAndView(pdx12);
@@ -41,6 +42,24 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 		}
 	}
 
+	clsColor[0] = clsColor[1] = clsColor[2] = 0; clsColor[3] = 1;
+	clearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsColor);
+	//ブルーム用リソース作成
+	for (auto& resource : bloomBuffer) {
+		auto result = pdx12->_dev->CreateCommittedResource(
+			&heapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&rtvResourceDesc,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+			&clearValue,
+			IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
+		);
+		rtvResourceDesc.Width >>= 1;
+		if (FAILED(result)) {
+			assert(0);
+			return;
+		}
+	}
 
 
 	auto result = pdx12->_dev->CreateCommittedResource(
@@ -56,11 +75,12 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 		return;
 	}
 
-	//RTV作成、２つ作る
+	//RTV作成、6つ作る
+	//通常、ノーマルマップ、高輝度、高輝度縮小、通常縮小、空を入れる。
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	heapDesc.NodeMask = 0;
-	heapDesc.NumDescriptors = 3;
+	heapDesc.NumDescriptors = 6;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 	result = pdx12->_dev->CreateDescriptorHeap(
@@ -82,6 +102,19 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
+	for (auto& resource : bloomBuffer) {
+		pdx12->_dev->CreateRenderTargetView(
+			resource.Get(),
+			&rtvDesc,
+			handle);
+		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	}
+
+	pdx12->_dev->CreateRenderTargetView(
+		dofBuffer.Get(),
+		&rtvDesc,
+		handle);
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	pdx12->_dev->CreateRenderTargetView(
 		planeResource2.Get(),
@@ -90,7 +123,7 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 
 
 	//SRV作成
-	heapDesc.NumDescriptors = 3;
+	heapDesc.NumDescriptors = 6;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -117,6 +150,21 @@ void OtherRenderTarget::CreateRTVsAndSRVs(DX12Application* pdx12)
 		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
+	for (auto& resource : bloomBuffer) {
+		pdx12->_dev->CreateShaderResourceView(
+			resource.Get(),
+			&srvDesc,
+			handle
+		);
+		handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	}
+
+	pdx12->_dev->CreateShaderResourceView(
+		dofBuffer.Get(),
+		&srvDesc,
+		handle
+	);
+	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	pdx12->_dev->CreateShaderResourceView(
 		planeResource2.Get(),
@@ -184,14 +232,18 @@ void OtherRenderTarget::CreateCBVForPostEffect(DX12Application* pdx12)
 	copy(gaussWeights.begin(), gaussWeights.end(), mappedWeight);
 	bokehParameterBuffer->Unmap(0, nullptr);
 
-	auto handle = planeSRVHeap->GetCPUDescriptorHandleForHeapStart();
-	//間にSRVがもう一つ入るため2*incrementSizeにする
-	handle.ptr += 2 * pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descriptorHeapDesc.NodeMask = 0;
+	descriptorHeapDesc.NumDescriptors = 1;
+	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	result = pdx12->_dev->CreateDescriptorHeap(&descriptorHeapDesc,
+		IID_PPV_ARGS(&bokeCSVHeap));
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 	cbvDesc.BufferLocation = bokehParameterBuffer->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = bokehParameterBuffer->GetDesc().Width;
-	pdx12->_dev->CreateConstantBufferView(&cbvDesc, handle);
+	pdx12->_dev->CreateConstantBufferView(&cbvDesc, bokeCSVHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 //ポストエフェクト用ルートシグネチャ作成
@@ -200,18 +252,18 @@ void OtherRenderTarget::CreateRootsignature(DX12Application* pdx12)
 	D3D12_DESCRIPTOR_RANGE range[5] = {};
 	range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	range[0].BaseShaderRegister = 0;
-	range[0].NumDescriptors = 2;
+	range[0].NumDescriptors = 5;
 	range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	range[1].BaseShaderRegister = 0;
 	range[1].NumDescriptors = 1;
 	range[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[2].BaseShaderRegister = 2;
+	range[2].BaseShaderRegister = 5;
 	range[2].NumDescriptors = 1;
 	range[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[3].BaseShaderRegister = 3;
+	range[3].BaseShaderRegister = 6;
 	range[3].NumDescriptors = 1;
 	range[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	range[4].BaseShaderRegister = 4;
+	range[4].BaseShaderRegister = 7;
 	range[4].NumDescriptors = 1;
 
 
@@ -341,9 +393,9 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 	gpsDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	gpsDesc.DepthStencilState.DepthEnable = false;
 	gpsDesc.DepthStencilState.StencilEnable = false;
-	gpsDesc.NumRenderTargets = 2;
+	gpsDesc.NumRenderTargets = 1;
 	gpsDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	gpsDesc.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 
 	gpsDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	gpsDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
@@ -388,6 +440,31 @@ void OtherRenderTarget::CreateGraphicsPipeline(DX12Application* pdx12)
 		return;
 	}
 
+	result = D3DCompileFromFile(
+		L"planePixel.hlsl", nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"BlurPS", "ps_5_0", 0, 0,
+		planePs.ReleaseAndGetAddressOf(),
+		errorBlob.ReleaseAndGetAddressOf()
+	);
+
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
+
+	gpsDesc.PS = CD3DX12_SHADER_BYTECODE(planePs.Get());
+	gpsDesc.NumRenderTargets = 2;
+	gpsDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	gpsDesc.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	result = pdx12->_dev->CreateGraphicsPipelineState(
+		&gpsDesc,
+		IID_PPV_ARGS(blurPipeline.ReleaseAndGetAddressOf())
+	);
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
 }
 
 //ポストエフェクト用SRV作成
@@ -420,6 +497,29 @@ void OtherRenderTarget::CreateEffectBufferAndView(DX12Application* pdx12)
 		&srvDesc,
 		effectSRVHeap->GetCPUDescriptorHandleForHeapStart()
 	);
+}
+
+void OtherRenderTarget::CreateBlurForDOFBuffer(DX12Application* pdx12)
+{
+	auto resDesc = pdx12->_backBuffers[0]->GetDesc();
+
+	D3D12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+	resDesc.Width >>= 1;
+	float clsColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	D3D12_CLEAR_VALUE clearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_R8G8B8A8_UNORM, clsColor);
+	auto result = pdx12->_dev->CreateCommittedResource(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		&clearValue,
+		IID_PPV_ARGS(dofBuffer.ReleaseAndGetAddressOf())
+	);
+	if (FAILED(result)) {
+		assert(0);
+		return;
+	}
 }
 
 
@@ -462,6 +562,13 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	auto handle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(0, handle);
 
+
+	//ガウスブラー用ボケウェイト
+	pdx12->_cmdList->SetDescriptorHeaps(1, bokeCSVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(1, bokeCSVHeap->GetGPUDescriptorHandleForHeapStart());
+	//エフェクト用ノーマルマップ
+	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
+	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
 	//深度マップ設定
 	pdx12->_cmdList->SetDescriptorHeaps(1, pdx12->depthSRVHeaps.GetAddressOf());
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(3, pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart());
@@ -469,9 +576,6 @@ void OtherRenderTarget::DrawOtherRenderTarget(DX12Application* pdx12)
 	handle = pdx12->depthSRVHeaps->GetGPUDescriptorHandleForHeapStart();
 	handle.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	pdx12->_cmdList->SetGraphicsRootDescriptorTable(4, handle);
-	//エフェクト用ノーマルマップ
-	pdx12->_cmdList->SetDescriptorHeaps(1, effectSRVHeap.GetAddressOf());
-	pdx12->_cmdList->SetGraphicsRootDescriptorTable(2, effectSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
 	pdx12->_cmdList->DrawInstanced(4,1,0,0);
 }
@@ -489,24 +593,41 @@ void OtherRenderTarget::PreDrawOtherRenderTargets(DX12Application* pdx12)
 		);
 		pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 	}
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		bloomBuffer[0].Get(),
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 
 
 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handles[3];
+	D3D12_CPU_DESCRIPTOR_HANDLE baseH = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
 
-
-	auto rtvHeapPointer = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
-	auto handleRTV = rtvHeapPointer;
-	handleRTV.ptr += pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvs[2] = { rtvHeapPointer, handleRTV };
+	auto incSize = pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	uint32_t offset = 0;
+	for (auto& handle : handles)
+	{
+		handle.InitOffsetted(baseH, offset);
+		offset += incSize;
+	}
 
 	auto dsvHead = pdx12->dsvHeaps->GetCPUDescriptorHandleForHeapStart();
 	pdx12->_cmdList->OMSetRenderTargets(
-		2, rtvs, false, &dsvHead);
+		3, handles, false, &dsvHead);
 	float clsClr[4] = { 0.5,0.5,0.5,1.0 };
-	for (auto& rt : rtvs)
+	for (int i =0; i < _countof(handles); ++i)
 	{
-		pdx12->_cmdList->ClearRenderTargetView(rt, clsClr, 0, nullptr);
+		if (i == 2)
+		{
+			clsClr[0] = clsClr[1] = clsClr[2] = 0;
+			clsClr[3] = 1;
+		}
+		pdx12->_cmdList->ClearRenderTargetView(handles[i], clsClr, 0, nullptr);
 	}
+
+
 	pdx12->_cmdList->ClearDepthStencilView(dsvHead, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	D3D12_VIEWPORT vp = CD3DX12_VIEWPORT(0.0f, 0.0f, pdx12->window_width, pdx12->window_height);
@@ -537,6 +658,13 @@ void OtherRenderTarget::PostDrawOtherRenderTargets(DX12Application* pdx12)
 			);
 			pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 		}
+
+		auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+			bloomBuffer[0].Get(),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+		);
+		pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 }
 
 //リソースバリアの設定、レンダーターゲットの設定も書く
@@ -592,5 +720,82 @@ void OtherRenderTarget::DrawOtherRenderTargetsFull(DX12Application* pdx12)
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
 
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+}
+
+void OtherRenderTarget::DrawShrinkTextureForBlur(DX12Application* pdx12)
+{
+	auto commandList = pdx12->_cmdList;
+
+	commandList->SetPipelineState(blurPipeline.Get());
+	commandList->SetGraphicsRootSignature(planeRootsignature.Get());
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	commandList->IASetVertexBuffers(0, 1, &planePolygonVertexView);
+
+
+	auto BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		bloomBuffer[0].Get(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		bloomBuffer[1].Get(),
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
+	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
+
+
+	auto rtvBaseHandle = planeRTVHeap->GetCPUDescriptorHandleForHeapStart();
+	auto rtvIncSize = pdx12->_dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	auto srvHandle = planeSRVHeap->GetGPUDescriptorHandleForHeapStart();
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandles[2] = {};
+
+	rtvHandles[0].InitOffsetted(rtvBaseHandle, rtvIncSize * 3);
+	rtvHandles[1].InitOffsetted(rtvBaseHandle, rtvIncSize * 4);
+
+	commandList->OMSetRenderTargets(2, rtvHandles, false, nullptr);
+
+	commandList->SetDescriptorHeaps(1, planeSRVHeap.GetAddressOf());
+	commandList->SetGraphicsRootDescriptorTable(0, srvHandle);
+
+	auto desc = bloomBuffer[0]->GetDesc();
+	D3D12_VIEWPORT vp = {};
+	D3D12_RECT rect = {};
+
+	vp.MaxDepth = 1.0f;
+	vp.MinDepth = 0.0f;
+	vp.Height = desc.Height / 2;
+	vp.Width = desc.Width / 2;
+	rect.top = 0;
+	rect.left = 0;
+	rect.bottom = vp.Height;
+	rect.right = vp.Width;
+
+	//八回縮小バッファを描画する
+	for (int i = 0; i < 8; ++i)
+	{
+		commandList->RSSetViewports(1, &vp);
+		commandList->RSSetScissorRects(1, &rect);
+		commandList->DrawInstanced(4, 1, 0, 0);
+
+		//描画を下にずらし、描画サイズを小さくする
+		rect.top += vp.Height;
+		vp.TopLeftX = 0;
+		vp.TopLeftY = rect.top;
+
+		vp.Width /= 2;
+		vp.Height /= 2;
+		rect.bottom = rect.top + vp.Height;
+	}
+
+	BarrierDesc = CD3DX12_RESOURCE_BARRIER::Transition(
+		bloomBuffer[1].Get(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
 	pdx12->_cmdList->ResourceBarrier(1, &BarrierDesc);
 }

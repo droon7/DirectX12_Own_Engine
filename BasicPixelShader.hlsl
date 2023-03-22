@@ -10,6 +10,8 @@ PixelOutput BasicPS(Output input) : SV_TARGET
 		po.normal.rgb = float3((input.normal.xyz + 1.0f) / 2.0f);
 		po.normal.a = 1;
 
+		po.highLum = 0.0f;
+
 		return po;
 	}
 
@@ -56,7 +58,8 @@ PixelOutput BasicPS(Output input) : SV_TARGET
 	//複数のレンダーターゲットに返す（現在は色と法線マップを返す）
 	PixelOutput output;
 
-	output.col = max(
+
+	float4 ret = max(
 		saturate(toonDif)
 		* diffuse
 		* texColor
@@ -65,10 +68,16 @@ PixelOutput BasicPS(Output input) : SV_TARGET
 		+ saturate(spa.Sample(smp, sphereMapUV))
 		+ float4(specularB * specular.rgb, 1)
 		, float4(texColor * ambient / 2, 1));
+	output.col = ret;
 
 	//法線が色で表現されるように加工
 	output.normal.rgb = float3((input.normal.xyz + 1.0f) / 2.0f);
 	output.normal.a = 1;
+
+	float y = dot(float3 (0.299f, 0.587f, 0.114f), output.col);
+
+	output.highLum = y > 0.99f ? y : float4(0,0,0,1);
+
 
 	return output;
 

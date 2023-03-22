@@ -1,74 +1,190 @@
 #include"planeHeader.hlsli"
 
-//縦方向のガウスブラー
-float4 VerticalBokePS(Output input) : SV_TARGET
-{
-	float4 color = tex.Sample(smp,input.uv);
-	return color;
-
-	//縦ガウスブラー+ 法線マップによる歪み
-	float w, h, levels;
-	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
-
-	float dx = 1.0f / w; //1ピクセル分の幅
-	float dy = 1.0f / h;
-	float4 ret = float4(0, 0, 0, 0);
 
 
-	ret += bkweights[0] * color;
-	for (float i = 1; i < 8; ++i)
-	{
-		ret += bkweights[i / 4 % 2][i % 4] * tex.Sample(smp, input.uv + float2(0, i*dy));
-		ret += bkweights[i / 4 %  2][i % 4] * tex.Sample(smp, input.uv + float2(0, -i*dy));
-	}
-	return float4(ret.rgb, color.a);
+float4 Get5x5GaussianBlur(Texture2D<float4> tex, SamplerState smp, float2 uv, float dx, float dy, float4 rect) {
+	float4 ret = tex.Sample(smp, uv);
+
+	float l1 = -dx, l2 = -2 * dx;
+	float r1 = dx, r2 = 2 * dx;
+	float u1 = -dy, u2 = -2 * dy;
+	float d1 = dy, d2 = 2 * dy;
+	l1 = max(uv.x + l1, rect.x) - uv.x;
+	l2 = max(uv.x + l2, rect.x) - uv.x;
+	r1 = min(uv.x + r1, rect.z - dx) - uv.x;
+	r2 = min(uv.x + r2, rect.z - dx) - uv.x;
+
+	u1 = max(uv.y + u1, rect.y) - uv.y;
+	u2 = max(uv.y + u2, rect.y) - uv.y;
+	d1 = min(uv.y + d1, rect.w - dy) - uv.y;
+	d2 = min(uv.y + d2, rect.w - dy) - uv.y;
+
+	return float4((
+		tex.Sample(smp, uv + float2(l2, u2)).rgb
+		+ tex.Sample(smp, uv + float2(l1, u2)).rgb * 4
+		+ tex.Sample(smp, uv + float2(0, u2)).rgb * 6
+		+ tex.Sample(smp, uv + float2(r1, u2)).rgb * 4
+		+ tex.Sample(smp, uv + float2(r2, u2)).rgb
+
+		+ tex.Sample(smp, uv + float2(l2, u1)).rgb * 4
+		+ tex.Sample(smp, uv + float2(l1, u1)).rgb * 16
+		+ tex.Sample(smp, uv + float2(0, u1)).rgb * 24
+		+ tex.Sample(smp, uv + float2(r1, u1)).rgb * 16
+		+ tex.Sample(smp, uv + float2(r2, u1)).rgb * 4
+
+		+ tex.Sample(smp, uv + float2(l2, 0)).rgb * 6
+		+ tex.Sample(smp, uv + float2(l1, 0)).rgb * 24
+		+ ret.rgb * 36
+		+ tex.Sample(smp, uv + float2(r1, 0)).rgb * 24
+		+ tex.Sample(smp, uv + float2(r2, 0)).rgb * 6
+
+		+ tex.Sample(smp, uv + float2(l2, d1)).rgb * 4
+		+ tex.Sample(smp, uv + float2(l1, d1)).rgb * 16
+		+ tex.Sample(smp, uv + float2(0, d1)).rgb * 24
+		+ tex.Sample(smp, uv + float2(r1, d1)).rgb * 16
+		+ tex.Sample(smp, uv + float2(r2, d1)).rgb * 4
+
+		+ tex.Sample(smp, uv + float2(l2, d2)).rgb
+		+ tex.Sample(smp, uv + float2(l1, d2)).rgb * 4
+		+ tex.Sample(smp, uv + float2(0, d2)).rgb * 6
+		+ tex.Sample(smp, uv + float2(r1, d2)).rgb * 4
+		+ tex.Sample(smp, uv + float2(r2, d2)).rgb
+		) / 256.0f, ret.a);
 }
+
+BlurOutput BlurPS(Output input) : SV_TARGET
+{
+	float w,h,miplevels;
+	tex.GetDimensions(0, w, h, miplevels);
+
+	BlurOutput ret;
+	ret.highLum = Get5x5GaussianBlur(texHighLum, smp, input.uv, 1.0f / w, 1.0f / h, float4(0,0,1,1));
+	ret.color = Get5x5GaussianBlur(tex, smp, input.uv, 1.0f / w, 1.0f / h, float4(0, 0, 1, 1));
+	return ret;
+}
+
 
 float4 ps(Output input) : SV_TARGET
 {
 
-	if (input.uv.x < 0.2 && input.uv.y < 0.2)	//深度マップ
-	{
-		float depth = depthTex.Sample(smp, input.uv * 5);
-		depth = 1.0f - pow(depth, 500);
-		return float4(depth,depth,depth, 1);
-	}
-	else if (input.uv.x < 0.2 && input.uv.y < 0.4) //ライトからの深度
-	{
-		float depth = shadowMapTex.Sample(smp, (input.uv - float2(0, 0.2)) * 5);
-		depth = 1 - depth;
-		return float4(depth, depth, depth, 1);
-	}
-	else if (input.uv.x < 0.2 && input.uv.y < 0.6)
-	{
-		return texNormal.Sample(smp, (input.uv - float2(0, 0.4)) * 5);
-	}
+	//if (input.uv.x < 0.2 && input.uv.y < 0.2)	//深度マップ
+	//{
+	//	float depth = depthTex.Sample(smp, input.uv * 5);
+	//	depth = 1.0f - pow(depth, 500);
+	//	return float4(depth,depth,depth, 1);
+	//}
+	//else if (input.uv.x < 0.2 && input.uv.y < 0.4) //ライトからの深度
+	//{
+	//	float depth = shadowMapTex.Sample(smp, (input.uv - float2(0, 0.2)) * 5);
+	//	depth = 1 - depth;
+	//	return float4(depth, depth, depth, 1);
+	//}
+	//else if (input.uv.x < 0.2 && input.uv.y < 0.6)
+	//{
+	//	return texNormal.Sample(smp, (input.uv - float2(0, 0.4)) * 5);
+	//}
+	//else if (input.uv.x < 0.2 && input.uv.y < 0.8)
+	//{
+	//	return texHighLum.Sample(smp, (input.uv - float2(0, 0.6)) * 5);
+	//}
+	//else if (input.uv.x < 0.2 )
+	//{
+	//	return texShrink.Sample(smp, (input.uv - float2(0, 0.6)) * 5);
+	//}
 
 	float4 color = tex.Sample(smp,input.uv);
-	return color;
-
-
-
-	//横ガウスブラー
+	//return color;
 	float w, h, levels;
 	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
 
 	float dx = 1.0f / w; //1ピクセル分の幅
 	float dy = 1.0f / h;
-	float4 ret = float4(0, 0, 0, 0);
 
-	float2 nmTex = effectTex.Sample(smp, input.uv).xy;
-	nmTex = nmTex * 2.0f - 1.0f;
-	return tex.Sample(smp, input.uv + nmTex * 0.1f);
+	//画面の中心との深度の差を測る
+	float depthDiff = abs(depthTex.Sample(smp, float2(0.5, 0.5)) - depthTex.Sample(smp, input.uv));
+	//深度値の差は小さいためpowで大きくし変化を作る
+	depthDiff *= 30;
+	depthDiff = pow(depthDiff, 0.5f);
+	float2 uvSize = float2(1, 0.5);
+	float2 uvOffset = float2(0, 0);
 
-	ret += bkweights[0] * color;
-	for(float i = 1; i < 8; ++i)
+	float t = depthDiff * 8;
+	float no;
+	t = modf(t, no);
+
+	float4 retColor[2];
+
+	//深度値の差に応じたレベルでのサンプルを２つ得て、それを線形補間したものを返す。
+	retColor[0] = tex.Sample(smp, input.uv);
+	if (no == 0.0f)
 	{
-		ret += bkweights[i / 4 % 2][i % 4] * tex.Sample(smp, input.uv + float2(i * dx, 0));
-		ret += bkweights[i / 4 % 2][i % 4] * tex.Sample(smp, input.uv + float2(-i * dx, 0));
+		retColor[1] = Get5x5GaussianBlur(
+			texShrink, smp,
+			input.uv * uvSize + uvOffset,
+			dx, dy,
+			float4(uvOffset, uvOffset + uvSize)
+		);
+	}
+	else
+	{
+		for (int i = 1; i < 8; ++i)
+		{
+			if (i - no < 0)
+			{
+				continue;
+			}
+
+			retColor[i - no] = Get5x5GaussianBlur(
+				texShrink, smp,
+				input.uv * uvSize + uvOffset,
+				dx, dy,
+				float4(uvOffset, uvOffset + uvSize)
+			);
+
+			uvOffset.y += uvSize.y;
+			uvSize *= 0.5f;
+
+			if (i - no > 1)
+			{
+				break;
+			}
+		}
 	}
 
-	return float4(ret.rgb, color.a);
+	return lerp(retColor[0], retColor[1], t);
+
+	//ブルームの実装
+
+	//float4 bloomAccum = float4(0, 0, 0, 0);
+	//float2 uvSize = float2(1, 0.5);
+	//float2 uvOffset = float2(0, 0);
+
+	//for (int i = 0; i < 8; ++i)
+	//{
+	//	bloomAccum += Get5x5GaussianBlur(texShrinkHighLum, smp, input.uv * uvSize + uvOffset, dx, dy, float4(uvOffset, uvOffset + uvSize));
+	//	uvOffset.y += uvSize.y;
+	//	uvSize *= 0.5f;
+	//}
+
+	//return color + Get5x5GaussianBlur(texHighLum, smp, input.uv, dx, dy, float4(0, 0, 1, 1)) + saturate(bloomAccum);
+
+	////横ガウスブラー
+	//float w, h, levels;
+	//tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
+
+	//float dx = 1.0f / w; //1ピクセル分の幅
+	//float dy = 1.0f / h;
+	//float4 ret = float4(0, 0, 0, 0);
+
+
+	//ret += bkweights[0] * texHighLum.Sample(smp, input.uv);
+	//for(float i = 1; i < 8; ++i)
+	//{
+	//	ret += bkweights[i / 4 % 2][i % 4] * texHighLum.Sample(smp, input.uv + float2(i * dx, 0));
+	//	ret += bkweights[i / 4 % 2][i % 4] * texHighLum.Sample(smp, input.uv + float2(-i * dx, 0));
+	//}
+
+	//return float4(ret.rgb, color.a);
 
 	//以下は試したポストエフェクト
 
@@ -196,5 +312,33 @@ float4 ps(Output input) : SV_TARGET
 	////return float4(color.rgb-Y, color.a); //通常の描画＋輪郭線
 	//return float4(Y, color.a);			   //輪郭線のみ
 
+	
+	//法線マップによる歪みエフェクト
+	//float2 nmTex = effectTex.Sample(smp, input.uv).xy;
+	//nmTex = nmTex * 2.0f - 1.0f;
+	//return tex.Sample(smp, input.uv + nmTex * 0.1f);
+}
 
+//縦方向のガウスブラー
+float4 VerticalBokePS(Output input) : SV_TARGET
+{
+	float4 color = tex.Sample(smp,input.uv);
+	return color;
+
+	//縦ガウスブラー+ 法線マップによる歪み
+	float w, h, levels;
+	tex.GetDimensions(0, w, h, levels); //幅、高さ、ミップマップのレベル数を得る
+
+	float dx = 1.0f / w; //1ピクセル分の幅
+	float dy = 1.0f / h;
+	float4 ret = float4(0, 0, 0, 0);
+
+
+	ret += bkweights[0] * color;
+	for (float i = 1; i < 8; ++i)
+	{
+		ret += bkweights[i / 4 % 2][i % 4] * tex.Sample(smp, input.uv + float2(0, i * dy));
+		ret += bkweights[i / 4 % 2][i % 4] * tex.Sample(smp, input.uv + float2(0, -i * dy));
+	}
+	return float4(ret.rgb, color.a);
 }

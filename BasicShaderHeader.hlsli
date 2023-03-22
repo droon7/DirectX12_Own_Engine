@@ -49,4 +49,5 @@ struct PixelOutput
 {
 	float4 col :SV_TARGET0;
 	float4 normal : SV_TARGET1;
+	float4 highLum : SV_TARGET2; //‚‹P“x¬•ª
 };

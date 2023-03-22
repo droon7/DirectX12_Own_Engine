@@ -164,6 +164,7 @@ void Win32Application::RunDX12()
 		//
 		//otherRenderTarget->DrawOtherRenderTargetsFull(pDX12);
 
+		otherRenderTarget->DrawShrinkTextureForBlur(pDX12);
 		//
 		pDX12->SetBackBufferToRTV();
 		otherRenderTarget->DrawOtherRenderTarget(pDX12);

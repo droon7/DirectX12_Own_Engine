@@ -172,9 +172,11 @@ HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 	//プリミティブトポロジの設定
 	gpipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	//レンダーターゲットの設定
-	gpipeline.NumRenderTargets = 2;
+	gpipeline.NumRenderTargets = 3;
 	gpipeline.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	gpipeline.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	gpipeline.RTVFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM;
+
 	//アンチエイリアシングのサンプル数の設定
 	gpipeline.SampleDesc.Count = 1;
 	gpipeline.SampleDesc.Quality = 0;
@@ -220,6 +222,7 @@ HRESULT PmdRenderer::CreateGraphicsPipelineForPmd(DX12Application* app)
 	gpipeline.NumRenderTargets = 0;
 	gpipeline.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 	gpipeline.RTVFormats[1] = DXGI_FORMAT_UNKNOWN;
+	gpipeline.RTVFormats[2] = DXGI_FORMAT_UNKNOWN;
 
 
 	result = app->_dev->CreateGraphicsPipelineState(
