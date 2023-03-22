@@ -46,6 +46,8 @@ private:
 	std::array<ComPtr<ID3D12Resource>, 2> bloomBuffer;
 	ComPtr<ID3D12PipelineState> blurPipeline;
 
+	//DOF用オブジェクト
+	ComPtr<ID3D12Resource> dofBuffer;
 
 	//別のRTV、ポストエフェクト用SRVの作成、
 	void CreateRTVsAndSRVs(DX12Application* pdx12);
@@ -59,6 +61,8 @@ private:
 	void CreateGraphicsPipeline(DX12Application* pdx12);
 	//ポストエフェクト用テクスチャバッファ＋ビュー作成
 	void CreateEffectBufferAndView(DX12Application* pdx12);
+	//DOF用バッファー作成
+	void CreateBlurForDOFBuffer(DX12Application* pdx12);
 
 
 	//ガウス分布の確率分布関数からボケウェイトを得る
