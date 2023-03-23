@@ -3,6 +3,7 @@
 #include"PmdData.h"
 #include"Win32Application.h"
 #include"Utility.h"
+#include"SSAO.h"
 
 using namespace::DirectX;
 
@@ -46,6 +47,7 @@ void DX12Application::OnInit(const HWND& hwnd)
 		return;
 	}
 	
+	ssao = SSAO(_dev);
 }
 
 //パイプラインに必要なオブジェクトの生成、初期化を行う

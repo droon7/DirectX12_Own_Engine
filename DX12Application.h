@@ -4,6 +4,7 @@
 #include"pch.h"
 #include"PmdData.h"
 #include"OtherRenderTarget.h"
+#include"SSAO.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -97,6 +98,9 @@ private:
 	HRESULT CreateDepthStencilView();
 	//ビュー行列、投射行列から作るシーンのビューを作る
 	HRESULT CreateSceneView();
+
+	//SSAOクラス
+	SSAO ssao;
 
 public:
 	ComPtr<ID3D12Device> _dev;
